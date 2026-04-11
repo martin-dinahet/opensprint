@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import type { PropsWithChildren } from "react";
-import "./globals.css";
 import { Noto_Sans } from "next/font/google";
+import type { PropsWithChildren } from "react";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import "./globals.css";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html lang="en" className={cn("font-sans", notoSans.variable)}>
       <body className="antialiased">
         <main>{children}</main>
+        <Toaster />
       </body>
     </html>
   );
