@@ -1,9 +1,10 @@
-node_modules/
-src/generated/prisma/
-
-.next/
-.zed/
-.claude/
-
+/node_modules
+/coverage
+/out
+/build
+/.next
+/.zed
+/.opencode
 
 .env
+next-env.d.ts
