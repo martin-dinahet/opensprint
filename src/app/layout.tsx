@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import "@/app/globals.css";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
 	title: "Hono | nextjs",
@@ -13,8 +18,10 @@ type Props = {
 
 export default function RootLayout({ children }: Props) {
 	return (
-		<html lang="en">
-			<body className="antialiased">{children}</body>
+		<html lang="en" className={cn("font-sans", geist.variable)}>
+			<TooltipProvider>
+				<body className="antialiased">{children}</body>
+			</TooltipProvider>
 		</html>
 	);
 }
