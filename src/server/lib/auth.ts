@@ -5,11 +5,11 @@ import { Pool } from "pg";
 import * as schema from "../db/schema";
 
 const db = drizzle(new Pool({ connectionString: process.env.DATABASE_URL }), {
-	schema,
+  schema,
 });
 
 export const auth = betterAuth({
-	database: drizzleAdapter(db, { provider: "pg", schema }),
-	baseURL: "http://localhost:3000/",
-	emailAndPassword: { enabled: true },
+  database: drizzleAdapter(db, { provider: "pg", schema }),
+  baseURL: "http://localhost:3000/",
+  emailAndPassword: { enabled: true },
 });

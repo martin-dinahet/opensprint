@@ -5,7 +5,7 @@ import { HealthRoute } from "./features/health/route";
 
 export type ServerType = typeof server;
 export const server = new Hono()
-	.use(logger())
-	.basePath("/api")
-	.route("/health", HealthRoute)
-	.route("/auth", AuthRoute);
+  .use(logger())
+  .basePath("/api")
+  .route("/health", HealthRoute)
+  .route("/auth", AuthRoute);
