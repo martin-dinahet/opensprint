@@ -55,6 +55,13 @@ Routes are organized by domain in `src/server/features/[feature]/route.ts`:
 - Use Zod schemas for request validation
 - Use `nanoid()` for ID generation
 
+### Endpoint Development
+
+When creating or modifying API endpoints, use the **endpoint-builder** skill (`.opencode/skills/endpoint-builder/SKILL.md`):
+- Provides step-by-step guidance for implementing endpoints
+- Includes testing workflow with curl/curlie
+- Documents code formatting rules (spacing, comments)
+
 ---
 
 ## API Endpoints
@@ -78,7 +85,7 @@ Routes are organized by domain in `src/server/features/[feature]/route.ts`:
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| GET | /api/projects | List all projects for user | [ ] |
+| GET | /api/projects | List all projects for user | [x] |
 | POST | /api/projects | Create project | [x] |
 | GET | /api/projects/:id | Get project by ID | [x] |
 | PATCH | /api/projects/:id | Update project | [ ] |
