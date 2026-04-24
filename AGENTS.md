@@ -54,6 +54,7 @@ Routes are organized by domain in `src/server/features/[feature]/route.ts`:
 - UI components are auto-generated (shadcn-like) and should not be manually edited
 - Use Zod schemas for request validation
 - Use `nanoid()` for ID generation
+- **Always run `npm run format` after any code change**
 
 ### Endpoint Development
 
@@ -88,7 +89,7 @@ When creating or modifying API endpoints, use the **endpoint-builder** skill (`.
 | GET | /api/projects | List all projects for user | [x] |
 | POST | /api/projects | Create project | [x] |
 | GET | /api/projects/:id | Get project by ID | [x] |
-| PATCH | /api/projects/:id | Update project | [ ] |
+| PATCH | /api/projects/:id | Update project | [x] |
 | DELETE | /api/projects/:id | Delete project | [ ] |
 
 **GET /api/projects**

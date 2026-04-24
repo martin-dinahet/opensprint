@@ -14,6 +14,11 @@ const CreateProjectSchema = z.object({
   description: z.string().min(3).max(800).optional(),
 });
 
+const UpdateProjectSchema = z.object({
+  name: z.string().min(3).max(130).optional(),
+  description: z.string().min(3).max(800).optional(),
+});
+
 /**
  * GET /api/projects
  * Lists all projects the current user is a member of.
@@ -106,6 +111,70 @@ export const projectRoute = new Hono<ServerVariables>() //
       description: foundProject[0].description,
       createdAt: foundProject[0].createdAt,
       updatedAt: foundProject[0].updatedAt,
+    });
+  })
+
+  /**
+   * PATCH /api/projects/:id
+   * Updates a project's name or description.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *   - Body: { name?: string (3-130 chars), description?: string (3-800 chars) }
+   *
+   * Returns:
+   *   200: { id, name, description, updatedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not authorized" } }
+   *   404: { success: false, errors: { root: "Project not found" } }
+   */
+  .patch("/:id", guard(), validate("json", UpdateProjectSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    // Find the project by ID
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    // Check if user is owner or admin
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+    if (membership[0].role === "member") {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+
+    // Update the project
+    const { error: updateError } = await handle(
+      db.update(project).set({ name: body.name, description: body.description }).where(eq(project.id, projectId)),
+    );
+    if (updateError) {
+      console.error(`unable to update project: ${updateError}`);
+      return c.json({ success: false, errors: { root: "Unable to update project" } }, 500);
+    }
+
+    // Fetch updated project
+    const { data: updatedProject } = await handle(db.select().from(project).where(eq(project.id, projectId)));
+
+    const updated = updatedProject?.[0];
+    return c.json({
+      id: updated?.id,
+      name: updated?.name,
+      description: updated?.description,
+      updatedAt: updated?.updatedAt,
     });
   })
 
