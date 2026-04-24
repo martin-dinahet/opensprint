@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { AuthRoute } from "./features/auth/route";
 import { HealthRoute } from "./features/health/route";
+import { projectRoute } from "./features/project/route";
 import { handleError } from "./lib/handle-error";
 import { handleNotFound } from "./lib/handle-notfound";
 import type { ServerVariables } from "./lib/types";
@@ -14,4 +15,5 @@ export const server = new Hono<ServerVariables>()
   .onError((error, c) => handleError(error, c))
   .basePath("/api")
   .route("/health", HealthRoute)
-  .route("/auth", AuthRoute);
+  .route("/auth", AuthRoute)
+  .route("/projects", projectRoute);

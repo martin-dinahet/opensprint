@@ -1,3 +1,4 @@
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import z from "zod";
@@ -14,6 +15,36 @@ const CreateProjectSchema = z.object({
 });
 
 export const projectRoute = new Hono<ServerVariables>() //
+  .get("/:id", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    return c.json({
+      id: foundProject[0].id,
+      name: foundProject[0].name,
+      description: foundProject[0].description,
+      createdAt: foundProject[0].createdAt,
+      updatedAt: foundProject[0].updatedAt,
+    });
+  })
   .post("/", guard(), validate("json", CreateProjectSchema), async (c) => {
     const currentUser = c.get("user");
     const body = c.req.valid("json");
@@ -23,7 +54,7 @@ export const projectRoute = new Hono<ServerVariables>() //
     // creating the project
     const { error: newProjectError } = await handle(
       db.insert(project).values({
-        id: nanoid(),
+        id: projectId,
         name: body.name,
         description: body.description,
       }),

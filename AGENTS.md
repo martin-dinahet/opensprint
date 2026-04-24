@@ -80,7 +80,7 @@ Routes are organized by domain in `src/server/features/[feature]/route.ts`:
 |--------|----------|-------------|--------|
 | GET | /api/projects | List all projects for user | [ ] |
 | POST | /api/projects | Create project | [x] |
-| GET | /api/projects/:id | Get project by ID | [ ] |
+| GET | /api/projects/:id | Get project by ID | [x] |
 | PATCH | /api/projects/:id | Update project | [ ] |
 | DELETE | /api/projects/:id | Delete project | [ ] |
 

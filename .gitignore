@@ -5,6 +5,7 @@
 /.next
 /.zed
 /.opencode
+/.agents
 
 .env
 next-env.d.ts
