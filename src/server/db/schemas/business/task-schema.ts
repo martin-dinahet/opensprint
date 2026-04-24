@@ -43,8 +43,5 @@ export const task = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [
-    index("task_board_id_idx").on(table.boardId),
-    index("task_assignee_id_idx").on(table.assigneeId),
-  ],
+  (table) => [index("task_board_id_idx").on(table.boardId), index("task_assignee_id_idx").on(table.assigneeId)],
 );

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@hono/zod-validator": "^0.7.6",
     "@tabler/icons-react": "^3.41.1",
     "@tailwindcss/postcss": "^4.2.2",
     "better-auth": "^1.6.5",
@@ -29,6 +30,7 @@
     "hono": "^4.12.14",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
+    "nanoid": "^5.1.9",
     "next": "16.2.4",
     "next-themes": "^0.4.6",
     "pg": "^8.20.0",
