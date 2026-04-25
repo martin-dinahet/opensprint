@@ -4,7 +4,14 @@ import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
 import { CreateBoardInput, ReorderBoardsInput, UpdateBoardInput } from "@/server/features/board/dto";
-import { createBoard, deleteBoard, getBoard, listBoards, reorderBoards, updateBoard } from "@/server/features/board/usecases";
+import {
+  createBoard,
+  deleteBoard,
+  getBoard,
+  listBoards,
+  reorderBoards,
+  updateBoard,
+} from "@/server/features/board/usecases";
 
 const CreateBoardSchema = CreateBoardInput;
 const UpdateBoardSchema = UpdateBoardInput;
