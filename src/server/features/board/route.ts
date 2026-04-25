@@ -18,6 +18,10 @@ const UpdateBoardSchema = z.object({
   position: z.number().int().min(0).optional(),
 });
 
+const ReorderBoardsSchema = z.object({
+  boardIds: z.array(z.string()),
+});
+
 /**
  * GET /api/projects/:id/boards
  * Lists all boards in a project.
@@ -137,6 +141,10 @@ export const boardRoute = new Hono<ServerVariables>() //
     }
 
     const { data: newBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+    if (!newBoard || newBoard.length === 0) {
+      console.error(`unable to fetch new board: null`);
+      return c.json({ success: false, errors: { root: "Unable to create board" } }, 500);
+    }
 
     return c.json({
       id: newBoard[0].id,
@@ -194,6 +202,55 @@ export const boardRoute = new Hono<ServerVariables>() //
   })
 
   /**
+   * PATCH /api/projects/:id/boards/reorder
+   * Reorders boards in a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *   - Body: { boardIds: string[] }
+   *
+   * Returns:
+   *   200: { success: boolean }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not a member of this project" } }
+   */
+  .patch("/:id/boards/reorder", guard(), validate("json", ReorderBoardsSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const { boardIds } = c.req.valid("json");
+
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    const { data: boards } = await handle(db.select().from(board).where(eq(board.projectId, projectId)));
+    const validBoardIds = boards?.map((b) => b.id) || [];
+
+    if (boardIds.some((id) => !validBoardIds.includes(id))) {
+      return c.json({ success: false, errors: { root: "Board not found" } }, 404);
+    }
+
+    for (let i = 0; i < boardIds.length; i++) {
+      const { error: updateError } = await handle(
+        db.update(board).set({ position: i }).where(eq(board.id, boardIds[i])),
+      );
+      if (updateError) {
+        console.error(`unable to reorder boards: ${updateError}`);
+        return c.json({ success: false, errors: { root: "Unable to reorder boards" } }, 500);
+      }
+    }
+
+    return c.json({ success: true });
+  })
+
+  /**
    * PATCH /api/projects/:id/boards/:boardId
    * Updates a board's name or position.
    *
@@ -239,6 +296,10 @@ export const boardRoute = new Hono<ServerVariables>() //
     }
 
     const { data: updatedBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+    if (!updatedBoard || updatedBoard.length === 0) {
+      console.error(`unable to fetch updated board: null`);
+      return c.json({ success: false, errors: { root: "Unable to update board" } }, 500);
+    }
 
     return c.json({
       id: updatedBoard[0].id,
