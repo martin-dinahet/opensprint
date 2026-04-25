@@ -392,13 +392,13 @@ Reorder boards in a project.
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| GET | /api/boards/:boardId/tasks | List board tasks | [ ] |
-| POST | /api/boards/:boardId/tasks | Create task | [ ] |
-| PATCH | /api/boards/:boardId/tasks/:taskId | Update task | [ ] |
-| DELETE | /api/boards/:boardId/tasks/:taskId | Delete task | [ ] |
-| PATCH | /api/tasks/:taskId/assign | Assign task to member | [ ] |
-| PATCH | /api/tasks/:taskId/move | Move task to board | [ ] |
-| PATCH | /api/tasks/:taskId/reorder | Reorder task | [ ] |
+| GET | /api/boards/:boardId/tasks | List board tasks | [x] |
+| POST | /api/boards/:boardId/tasks | Create task | [x] |
+| PATCH | /api/boards/:boardId/tasks/:taskId | Update task | [x] |
+| DELETE | /api/boards/:boardId/tasks/:taskId | Delete task | [x] |
+| PATCH | /api/tasks/:taskId/assign | Assign task to member | [x] |
+| PATCH | /api/tasks/:taskId/move | Move task to board | [x] |
+| PATCH | /api/tasks/:taskId/reorder | Reorder task | [x] |
 
 **GET /api/boards/:boardId/tasks**
 

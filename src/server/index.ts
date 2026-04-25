@@ -5,6 +5,7 @@ import { boardRoute } from "./features/board/route";
 import { HealthRoute } from "./features/health/route";
 import { projectRoute } from "./features/project/route";
 import { projectMemberRoute } from "./features/project-member/route";
+import { taskManagementRoute, taskRoute } from "./features/task/route";
 import { handleError } from "./lib/handle-error";
 import { handleNotFound } from "./lib/handle-notfound";
 import type { ServerVariables } from "./lib/types";
@@ -20,4 +21,6 @@ export const server = new Hono<ServerVariables>()
   .route("/auth", AuthRoute)
   .route("/projects", projectRoute)
   .route("/projects", projectMemberRoute)
-  .route("/projects", boardRoute);
+  .route("/projects", boardRoute)
+  .route("/boards", taskRoute)
+  .route("/tasks", taskManagementRoute);
