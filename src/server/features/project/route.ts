@@ -19,6 +19,11 @@ const UpdateProjectSchema = z.object({
   description: z.string().min(3).max(800).optional(),
 });
 
+const AddMemberSchema = z.object({
+  email: z.string().email(),
+  role: z.enum(["admin", "member"]),
+});
+
 /**
  * GET /api/projects
  * Lists all projects the current user is a member of.
@@ -355,5 +360,89 @@ export const projectRoute = new Hono<ServerVariables>() //
           },
         };
       }),
+    });
+  })
+
+  /**
+   * POST /api/projects/:id/members
+   * Adds a user to a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *   - Body: { email: string, role: "admin" | "member" }
+   *
+   * Returns:
+   *   200: { id, userId, projectId, role, joinedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not authorized" } }
+   *   404: { success: false, errors: { root: "Project not found" } }
+   */
+  .post("/:id/members", guard(), validate("json", AddMemberSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const { email, role } = c.req.valid("json");
+
+    // Find the project by ID
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    // Check if current user is owner or admin
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+    if (membership[0].role === "member") {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+
+    // Find the user by email
+    const { data: targetUser, error: userError } = await handle(db.select().from(user).where(eq(user.email, email)));
+    if (userError || !targetUser || targetUser.length === 0) {
+      return c.json({ success: false, errors: { root: "User not found" } }, 404);
+    }
+
+    // Check if user is already a member
+    const { data: existingMember } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, targetUser[0].id))),
+    );
+    if (existingMember && existingMember.length > 0) {
+      return c.json({ success: false, errors: { root: "User is already a member" } }, 400);
+    }
+
+    // Add the user as a member
+    const memberId = nanoid();
+    const { error: addMemberError } = await handle(
+      db.insert(projectMember).values({
+        id: memberId,
+        projectId,
+        userId: targetUser[0].id,
+        role,
+      }),
+    );
+    if (addMemberError) {
+      console.error(`unable to add member: ${addMemberError}`);
+      return c.json({ success: false, errors: { root: "Unable to add member" } }, 500);
+    }
+
+    return c.json({
+      id: memberId,
+      userId: targetUser[0].id,
+      projectId,
+      role,
+      joinedAt: new Date().toISOString(),
     });
   });
