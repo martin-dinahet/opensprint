@@ -90,7 +90,7 @@ When creating or modifying API endpoints, use the **endpoint-builder** skill (`.
 | POST | /api/projects | Create project | [x] |
 | GET | /api/projects/:id | Get project by ID | [x] |
 | PATCH | /api/projects/:id | Update project | [x] |
-| DELETE | /api/projects/:id | Delete project | [ ] |
+| DELETE | /api/projects/:id | Delete project | [x] |
 
 **GET /api/projects**
 

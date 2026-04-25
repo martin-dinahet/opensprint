@@ -224,4 +224,64 @@ export const projectRoute = new Hono<ServerVariables>() //
     }
 
     return c.json({ id: projectId, name: body.name, description: body.description });
+  })
+
+  /**
+   * DELETE /api/projects/:id
+   * Deletes a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *
+   * Returns:
+   *   200: { success: boolean }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not authorized" } }
+   *   404: { success: false, errors: { root: "Project not found" } }
+   */
+  .delete("/:id", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+
+    // Find the project by ID
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    // Check if user is owner
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+    if (membership[0].role !== "owner") {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+
+    // Delete all project members first
+    const { error: deleteMembersError } = await handle(
+      db.delete(projectMember).where(eq(projectMember.projectId, projectId)),
+    );
+    if (deleteMembersError) {
+      console.error(`unable to delete project members: ${deleteMembersError}`);
+      return c.json({ success: false, errors: { root: "Unable to delete project" } }, 500);
+    }
+
+    // Delete the project
+    const { error: deleteError } = await handle(db.delete(project).where(eq(project.id, projectId)));
+    if (deleteError) {
+      console.error(`unable to delete project: ${deleteError}`);
+      return c.json({ success: false, errors: { root: "Unable to delete project" } }, 500);
+    }
+
+    return c.json({ success: true });
   });
