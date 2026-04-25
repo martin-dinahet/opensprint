@@ -270,7 +270,7 @@ Remove a member from a project.
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| GET | /api/projects/:id/boards | List project boards | [ ] |
+| GET | /api/projects/:id/boards | List project boards | [x] |
 | POST | /api/projects/:id/boards | Create board | [ ] |
 | GET | /api/projects/:id/boards/:boardId | Get board | [ ] |
 | PATCH | /api/projects/:id/boards/:boardId | Update board | [ ] |
