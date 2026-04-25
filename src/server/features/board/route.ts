@@ -41,6 +41,7 @@ export const boardRoute = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
+    // Find the project by ID
     const { data: foundProject, error: projectError } = await handle(
       db.select().from(project).where(eq(project.id, projectId)),
     );
@@ -49,6 +50,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Project not found" } }, 404);
     }
 
+    // Check if user is a member of the project
     const { data: membership, error: membershipError } = await handle(
       db
         .select()
@@ -59,6 +61,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
     }
 
+    // Get all boards for the project
     const { data: boards, error: boardsError } = await handle(
       db.select().from(board).where(eq(board.projectId, projectId)),
     );
@@ -99,6 +102,7 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const { name } = c.req.valid("json");
 
+    // Find the project by ID
     const { data: foundProject, error: projectError } = await handle(
       db.select().from(project).where(eq(project.id, projectId)),
     );
@@ -107,6 +111,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Project not found" } }, 404);
     }
 
+    // Check if user is a member of the project
     const { data: membership, error: membershipError } = await handle(
       db
         .select()
@@ -117,6 +122,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
     }
 
+    // Get existing boards to determine position
     const { data: existingBoards, error: boardsError } = await handle(
       db.select().from(board).where(eq(board.projectId, projectId)),
     );
@@ -127,6 +133,7 @@ export const boardRoute = new Hono<ServerVariables>() //
 
     const boardId = nanoid();
     const position = existingBoards?.length || 0;
+    // Create the new board
     const { error: createError } = await handle(
       db.insert(board).values({
         id: boardId,
@@ -140,6 +147,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Unable to create board" } }, 500);
     }
 
+    // Fetch the newly created board
     const { data: newBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
     if (!newBoard || newBoard.length === 0) {
       console.error(`unable to fetch new board: null`);
@@ -175,6 +183,7 @@ export const boardRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
+    // Check if user is a member of the project
     const { data: membership, error: membershipError } = await handle(
       db
         .select()
@@ -185,6 +194,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
     }
 
+    // Find the board by ID
     const { data: foundBoard, error: boardError } = await handle(db.select().from(board).where(eq(board.id, boardId)));
     if (boardError || !foundBoard || foundBoard.length === 0) {
       console.error(`unable to find board: ${boardError}`);
@@ -220,6 +230,7 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const { boardIds } = c.req.valid("json");
 
+    // Check if user is a member of the project
     const { data: membership, error: membershipError } = await handle(
       db
         .select()
@@ -230,6 +241,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
     }
 
+    // Get all boards to validate provided IDs
     const { data: boards } = await handle(db.select().from(board).where(eq(board.projectId, projectId)));
     const validBoardIds = boards?.map((b) => b.id) || [];
 
@@ -237,6 +249,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Board not found" } }, 404);
     }
 
+    // Update positions for each board
     for (let i = 0; i < boardIds.length; i++) {
       const { error: updateError } = await handle(
         db.update(board).set({ position: i }).where(eq(board.id, boardIds[i])),
@@ -271,6 +284,7 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
+    // Check if user is a member of the project
     const { data: membership, error: membershipError } = await handle(
       db
         .select()
@@ -281,12 +295,14 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
     }
 
+    // Find the board by ID
     const { data: foundBoard, error: boardError } = await handle(db.select().from(board).where(eq(board.id, boardId)));
     if (boardError || !foundBoard || foundBoard.length === 0) {
       console.error(`unable to find board: ${boardError}`);
       return c.json({ success: false, errors: { root: "Board not found" } }, 404);
     }
 
+    // Update the board
     const { error: updateError } = await handle(
       db.update(board).set({ name: body.name, position: body.position }).where(eq(board.id, boardId)),
     );
@@ -295,6 +311,7 @@ export const boardRoute = new Hono<ServerVariables>() //
       return c.json({ success: false, errors: { root: "Unable to update board" } }, 500);
     }
 
+    // Fetch the updated board
     const { data: updatedBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
     if (!updatedBoard || updatedBoard.length === 0) {
       console.error(`unable to fetch updated board: null`);
