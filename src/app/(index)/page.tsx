@@ -2,7 +2,7 @@
 
 import { hc } from "hono/client";
 import { useEffect, useState } from "react";
-import type { ServerType } from "@/src/server";
+import type { ServerType } from "@/server";
 
 export default function Home() {
   const [message, setMessage] = useState("");

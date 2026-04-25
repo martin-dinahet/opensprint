@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import z from "zod";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
-import { project, projectMember } from "@/server/db/schema";
+import { project, projectMember, user } from "@/server/db/schema";
 import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
@@ -284,4 +284,76 @@ export const projectRoute = new Hono<ServerVariables>() //
     }
 
     return c.json({ success: true });
+  })
+
+  /**
+   * GET /api/projects/:id/members
+   * Lists all members of a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *
+   * Returns:
+   *   200: { members: Array<{ id, userId, role, joinedAt, user: { id, name, email, image } }> }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not a member of this project" } }
+   *   404: { success: false, errors: { root: "Project not found" } }
+   */
+  .get("/:id/members", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+
+    // Find the project by ID
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    // Verify the current user is a member of this project
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    // Get all members of this project
+    const { data: members, error: membersError } = await handle(
+      db.select().from(projectMember).where(eq(projectMember.projectId, projectId)),
+    );
+    if (membersError) {
+      console.error(`unable to fetch members: ${membersError}`);
+      return c.json({ success: false, errors: { root: "Unable to fetch members" } }, 500);
+    }
+    if (!members || members.length === 0) {
+      return c.json({ members: [] });
+    }
+
+    // Get user details for each member
+    const { data: allUsers } = await handle(db.select().from(user));
+
+    return c.json({
+      members: members.map((member) => {
+        const userData = allUsers?.find((u) => u.id === member.userId);
+        return {
+          id: member.id,
+          userId: member.userId,
+          role: member.role,
+          joinedAt: member.joinedAt,
+          user: {
+            id: userData?.id,
+            name: userData?.name,
+            email: userData?.email,
+            image: userData?.image,
+          },
+        };
+      }),
+    });
   });

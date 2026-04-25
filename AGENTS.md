@@ -186,7 +186,7 @@ Delete a project.
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| GET | /api/projects/:id/members | List project members | [ ] |
+| GET | /api/projects/:id/members | List project members | [x] |
 | POST | /api/projects/:id/members | Add member to project | [ ] |
 | PATCH | /api/projects/:id/members/:memberId | Update member role | [ ] |
 | DELETE | /api/projects/:id/members/:memberId | Remove member from project | [ ] |
