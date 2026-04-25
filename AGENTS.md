@@ -76,10 +76,10 @@ Use error classes from `@/server/features/shared/errors`:
 
 ### Endpoint Development
 
-When creating or modifying API endpoints, use the **endpoint-builder** skill (`.opencode/skills/endpoint-builder/SKILL.md`):
-- Provides step-by-step guidance for implementing endpoints
+When creating or modifying API endpoints, use the **feature-builder** skill (`.opencode/skills/feature-builder/SKILL.md`):
+- Provides step-by-step guidance for creating features
 - Includes testing workflow with curl/curlie
-- Documents code formatting rules (spacing, comments)
+- Documents code formatting rules
 
 ---
 
