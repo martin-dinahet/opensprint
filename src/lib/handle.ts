@@ -5,7 +5,7 @@ export const handle = async <T>(promise: Promise<T>): Promise<Result<T>> => {
     const data = await promise;
     return { data, error: null };
   } catch (err) {
-    const error = err instanceof Error ? err.message : "Unknown error";
+    const error = err instanceof Error ? err.message : String(err);
     return { data: null, error };
   }
 };
