@@ -1,10 +1,22 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import z from "zod";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { board, project, projectMember } from "@/server/db/schema";
 import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
+import { validate } from "@/server/lib/validate";
+
+const CreateBoardSchema = z.object({
+  name: z.string().min(1).max(130),
+});
+
+const UpdateBoardSchema = z.object({
+  name: z.string().min(1).max(130).optional(),
+  position: z.number().int().min(0).optional(),
+});
 
 /**
  * GET /api/projects/:id/boards
@@ -60,5 +72,179 @@ export const boardRoute = new Hono<ServerVariables>() //
         createdAt: b.createdAt,
         updatedAt: b.updatedAt,
       })),
+    });
+  })
+
+  /**
+   * POST /api/projects/:id/boards
+   * Creates a new board in a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID)
+   *   - Body: { name: string (1-130 chars) }
+   *
+   * Returns:
+   *   200: { id, projectId, name, position, createdAt, updatedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not a member of this project" } }
+   *   404: { success: false, errors: { root: "Project not found" } }
+   */
+  .post("/:id/boards", guard(), validate("json", CreateBoardSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const { name } = c.req.valid("json");
+
+    const { data: foundProject, error: projectError } = await handle(
+      db.select().from(project).where(eq(project.id, projectId)),
+    );
+    if (projectError || !foundProject || foundProject.length === 0) {
+      console.error(`unable to find project: ${projectError}`);
+      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    }
+
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    const { data: existingBoards, error: boardsError } = await handle(
+      db.select().from(board).where(eq(board.projectId, projectId)),
+    );
+    if (boardsError) {
+      console.error(`unable to fetch boards: ${boardsError}`);
+      return c.json({ success: false, errors: { root: "Unable to create board" } }, 500);
+    }
+
+    const boardId = nanoid();
+    const position = existingBoards?.length || 0;
+    const { error: createError } = await handle(
+      db.insert(board).values({
+        id: boardId,
+        projectId,
+        name,
+        position,
+      }),
+    );
+    if (createError) {
+      console.error(`unable to create board: ${createError}`);
+      return c.json({ success: false, errors: { root: "Unable to create board" } }, 500);
+    }
+
+    const { data: newBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+
+    return c.json({
+      id: newBoard[0].id,
+      projectId: newBoard[0].projectId,
+      name: newBoard[0].name,
+      position: newBoard[0].position,
+      createdAt: newBoard[0].createdAt,
+      updatedAt: newBoard[0].updatedAt,
+    });
+  })
+
+  /**
+   * GET /api/projects/:id/boards/:boardId
+   * Gets a specific board.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID), boardId (board ID)
+   *
+   * Returns:
+   *   200: { id, projectId, name, position, createdAt, updatedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not a member of this project" } }
+   *   404: { success: false, errors: { root: "Board not found" } }
+   */
+  .get("/:id/boards/:boardId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
+    const currentUser = c.get("user");
+
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    const { data: foundBoard, error: boardError } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+    if (boardError || !foundBoard || foundBoard.length === 0) {
+      console.error(`unable to find board: ${boardError}`);
+      return c.json({ success: false, errors: { root: "Board not found" } }, 404);
+    }
+
+    return c.json({
+      id: foundBoard[0].id,
+      projectId: foundBoard[0].projectId,
+      name: foundBoard[0].name,
+      position: foundBoard[0].position,
+      createdAt: foundBoard[0].createdAt,
+      updatedAt: foundBoard[0].updatedAt,
+    });
+  })
+
+  /**
+   * PATCH /api/projects/:id/boards/:boardId
+   * Updates a board's name or position.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID), boardId (board ID)
+   *   - Body: { name?: string, position?: number }
+   *
+   * Returns:
+   *   200: { id, projectId, name, position, updatedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not a member of this project" } }
+   *   404: { success: false, errors: { root: "Board not found" } }
+   */
+  .patch("/:id/boards/:boardId", guard(), validate("json", UpdateBoardSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    const { data: membership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !membership || membership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not a member of this project" } }, 403);
+    }
+
+    const { data: foundBoard, error: boardError } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+    if (boardError || !foundBoard || foundBoard.length === 0) {
+      console.error(`unable to find board: ${boardError}`);
+      return c.json({ success: false, errors: { root: "Board not found" } }, 404);
+    }
+
+    const { error: updateError } = await handle(
+      db.update(board).set({ name: body.name, position: body.position }).where(eq(board.id, boardId)),
+    );
+    if (updateError) {
+      console.error(`unable to update board: ${updateError}`);
+      return c.json({ success: false, errors: { root: "Unable to update board" } }, 500);
+    }
+
+    const { data: updatedBoard } = await handle(db.select().from(board).where(eq(board.id, boardId)));
+
+    return c.json({
+      id: updatedBoard[0].id,
+      projectId: updatedBoard[0].projectId,
+      name: updatedBoard[0].name,
+      position: updatedBoard[0].position,
+      updatedAt: updatedBoard[0].updatedAt,
     });
   });

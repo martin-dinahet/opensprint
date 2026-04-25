@@ -271,9 +271,9 @@ Remove a member from a project.
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
 | GET | /api/projects/:id/boards | List project boards | [x] |
-| POST | /api/projects/:id/boards | Create board | [ ] |
-| GET | /api/projects/:id/boards/:boardId | Get board | [ ] |
-| PATCH | /api/projects/:id/boards/:boardId | Update board | [ ] |
+| POST | /api/projects/:id/boards | Create board | [x] |
+| GET | /api/projects/:id/boards/:boardId | Get board | [x] |
+| PATCH | /api/projects/:id/boards/:boardId | Update board | [x] |
 | DELETE | /api/projects/:id/boards/:boardId | Delete board | [ ] |
 | PATCH | /api/projects/:id/boards/reorder | Reorder boards | [ ] |
 
