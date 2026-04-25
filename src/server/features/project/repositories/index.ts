@@ -2,7 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { project } from "@/server/db/schema";
-import type { CreateProjectInput, UpdateProjectInput } from "@/server/dto";
+import type { CreateProjectInput, UpdateProjectInput } from "../dto";
 
 export class ProjectRepository {
   async findById(id: string) {

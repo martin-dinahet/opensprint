@@ -1,10 +1,10 @@
 import { Hono } from "hono";
+import { handleUseCase } from "@/server/lib/handle-use-case";
+import { addMember, listMembers, removeMember, updateMember } from "@/server/features/member/usecases";
 import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
-import { AddMemberInput, UpdateMemberInput } from "@/server/dto";
-import { listMembersUseCase, addMemberUseCase, updateMemberUseCase, removeMemberUseCase } from "@/server/usecases";
-import { AppError } from "@/server/usecases/errors";
+import { AddMemberInput, UpdateMemberInput } from "@/server/features/member/dto";
 
 const AddMemberSchema = AddMemberInput;
 const UpdateMemberSchema = UpdateMemberInput;
@@ -14,16 +14,13 @@ export const projectMemberRoute = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    try {
-      const members = await listMembersUseCase.execute(currentUser.id, projectId);
-      return c.json({ members });
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to fetch members: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to fetch members" } }, 500);
+    const { data, error } = await handleUseCase(listMembers(currentUser.id, projectId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json({ members: data });
   })
 
   .post("/:id/members", guard(), validate("json", AddMemberSchema), async (c) => {
@@ -31,16 +28,13 @@ export const projectMemberRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const member = await addMemberUseCase.execute(currentUser.id, projectId, body);
-      return c.json(member);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to add member: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to add member" } }, 500);
+    const { data, error } = await handleUseCase(addMember(currentUser.id, projectId, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .patch("/:id/members/:memberId", guard(), validate("json", UpdateMemberSchema), async (c) => {
@@ -49,16 +43,13 @@ export const projectMemberRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const member = await updateMemberUseCase.execute(currentUser.id, projectId, memberId, body);
-      return c.json(member);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to update member: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to update member" } }, 500);
+    const { data, error } = await handleUseCase(updateMember(currentUser.id, projectId, memberId, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .delete("/:id/members/:memberId", guard(), async (c) => {
@@ -66,14 +57,11 @@ export const projectMemberRoute = new Hono<ServerVariables>() //
     const memberId = c.req.param("memberId");
     const currentUser = c.get("user");
 
-    try {
-      const result = await removeMemberUseCase.execute(currentUser.id, projectId, memberId);
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to remove member: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to remove member" } }, 500);
+    const { data, error } = await handleUseCase(removeMember(currentUser.id, projectId, memberId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   });

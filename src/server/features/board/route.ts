@@ -1,17 +1,10 @@
 import { Hono } from "hono";
+import { handleUseCase } from "@/server/lib/handle-use-case";
 import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
-import { CreateBoardInput, UpdateBoardInput, ReorderBoardsInput } from "@/server/dto";
-import {
-  listBoardsUseCase,
-  createBoardUseCase,
-  getBoardUseCase,
-  updateBoardUseCase,
-  deleteBoardUseCase,
-  reorderBoardsUseCase,
-} from "@/server/usecases";
-import { AppError } from "@/server/usecases/errors";
+import { CreateBoardInput, ReorderBoardsInput, UpdateBoardInput } from "@/server/features/board/dto";
+import { createBoard, deleteBoard, getBoard, listBoards, reorderBoards, updateBoard } from "@/server/features/board/usecases";
 
 const CreateBoardSchema = CreateBoardInput;
 const UpdateBoardSchema = UpdateBoardInput;
@@ -22,16 +15,13 @@ export const boardRoute = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    try {
-      const boards = await listBoardsUseCase.execute(currentUser.id, projectId);
-      return c.json({ boards });
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to fetch boards: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to fetch boards" } }, 500);
+    const { data, error } = await handleUseCase(listBoards(currentUser.id, projectId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json({ boards: data });
   })
 
   .post("/:id/boards", guard(), validate("json", CreateBoardSchema), async (c) => {
@@ -39,16 +29,13 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const board = await createBoardUseCase.execute(currentUser.id, projectId, body);
-      return c.json(board);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to create board: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to create board" } }, 500);
+    const { data, error } = await handleUseCase(createBoard(currentUser.id, projectId, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .get("/:id/boards/:boardId", guard(), async (c) => {
@@ -56,16 +43,13 @@ export const boardRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
-    try {
-      const board = await getBoardUseCase.execute(currentUser.id, projectId, boardId);
-      return c.json(board);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to find board: ${error}`);
-      return c.json({ success: false, errors: { root: "Board not found" } }, 404);
+    const { data, error } = await handleUseCase(getBoard(currentUser.id, projectId, boardId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .patch("/:id/boards/reorder", guard(), validate("json", ReorderBoardsSchema), async (c) => {
@@ -73,16 +57,13 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const result = await reorderBoardsUseCase.execute(currentUser.id, projectId, body.boardIds);
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to reorder boards: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to reorder boards" } }, 500);
+    const { data, error } = await handleUseCase(reorderBoards(currentUser.id, projectId, body.boardIds));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .patch("/:id/boards/:boardId", guard(), validate("json", UpdateBoardSchema), async (c) => {
@@ -91,16 +72,13 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const board = await updateBoardUseCase.execute(currentUser.id, projectId, boardId, body);
-      return c.json(board);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to update board: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to update board" } }, 500);
+    const { data, error } = await handleUseCase(updateBoard(currentUser.id, projectId, boardId, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .delete("/:id/boards/:boardId", guard(), async (c) => {
@@ -108,14 +86,11 @@ export const boardRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
-    try {
-      const result = await deleteBoardUseCase.execute(currentUser.id, projectId, boardId);
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to delete board: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to delete board" } }, 500);
+    const { data, error } = await handleUseCase(deleteBoard(currentUser.id, projectId, boardId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   });

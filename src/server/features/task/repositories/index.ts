@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { task } from "@/server/db/schema";
-import type { CreateTaskInput, UpdateTaskInput } from "@/server/dto";
+import type { CreateTaskInput, UpdateTaskInput } from "../dto";
 
 export class TaskRepository {
   async findById(id: string) {

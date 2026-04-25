@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { board } from "@/server/db/schema";
-import type { CreateBoardInput, UpdateBoardInput } from "@/server/dto";
+import type { CreateBoardInput, UpdateBoardInput } from "../dto";
 
 export class BoardRepository {
   async findById(id: string) {

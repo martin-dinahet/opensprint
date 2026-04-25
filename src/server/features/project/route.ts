@@ -1,16 +1,10 @@
 import { Hono } from "hono";
+import { handleUseCase } from "@/server/lib/handle-use-case";
 import { guard } from "@/server/lib/guard";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
-import { CreateProjectInput, UpdateProjectInput } from "@/server/dto";
-import {
-  listProjectsUseCase,
-  createProjectUseCase,
-  getProjectUseCase,
-  updateProjectUseCase,
-  deleteProjectUseCase,
-} from "@/server/usecases";
-import { AppError } from "@/server/usecases/errors";
+import { CreateProjectInput, UpdateProjectInput } from "@/server/features/project/dto";
+import { createProject, deleteProject, getProject, listProjects, updateProject } from "@/server/features/project/usecases";
 
 const CreateProjectSchema = CreateProjectInput;
 const UpdateProjectSchema = UpdateProjectInput;
@@ -19,32 +13,26 @@ export const projectRoute = new Hono<ServerVariables>() //
   .get("/", guard(), async (c) => {
     const currentUser = c.get("user");
 
-    try {
-      const projects = await listProjectsUseCase.execute(currentUser.id);
-      return c.json({ projects });
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to fetch projects: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to fetch projects" } }, 500);
+    const { data, error } = await handleUseCase(listProjects(currentUser.id));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json({ projects: data });
   })
 
   .get("/:id", guard(), async (c) => {
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    try {
-      const project = await getProjectUseCase.execute(currentUser.id, projectId);
-      return c.json(project);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to find project: ${error}`);
-      return c.json({ success: false, errors: { root: "Project not found" } }, 404);
+    const { data, error } = await handleUseCase(getProject(currentUser.id, projectId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .patch("/:id", guard(), validate("json", UpdateProjectSchema), async (c) => {
@@ -52,46 +40,37 @@ export const projectRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const project = await updateProjectUseCase.execute(currentUser.id, projectId, body);
-      return c.json(project);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to update project: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to update project" } }, 500);
+    const { data, error } = await handleUseCase(updateProject(currentUser.id, projectId, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .post("/", guard(), validate("json", CreateProjectSchema), async (c) => {
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    try {
-      const project = await createProjectUseCase.execute(currentUser.id, body);
-      return c.json(project);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to create project: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to create project" } }, 500);
+    const { data, error } = await handleUseCase(createProject(currentUser.id, body));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   })
 
   .delete("/:id", guard(), async (c) => {
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    try {
-      const result = await deleteProjectUseCase.execute(currentUser.id, projectId);
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof AppError) {
-        return c.json({ success: false, errors: { root: error.message } }, error.statusCode);
-      }
-      console.error(`unable to delete project: ${error}`);
-      return c.json({ success: false, errors: { root: "Unable to delete project" } }, 500);
+    const { data, error } = await handleUseCase(deleteProject(currentUser.id, projectId));
+
+    if (error) {
+      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
     }
+
+    return c.json(data);
   });

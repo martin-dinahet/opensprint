@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { projectMember, user } from "@/server/db/schema";
-import type { UpdateMemberInput } from "@/server/dto";
+import type { UpdateMemberInput } from "../dto";
 
 export class MemberRepository {
   async findByUserAndProject(userId: string, projectId: string) {

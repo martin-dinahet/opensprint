@@ -1,20 +1,12 @@
-import type { ContentfulStatusCode } from "hono/dist/types";
+export type HttpStatusCode = 400 | 401 | 403 | 404 | 409 | 500;
 
 export class AppError extends Error {
   constructor(
     public code: string,
     message: string,
-    public statusCode: ContentfulStatusCode = 400,
+    public statusCode: HttpStatusCode = 400,
   ) {
     super(message);
-    this.name = "AppError";
-  }
-
-  toJSON() {
-    return {
-      code: this.code,
-      message: this.message,
-    };
   }
 }
 
