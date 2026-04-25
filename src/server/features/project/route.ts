@@ -24,6 +24,10 @@ const AddMemberSchema = z.object({
   role: z.enum(["admin", "member"]),
 });
 
+const UpdateMemberSchema = z.object({
+  role: z.enum(["admin", "member"]),
+});
+
 /**
  * GET /api/projects
  * Lists all projects the current user is a member of.
@@ -444,5 +448,71 @@ export const projectRoute = new Hono<ServerVariables>() //
       projectId,
       role,
       joinedAt: new Date().toISOString(),
+    });
+  })
+
+  /**
+   * PATCH /api/projects/:id/members/:memberId
+   * Updates a member's role.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID), memberId (member ID)
+   *   - Body: { role: "admin" | "member" }
+   *
+   * Returns:
+   *   200: { id, userId, projectId, role, joinedAt }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not authorized" } }
+   *   404: { success: false, errors: { root: "Member not found" } }
+   */
+  .patch("/:id/members/:memberId", guard(), validate("json", UpdateMemberSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const memberId = c.req.param("memberId");
+    const currentUser = c.get("user");
+    const { role } = c.req.valid("json");
+
+    // Check if current user is owner
+    const { data: currentMembership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !currentMembership || currentMembership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+    if (currentMembership[0].role !== "owner") {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+
+    // Find the member to update
+    const { data: targetMember, error: targetError } = await handle(
+      db.select().from(projectMember).where(eq(projectMember.id, memberId)),
+    );
+    if (targetError || !targetMember || targetMember.length === 0) {
+      return c.json({ success: false, errors: { root: "Member not found" } }, 404);
+    }
+
+    // Cannot change owner's role
+    if (targetMember[0].role === "owner") {
+      return c.json({ success: false, errors: { root: "Cannot change owner's role" } }, 403);
+    }
+
+    // Update the member's role
+    const { error: updateError } = await handle(
+      db.update(projectMember).set({ role }).where(eq(projectMember.id, memberId)),
+    );
+    if (updateError) {
+      console.error(`unable to update member: ${updateError}`);
+      return c.json({ success: false, errors: { root: "Unable to update member" } }, 500);
+    }
+
+    return c.json({
+      id: targetMember[0].id,
+      userId: targetMember[0].userId,
+      projectId: targetMember[0].projectId,
+      role,
+      joinedAt: targetMember[0].joinedAt,
     });
   });
