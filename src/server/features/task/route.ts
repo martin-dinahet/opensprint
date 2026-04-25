@@ -1,8 +1,4 @@
 import { Hono } from "hono";
-import { handleUseCase } from "@/server/lib/handle-use-case";
-import { guard } from "@/server/lib/guard";
-import type { ServerVariables } from "@/server/lib/types";
-import { validate } from "@/server/lib/validate";
 import {
   AssignTaskInput,
   CreateTaskInput,
@@ -19,6 +15,10 @@ import {
   reorderTask,
   updateTask,
 } from "@/server/features/task/usecases";
+import { guard } from "@/server/lib/guard";
+import { handleUseCase } from "@/server/lib/handle-use-case";
+import type { ServerVariables } from "@/server/lib/types";
+import { validate } from "@/server/lib/validate";
 
 const CreateTaskSchema = CreateTaskInput;
 const UpdateTaskSchema = UpdateTaskInput;

@@ -1,8 +1,4 @@
 import { Hono } from "hono";
-import { handleUseCase } from "@/server/lib/handle-use-case";
-import { guard } from "@/server/lib/guard";
-import type { ServerVariables } from "@/server/lib/types";
-import { validate } from "@/server/lib/validate";
 import { CreateBoardInput, ReorderBoardsInput, UpdateBoardInput } from "@/server/features/board/dto";
 import {
   createBoard,
@@ -12,6 +8,10 @@ import {
   reorderBoards,
   updateBoard,
 } from "@/server/features/board/usecases";
+import { guard } from "@/server/lib/guard";
+import { handleUseCase } from "@/server/lib/handle-use-case";
+import type { ServerVariables } from "@/server/lib/types";
+import { validate } from "@/server/lib/validate";
 
 const CreateBoardSchema = CreateBoardInput;
 const UpdateBoardSchema = UpdateBoardInput;

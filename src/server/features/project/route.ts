@@ -1,8 +1,4 @@
 import { Hono } from "hono";
-import { handleUseCase } from "@/server/lib/handle-use-case";
-import { guard } from "@/server/lib/guard";
-import type { ServerVariables } from "@/server/lib/types";
-import { validate } from "@/server/lib/validate";
 import { CreateProjectInput, UpdateProjectInput } from "@/server/features/project/dto";
 import {
   createProject,
@@ -11,6 +7,10 @@ import {
   listProjects,
   updateProject,
 } from "@/server/features/project/usecases";
+import { guard } from "@/server/lib/guard";
+import { handleUseCase } from "@/server/lib/handle-use-case";
+import type { ServerVariables } from "@/server/lib/types";
+import { validate } from "@/server/lib/validate";
 
 const CreateProjectSchema = CreateProjectInput;
 const UpdateProjectSchema = UpdateProjectInput;
