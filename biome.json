@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,37 +7,27 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!src/generated", "!src/components/ui"]
+    "includes": ["**", "!src/components/ui", "!drizzle"]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 2,
     "lineWidth": 120
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "nursery": {
-        "useSortedClasses": {
-          "fix": "safe",
-          "level": "info"
-        }
-      },
-      "suspicious": {
-        "noUnknownAtRules": "off"
-      }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double"
+      "recommended": true
     }
   },
   "css": {
     "parser": {
       "tailwindDirectives": true
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
     }
   },
   "assist": {
