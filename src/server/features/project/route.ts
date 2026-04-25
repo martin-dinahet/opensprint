@@ -515,4 +515,60 @@ export const projectRoute = new Hono<ServerVariables>() //
       role,
       joinedAt: targetMember[0].joinedAt,
     });
+  })
+
+  /**
+   * DELETE /api/projects/:id/members/:memberId
+   * Removes a member from a project.
+   *
+   * Expects:
+   *   - Auth: Required (via cookie)
+   *   - Params: id (project ID), memberId (member ID)
+   *
+   * Returns:
+   *   200: { success: boolean }
+   *   401: { success: false, errors: { root: "Not authenticated" } }
+   *   403: { success: false, errors: { root: "Not authorized" } }
+   *   404: { success: false, errors: { root: "Member not found" } }
+   */
+  .delete("/:id/members/:memberId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const memberId = c.req.param("memberId");
+    const currentUser = c.get("user");
+
+    // Check if current user is owner or admin
+    const { data: currentMembership, error: membershipError } = await handle(
+      db
+        .select()
+        .from(projectMember)
+        .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, currentUser.id))),
+    );
+    if (membershipError || !currentMembership || currentMembership.length === 0) {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+    if (currentMembership[0].role === "member") {
+      return c.json({ success: false, errors: { root: "Not authorized" } }, 403);
+    }
+
+    // Find the member to delete
+    const { data: targetMember, error: targetError } = await handle(
+      db.select().from(projectMember).where(eq(projectMember.id, memberId)),
+    );
+    if (targetError || !targetMember || targetMember.length === 0) {
+      return c.json({ success: false, errors: { root: "Member not found" } }, 404);
+    }
+
+    // Cannot remove owner
+    if (targetMember[0].role === "owner") {
+      return c.json({ success: false, errors: { root: "Cannot remove owner" } }, 403);
+    }
+
+    // Delete the member
+    const { error: deleteError } = await handle(db.delete(projectMember).where(eq(projectMember.id, memberId)));
+    if (deleteError) {
+      console.error(`unable to delete member: ${deleteError}`);
+      return c.json({ success: false, errors: { root: "Unable to remove member" } }, 500);
+    }
+
+    return c.json({ success: true });
   });
