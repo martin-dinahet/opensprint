@@ -33,19 +33,37 @@ npm run db:migrate  # drizzle-kit migrate
   - `src/server/db/schemas/auth/` - User, Account, Session, Verification
   - `src/server/db/schemas/business/` - Project, ProjectMember, Board, Task
 
-### Feature Routes
+### Feature-Based Organization
 
-Routes are organized by domain in `src/server/features/[feature]/route.ts`:
+Each feature lives in `src/server/features/[feature]/` with:
+- `dto/index.ts` - Zod schemas for request validation
+- `repositories/index.ts` - Database operations using db.select()
+- `usecases/index.ts` - Business logic
+- `route.ts` - Route handlers
 
-- `src/server/features/health/route.ts` - Health checks
-- `src/server/features/auth/route.ts` - NextAuth.js handler
-- `src/server/features/project/route.ts` - Project management
+Example structure:
+```
+src/server/features/project/
+  dto/index.ts
+  repositories/index.ts
+  usecases/index.ts  (imports from repositories)
+  route.ts          (imports from usecases and dto)
+```
 
 ### Middleware
 
 - `guard()` - Requires authentication, attaches user to context
 - `validate("json", schema)` - Zod validation for JSON body
-- `handle()` - Wrapper for DB calls, handles errors
+- `handle()` - Wrapper for DB calls in repositories
+- `handleUseCase()` - Wrapper for use cases in routes (from `@/server/lib/handle-use-case`)
+
+### Error Handling
+
+Use error classes from `@/server/features/shared/errors`:
+- `NotFoundError` - 404
+- `UnauthorizedError` - 403
+- `ForbiddenError` - 403
+- `ConflictError` - 409
 
 ## Code Style
 
