@@ -10,9 +10,9 @@ import { handleError } from "./lib/handle-error";
 import { handleNotFound } from "./lib/handle-notfound";
 import type { ServerVariables } from "./lib/types";
 
-export type { ServerType } from "./lib/types";
+export type { ServerVariables } from "./lib/types";
 
-export const server = new Hono<ServerVariables>()
+const app = new Hono<ServerVariables>()
   .use(logger())
   .notFound((c) => handleNotFound(c))
   .onError((error, c) => handleError(error, c))
@@ -24,3 +24,6 @@ export const server = new Hono<ServerVariables>()
   .route("/projects", boardRoute)
   .route("/boards", taskRoute)
   .route("/tasks", taskManagementRoute);
+
+export type ServerType = typeof app;
+export { app as server };

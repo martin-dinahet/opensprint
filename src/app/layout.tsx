@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryProvider } from "@/lib/query-provider";
 import { cn } from "@/lib/utils";
 import "@/app/globals.css";
 
@@ -19,9 +20,11 @@ type Props = {
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <TooltipProvider>
-        <body className="antialiased">{children}</body>
-      </TooltipProvider>
+      <QueryProvider>
+        <TooltipProvider>
+          <body className="antialiased">{children}</body>
+        </TooltipProvider>
+      </QueryProvider>
     </html>
   );
 }
