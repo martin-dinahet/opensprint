@@ -1,4 +1,4 @@
-import { IconFileText, IconFlag, IconLoader2, IconPlus, IconTextCaption } from "@tabler/icons-react";
+import { IconFileText, IconFlag, IconLoader2, IconPlus, IconTextCaption, IconUser } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { MemberWithUserOutput } from "@/features/member/types";
+
+const priorityItems = {
+  high: "High",
+  low: "Low",
+  medium: "Medium",
+  urgent: "Urgent",
+};
+
+const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 type Props = {
   open: boolean;
@@ -24,6 +34,9 @@ type Props = {
   onDescriptionChange: (description: string) => void;
   priority: "low" | "medium" | "high" | "urgent";
   onPriorityChange: (priority: "low" | "medium" | "high" | "urgent") => void;
+  assigneeId: string | null;
+  members: MemberWithUserOutput[];
+  onAssigneeChange: (assigneeId: string | null) => void;
 };
 
 export function CreateTaskDialog({
@@ -37,7 +50,15 @@ export function CreateTaskDialog({
   onDescriptionChange,
   priority,
   onPriorityChange,
+  assigneeId,
+  members,
+  onAssigneeChange,
 }: Props) {
+  const assigneeItems = [
+    { label: "Unassigned", value: null },
+    ...members.map((member) => ({ label: getMemberLabel(member), value: member.id })),
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -77,8 +98,12 @@ export function CreateTaskDialog({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="taskPriority">Priority</Label>
-            <Select value={priority} onValueChange={(v) => onPriorityChange(v as typeof priority)}>
-              <SelectTrigger className="w-full">
+            <Select
+              items={priorityItems}
+              value={priority}
+              onValueChange={(v) => onPriorityChange(v as typeof priority)}
+            >
+              <SelectTrigger id="taskPriority" className="w-full">
                 <IconFlag className="h-4 w-4 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
@@ -87,6 +112,27 @@ export function CreateTaskDialog({
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="taskAssignee">Assignee</Label>
+            <Select
+              items={assigneeItems}
+              value={assigneeId}
+              onValueChange={(value) => onAssigneeChange(typeof value === "string" ? value : null)}
+            >
+              <SelectTrigger id="taskAssignee" className="w-full">
+                <IconUser className="h-4 w-4 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={null}>Unassigned</SelectItem>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {getMemberLabel(member)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

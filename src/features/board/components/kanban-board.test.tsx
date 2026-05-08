@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KanbanBoard } from "@/features/board/components/kanban-board";
 import { TaskCard } from "@/features/task/components/task-card";
-import { makeBoard, makeTask } from "@/test/factories";
+import { makeBoard, makeProjectMember, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 
 vi.mock("@dnd-kit/core", () => ({
@@ -40,8 +40,11 @@ describe("KanbanBoard", () => {
       <KanbanBoard
         board={makeBoard({ name: "Doing" })}
         tasks={[
-          makeTask({ title: "First task", priority: "urgent" }),
+          makeTask({ title: "First task", priority: "urgent", assigneeId: "member-1" }),
           makeTask({ id: "task-2", title: "Second task" }),
+        ]}
+        members={[
+          makeProjectMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } }),
         ]}
         onAddTask={vi.fn()}
         onEditTask={vi.fn()}
@@ -54,6 +57,7 @@ describe("KanbanBoard", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("First task")).toBeInTheDocument();
     expect(screen.getByText("urgent")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.getByText("Second task")).toBeInTheDocument();
   });
 
@@ -94,14 +98,18 @@ describe("KanbanBoard", () => {
 
 describe("TaskCard", () => {
   it("renders task details and fires edit/delete callbacks", () => {
-    const task = makeTask({ title: "Design API", priority: "high" });
+    const task = makeTask({ title: "Design API", priority: "high", assigneeId: "member-1" });
+    const members = [
+      makeProjectMember({ user: { id: "user-1", name: null, email: "owner@example.com", image: null } }),
+    ];
     const onEdit = vi.fn();
     const onDelete = vi.fn();
 
-    renderWithClient(<TaskCard task={task} onEdit={onEdit} onDelete={onDelete} />);
+    renderWithClient(<TaskCard task={task} onEdit={onEdit} onDelete={onDelete} members={members} />);
 
     expect(screen.getByText("Design API")).toBeInTheDocument();
     expect(screen.getByText("high")).toBeInTheDocument();
+    expect(screen.getByText("owner@example.com")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

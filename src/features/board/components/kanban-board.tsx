@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import type { BoardOutput } from "@/features/board/types";
+import type { MemberWithUserOutput } from "@/features/member/types";
 import { TaskCard } from "@/features/task/components/task-card";
 import type { TaskOutput } from "@/features/task/types";
 
@@ -15,9 +16,10 @@ type Props = {
   onEditTask: (task: TaskOutput) => void;
   onDeleteTask: (id: string) => void;
   isHovered: boolean;
+  members?: MemberWithUserOutput[];
 };
 
-export function KanbanBoard({ board, tasks, onAddTask, onEditTask, onDeleteTask, isHovered }: Props) {
+export function KanbanBoard({ board, tasks, onAddTask, onEditTask, onDeleteTask, isHovered, members = [] }: Props) {
   const { setNodeRef, isOver } = useDroppable({
     id: board.id,
     data: { type: "board", board },
@@ -46,7 +48,7 @@ export function KanbanBoard({ board, tasks, onAddTask, onEditTask, onDeleteTask,
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
+              <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} members={members} />
             ))}
 
             {tasks.length === 0 && (

@@ -1,4 +1,4 @@
-import { IconDeviceFloppy, IconFileText, IconFlag, IconTextCaption } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconFileText, IconFlag, IconTextCaption, IconUser } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { MemberWithUserOutput } from "@/features/member/types";
 import type { TaskOutput } from "@/features/task/types";
+
+const priorityItems = {
+  high: "High",
+  low: "Low",
+  medium: "Medium",
+  urgent: "Urgent",
+};
+
+const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 type Props = {
   open: boolean;
@@ -20,9 +30,15 @@ type Props = {
   onSave: () => void;
   task: TaskOutput | null;
   onTaskChange: (task: TaskOutput | null) => void;
+  members: MemberWithUserOutput[];
 };
 
-export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange }: Props) {
+export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange, members }: Props) {
+  const assigneeItems = [
+    { label: "Unassigned", value: null },
+    ...members.map((member) => ({ label: getMemberLabel(member), value: member.id })),
+  ];
+
   return (
     <Dialog
       open={open}
@@ -67,10 +83,11 @@ export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange 
             <div className="grid gap-2">
               <Label htmlFor="editPriority">Priority</Label>
               <Select
+                items={priorityItems}
                 value={task.priority}
                 onValueChange={(v) => onTaskChange({ ...task, priority: v as TaskOutput["priority"] })}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="editPriority" className="w-full">
                   <IconFlag className="h-4 w-4 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
@@ -79,6 +96,29 @@ export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange 
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>
                   <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editAssignee">Assignee</Label>
+              <Select
+                items={assigneeItems}
+                value={task.assigneeId}
+                onValueChange={(value) =>
+                  onTaskChange({ ...task, assigneeId: typeof value === "string" ? value : null })
+                }
+              >
+                <SelectTrigger id="editAssignee" className="w-full">
+                  <IconUser className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Unassigned</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {getMemberLabel(member)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

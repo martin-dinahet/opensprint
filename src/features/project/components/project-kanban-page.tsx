@@ -11,11 +11,12 @@ import { CreateBoardDialog } from "@/features/board/components/create-board-dial
 import { useBoards, useCreateBoard } from "@/features/board/hooks";
 import { useKanbanDrag } from "@/features/board/hooks/use-kanban-drag";
 import { kanbanCollisionDetection } from "@/features/board/lib/kanban-dnd";
+import { useProjectMembers } from "@/features/member/hooks";
 import { AppHeader } from "@/features/shared/components/app-header";
 import { CreateTaskDialog } from "@/features/task/components/create-task-dialog";
 import { EditTaskDialog } from "@/features/task/components/edit-task-dialog";
 import { TaskCardContent } from "@/features/task/components/task-card";
-import { useCreateTask, useDeleteTask, useMoveTask, useUpdateTask } from "@/features/task/hooks";
+import { useAssignTask, useCreateTask, useDeleteTask, useMoveTask, useUpdateTask } from "@/features/task/hooks";
 import type { TaskOutput, TaskPriority } from "@/features/task/types";
 import { authClient } from "@/lib/auth-client";
 
@@ -28,11 +29,13 @@ const DEFAULT_TASK_PRIORITY: TaskPriority = "medium";
 export function ProjectKanbanPage({ projectId }: Props) {
   const session = authClient.useSession();
   const { data: boards, isLoading } = useBoards(projectId);
+  const { data: members = [] } = useProjectMembers(projectId);
   const createBoard = useCreateBoard();
   const createTask = useCreateTask();
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
   const updateTask = useUpdateTask();
+  const assignTask = useAssignTask();
   const kanbanDrag = useKanbanDrag(moveTask);
 
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
@@ -42,7 +45,9 @@ export function ProjectKanbanPage({ projectId }: Props) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>(DEFAULT_TASK_PRIORITY);
+  const [newTaskAssigneeId, setNewTaskAssigneeId] = useState<string | null>(null);
   const [editTask, setEditTask] = useState<TaskOutput | null>(null);
+  const [originalEditAssigneeId, setOriginalEditAssigneeId] = useState<string | null>(null);
 
   const resetCreateTaskDialog = () => {
     setCreateTaskOpen(false);
@@ -50,6 +55,7 @@ export function ProjectKanbanPage({ projectId }: Props) {
     setNewTaskTitle("");
     setNewTaskDesc("");
     setNewTaskPriority(DEFAULT_TASK_PRIORITY);
+    setNewTaskAssigneeId(null);
   };
 
   const handleCreateBoard = async () => {
@@ -69,6 +75,7 @@ export function ProjectKanbanPage({ projectId }: Props) {
       boardId: activeBoardId,
       data: {
         description: newTaskDesc.trim() || undefined,
+        assigneeId: newTaskAssigneeId || undefined,
         priority: newTaskPriority,
         title,
       },
@@ -88,12 +95,23 @@ export function ProjectKanbanPage({ projectId }: Props) {
       },
       taskId: editTask.id,
     });
+
+    if (editTask.assigneeId !== originalEditAssigneeId) {
+      await assignTask.mutateAsync({ assigneeId: editTask.assigneeId, taskId: editTask.id });
+    }
+
     setEditTask(null);
+    setOriginalEditAssigneeId(null);
   };
 
   const openCreateTaskDialog = (boardId: string) => {
     setActiveBoardId(boardId);
     setCreateTaskOpen(true);
+  };
+
+  const openEditTaskDialog = (task: TaskOutput) => {
+    setOriginalEditAssigneeId(task.assigneeId);
+    setEditTask(task);
   };
 
   if (!session.data?.user) return <LoadingScreen />;
@@ -133,9 +151,10 @@ export function ProjectKanbanPage({ projectId }: Props) {
                   dragInFlight={kanbanDrag.dragInFlight}
                   isHovered={kanbanDrag.overBoardId === board.id}
                   key={board.id}
+                  members={members}
                   onAddTask={() => openCreateTaskDialog(board.id)}
                   onDeleteTask={(taskId) => deleteTask.mutate({ boardId: board.id, taskId })}
-                  onEditTask={setEditTask}
+                  onEditTask={openEditTaskDialog}
                   onTasksReady={kanbanDrag.registerBoardTasks}
                   optimisticTasks={kanbanDrag.getBoardTasks(board.id)}
                 />
@@ -165,7 +184,13 @@ export function ProjectKanbanPage({ projectId }: Props) {
         }
       >
         {kanbanDrag.activeTask ? (
-          <TaskCardContent isOverlay onDelete={() => {}} onEdit={() => {}} task={kanbanDrag.activeTask} />
+          <TaskCardContent
+            isOverlay
+            members={members}
+            onDelete={() => {}}
+            onEdit={() => {}}
+            task={kanbanDrag.activeTask}
+          />
         ) : null}
       </DragOverlay>
 
@@ -179,8 +204,11 @@ export function ProjectKanbanPage({ projectId }: Props) {
       />
 
       <CreateTaskDialog
+        assigneeId={newTaskAssigneeId}
         description={newTaskDesc}
         isPending={createTask.isPending}
+        members={members}
+        onAssigneeChange={setNewTaskAssigneeId}
         onCreate={handleCreateTask}
         onDescriptionChange={setNewTaskDesc}
         onOpenChange={(open) => {
@@ -195,7 +223,13 @@ export function ProjectKanbanPage({ projectId }: Props) {
       />
 
       <EditTaskDialog
-        onOpenChange={(open) => !open && setEditTask(null)}
+        members={members}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditTask(null);
+            setOriginalEditAssigneeId(null);
+          }
+        }}
         onSave={handleUpdateTask}
         onTaskChange={setEditTask}
         open={!!editTask}

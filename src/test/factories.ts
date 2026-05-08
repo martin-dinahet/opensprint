@@ -1,4 +1,5 @@
 import type { BoardOutput } from "@/features/board/types";
+import type { MemberWithUserOutput } from "@/features/member/types";
 import type { ProjectListOutput } from "@/features/project/types";
 import type { TaskOutput } from "@/features/task/types";
 
@@ -33,6 +34,18 @@ export function makeMembership(
     projectId: "project-1",
     userId: "user-1",
     role: "owner" as const,
+    ...overrides,
+  };
+}
+
+export function makeProjectMember(overrides: Partial<MemberWithUserOutput> = {}): MemberWithUserOutput {
+  return {
+    id: "member-1",
+    projectId: "project-1",
+    userId: "user-1",
+    role: "owner",
+    joinedAt: timestamp,
+    user: makeUser(),
     ...overrides,
   };
 }

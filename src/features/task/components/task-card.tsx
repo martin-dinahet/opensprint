@@ -5,7 +5,9 @@ import { defaultAnimateLayoutChanges, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconPencil, IconX } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { MemberWithUserOutput } from "@/features/member/types";
 import type { TaskOutput } from "@/features/task/types";
 
 type TaskPriority = "low" | "medium" | "high" | "urgent";
@@ -21,6 +23,7 @@ type Props = {
   task: TaskOutput;
   onEdit: (task: TaskOutput) => void;
   onDelete: (taskId: string) => void;
+  members?: MemberWithUserOutput[];
 };
 
 type TaskCardContentProps = Props & {
@@ -40,7 +43,12 @@ export function TaskCardContent({
   setNodeRef,
   style,
   task,
+  members = [],
 }: TaskCardContentProps) {
+  const assignee = members.find((member) => member.id === task.assigneeId);
+  const assigneeLabel = assignee?.user.name || assignee?.user.email;
+  const assigneeInitial = assigneeLabel?.trim().charAt(0).toUpperCase() ?? "";
+
   return (
     <div
       ref={setNodeRef}
@@ -91,12 +99,22 @@ export function TaskCardContent({
           />
           <span className="text-muted-foreground text-xs capitalize">{task.priority}</span>
         </div>
+
+        {assignee && assigneeLabel ? (
+          <div className="mt-3 flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
+            <Avatar size="sm">
+              {assignee.user.image ? <AvatarImage alt="" src={assignee.user.image} /> : null}
+              <AvatarFallback>{assigneeInitial}</AvatarFallback>
+            </Avatar>
+            <span className="truncate">{assigneeLabel}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-export function TaskCard({ task, onEdit, onDelete }: Props) {
+export function TaskCard({ task, onEdit, onDelete, members = [] }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: "task", task },
@@ -124,6 +142,7 @@ export function TaskCard({ task, onEdit, onDelete }: Props) {
       listeners={listeners}
       onDelete={onDelete}
       onEdit={onEdit}
+      members={members}
       setNodeRef={setNodeRef}
       style={style}
       task={task}
