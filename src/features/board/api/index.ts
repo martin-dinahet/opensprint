@@ -1,4 +1,3 @@
-import { api } from "@/features/shared/api/client";
 import type {
   BoardOutput,
   CreateBoardInput,
@@ -6,6 +5,7 @@ import type {
   UpdateBoardInput,
   UpdateBoardOutput,
 } from "@/features/board/types";
+import { api } from "@/features/shared/api/client";
 
 const BASE_KEY = "boards";
 

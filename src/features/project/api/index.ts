@@ -1,10 +1,10 @@
-import { api } from "@/features/shared/api/client";
 import type {
   CreateProjectInput,
   ProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
 } from "@/features/project/types";
+import { api } from "@/features/shared/api/client";
 
 const BASE_KEY = "projects";
 
