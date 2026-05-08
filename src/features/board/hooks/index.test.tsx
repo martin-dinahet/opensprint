@@ -4,8 +4,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { boardApi, boardKeys } from "@/features/board/api";
-import { createTestQueryClient } from "@/test/render";
 import { makeBoard } from "@/test/factories";
+import { createTestQueryClient } from "@/test/render";
 import { useBoards, useCreateBoard, useUpdateBoard } from ".";
 
 vi.mock("@/features/board/api", () => ({

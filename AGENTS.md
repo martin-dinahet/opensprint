@@ -55,7 +55,7 @@ src/server/features/project/
 - `guard()` - Requires authentication, attaches user to context
 - `validate("json", schema)` - Zod validation for JSON body
 - `handle()` - Wrapper for DB calls in repositories
-- `handleUseCase()` - Wrapper for use cases in routes (from `@/server/lib/handle-use-case`)
+- Use `Result.match()` from `@punpun-dev/ts-result` directly in routes to map use case results to responses
 
 ### Error Handling
 

@@ -9,7 +9,6 @@ import {
   updateBoard,
 } from "@/server/features/board/usecases";
 import { guard } from "@/server/lib/guard";
-import { handleUseCase } from "@/server/lib/handle-use-case";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
 
@@ -22,13 +21,12 @@ export const boardRoute = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    const { data, error } = await handleUseCase(listBoards(currentUser.id, projectId));
+    const result = await listBoards(currentUser.id, projectId);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json({ boards: data });
+    return result.match({
+      ok: (boards) => c.json({ boards }),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .post("/:id/boards", guard(), validate("json", CreateBoardSchema), async (c) => {
@@ -36,13 +34,12 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(createBoard(currentUser.id, projectId, body));
+    const result = await createBoard(currentUser.id, projectId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .get("/:id/boards/:boardId", guard(), async (c) => {
@@ -50,13 +47,12 @@ export const boardRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
-    const { data, error } = await handleUseCase(getBoard(currentUser.id, projectId, boardId));
+    const result = await getBoard(currentUser.id, projectId, boardId);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .patch("/:id/boards/reorder", guard(), validate("json", ReorderBoardsSchema), async (c) => {
@@ -64,13 +60,12 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(reorderBoards(currentUser.id, projectId, body.boardIds));
+    const result = await reorderBoards(currentUser.id, projectId, body.boardIds);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (response) => c.json(response),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .patch("/:id/boards/:boardId", guard(), validate("json", UpdateBoardSchema), async (c) => {
@@ -79,13 +74,12 @@ export const boardRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(updateBoard(currentUser.id, projectId, boardId, body));
+    const result = await updateBoard(currentUser.id, projectId, boardId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .delete("/:id/boards/:boardId", guard(), async (c) => {
@@ -93,11 +87,10 @@ export const boardRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
-    const { data, error } = await handleUseCase(deleteBoard(currentUser.id, projectId, boardId));
+    const result = await deleteBoard(currentUser.id, projectId, boardId);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (response) => c.json(response),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   });

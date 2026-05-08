@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KanbanBoard } from "@/components/features/kanban-board";
 import { TaskCard } from "@/components/features/task-card";
-import { renderWithClient } from "@/test/render";
 import { makeBoard, makeTask } from "@/test/factories";
+import { renderWithClient } from "@/test/render";
 
 vi.mock("@dnd-kit/core", () => ({
   useDroppable: () => ({

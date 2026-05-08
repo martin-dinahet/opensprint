@@ -16,7 +16,6 @@ import {
   updateTask,
 } from "@/server/features/task/usecases";
 import { guard } from "@/server/lib/guard";
-import { handleUseCase } from "@/server/lib/handle-use-case";
 import type { ServerVariables } from "@/server/lib/types";
 import { validate } from "@/server/lib/validate";
 
@@ -31,13 +30,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
 
-    const { data, error } = await handleUseCase(listTasks(currentUser.id, boardId));
+    const result = await listTasks(currentUser.id, boardId);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json({ tasks: data });
+    return result.match({
+      ok: (tasks) => c.json({ tasks }),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .post("/:boardId/tasks", guard(), validate("json", CreateTaskSchema), async (c) => {
@@ -45,13 +43,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(createTask(currentUser.id, boardId, body));
+    const result = await createTask(currentUser.id, boardId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .patch("/:boardId/tasks/:taskId", guard(), validate("json", UpdateTaskSchema), async (c) => {
@@ -60,13 +57,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(updateTask(currentUser.id, boardId, taskId, body));
+    const result = await updateTask(currentUser.id, boardId, taskId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .delete("/:boardId/tasks/:taskId", guard(), async (c) => {
@@ -74,13 +70,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     const taskId = c.req.param("taskId");
     const currentUser = c.get("user");
 
-    const { data, error } = await handleUseCase(deleteTask(currentUser.id, boardId, taskId));
+    const result = await deleteTask(currentUser.id, boardId, taskId);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (response) => c.json(response),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   });
 
 export const taskManagementRoute = new Hono<ServerVariables>() //
@@ -89,13 +84,12 @@ export const taskManagementRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(assignTask(currentUser.id, taskId, body));
+    const result = await assignTask(currentUser.id, taskId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .patch("/:taskId/move", guard(), validate("json", MoveTaskSchema), async (c) => {
@@ -103,13 +97,12 @@ export const taskManagementRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(moveTask(currentUser.id, taskId, body));
+    const result = await moveTask(currentUser.id, taskId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   })
 
   .patch("/:taskId/reorder", guard(), validate("json", ReorderTaskSchema), async (c) => {
@@ -117,11 +110,10 @@ export const taskManagementRoute = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const { data, error } = await handleUseCase(reorderTask(currentUser.id, taskId, body));
+    const result = await reorderTask(currentUser.id, taskId, body);
 
-    if (error) {
-      return c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode });
-    }
-
-    return c.json(data);
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
   });
