@@ -1,7 +1,7 @@
-import type { BoardOutput } from "@/features/board/types";
-import type { MemberWithUserOutput } from "@/features/member/types";
-import type { ProjectListOutput } from "@/features/project/types";
-import type { TaskOutput } from "@/features/task/types";
+import type { BoardOutput } from "@/entities/board";
+import type { MemberWithUserOutput } from "@/entities/member";
+import type { ProjectListOutput } from "@/entities/project";
+import type { TaskOutput } from "@/entities/task";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
 

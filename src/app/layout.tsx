@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryProvider } from "@/lib/query-provider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
+import { QueryProvider } from "@/shared/providers/query-provider";
+import { TooltipProvider } from "@/shared/ui/tooltip";
 import "@/app/globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
