@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 const alias = {
+  "@/pages": fileURLToPath(new URL("./src/_pages", import.meta.url)),
   "@": fileURLToPath(new URL("./src", import.meta.url)),
 };
 
