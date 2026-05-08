@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import z from "zod";
-import { parseFormData } from "@/lib/parse-form-data";
+import { parseFormData } from "@/shared/lib/forms";
 import { signInEmail } from "../api/sign-in-email";
 
 export const useSignInForm = () => {

@@ -1,5 +1,5 @@
 import { err, ok } from "@punpun-dev/ts-result";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/shared/lib/auth-client";
 import type { AuthFormError } from "./sign-in-email";
 
 export const signUpEmail = async (email: string, name: string, password: string) => {

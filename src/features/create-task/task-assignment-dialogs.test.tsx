@@ -1,8 +1,8 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { CreateTaskDialog } from "@/features/task/components/create-task-dialog";
-import { EditTaskDialog } from "@/features/task/components/edit-task-dialog";
+import { CreateTaskDialog } from "@/features/create-task";
+import { EditTaskDialog } from "@/features/edit-task";
 import { makeProjectMember, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 
@@ -21,23 +21,7 @@ describe("task assignment dialogs", () => {
       }),
     ];
 
-    renderWithClient(
-      <CreateTaskDialog
-        assigneeId={null}
-        description=""
-        isPending={false}
-        members={members}
-        onAssigneeChange={vi.fn()}
-        onCreate={vi.fn()}
-        onDescriptionChange={vi.fn()}
-        onOpenChange={vi.fn()}
-        onPriorityChange={vi.fn()}
-        onTitleChange={vi.fn()}
-        open
-        priority="medium"
-        title=""
-      />,
-    );
+    renderWithClient(<CreateTaskDialog boardId="board-1" members={members} onOpenChange={vi.fn()} open />);
 
     await user.click(screen.getByLabelText("Assignee"));
 
@@ -46,7 +30,7 @@ describe("task assignment dialogs", () => {
     expect(screen.getByText("grace@example.com")).toBeInTheDocument();
   });
 
-  it("shows the selected assignee label instead of the raw value", () => {
+  it("shows the selected assignee label instead of the raw value when editing", () => {
     const members = [
       makeProjectMember({
         id: "member-1",
@@ -55,21 +39,7 @@ describe("task assignment dialogs", () => {
     ];
 
     renderWithClient(
-      <CreateTaskDialog
-        assigneeId="member-1"
-        description=""
-        isPending={false}
-        members={members}
-        onAssigneeChange={vi.fn()}
-        onCreate={vi.fn()}
-        onDescriptionChange={vi.fn()}
-        onOpenChange={vi.fn()}
-        onPriorityChange={vi.fn()}
-        onTitleChange={vi.fn()}
-        open
-        priority="medium"
-        title=""
-      />,
+      <EditTaskDialog members={members} onOpenChange={vi.fn()} open task={makeTask({ assigneeId: "member-1" })} />,
     );
 
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
@@ -78,7 +48,6 @@ describe("task assignment dialogs", () => {
 
   it("changes the task assignee when editing a task", async () => {
     const user = userEvent.setup();
-    const onTaskChange = vi.fn();
     const task = makeTask({ assigneeId: null });
     const members = [
       makeProjectMember({
@@ -87,20 +56,11 @@ describe("task assignment dialogs", () => {
       }),
     ];
 
-    renderWithClient(
-      <EditTaskDialog
-        members={members}
-        onOpenChange={vi.fn()}
-        onSave={vi.fn()}
-        onTaskChange={onTaskChange}
-        open
-        task={task}
-      />,
-    );
+    renderWithClient(<EditTaskDialog members={members} onOpenChange={vi.fn()} open task={task} />);
 
     await user.click(screen.getByLabelText("Assignee"));
-    await user.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+    await user.click(await screen.findByText("Ada Lovelace"));
 
-    expect(onTaskChange).toHaveBeenCalledWith({ ...task, assigneeId: "member-1" });
+    expect(document.querySelector<HTMLInputElement>('input[name="assigneeId"]')?.value).toBe("member-1");
   });
 });

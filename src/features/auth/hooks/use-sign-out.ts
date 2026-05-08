@@ -4,7 +4,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { IconLoader2, IconLogout } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/shared/lib/auth-client";
 
 type SignOutResponse = {
   error?: {
