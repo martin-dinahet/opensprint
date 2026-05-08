@@ -1,7 +1,7 @@
 "use client";
 
-import { defaultAnimateLayoutChanges, useSortable } from "@dnd-kit/sortable";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
+import { defaultAnimateLayoutChanges, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconPencil, IconX } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
