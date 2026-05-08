@@ -1,84 +1,98 @@
+import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { memberRepository } from "@/server/features/member/repositories";
-import { NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import { AppError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import type { CreateProjectInput } from "../dto";
 import { projectRepository } from "../repositories";
 
 export const listProjects = async (userId: string) => {
-  const { data: memberships } = await memberRepository.findByUserId(userId);
+  const membershipsResult = await memberRepository.findByUserId(userId);
+  if (membershipsResult.isErr()) return err(membershipsResult.error);
 
+  const memberships = membershipsResult.unwrap();
   if (!memberships || memberships.length === 0) {
-    return [];
+    return ok([]);
   }
 
   const projectIds = memberships.map((m) => m.projectId);
-  const { data: projects } = await projectRepository.findByIds(projectIds);
+  const projectsResult = await projectRepository.findByIds(projectIds);
+  if (projectsResult.isErr()) return err(projectsResult.error);
 
-  if (!projects) {
-    return [];
-  }
+  const projects = projectsResult.unwrap();
 
-  return projects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-  }));
+  return ok(
+    projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+    })),
+  );
 };
 
 export const createProject = async (userId: string, input: CreateProjectInput) => {
   const projectId = nanoid();
   const memberId = nanoid();
 
-  const { error: projectError } = await projectRepository.create({
+  const projectResult = await projectRepository.create({
     id: projectId,
     name: input.name,
     description: input.description,
   });
 
-  if (projectError) {
-    throw new Error(`Unable to create project: ${projectError}`);
+  if (projectResult.isErr()) {
+    return err(new AppError("project-create-failed", `Unable to create project: ${projectResult.error.message}`, 500));
   }
 
-  const { error: memberError } = await memberRepository.create({
+  const memberResult = await memberRepository.create({
     id: memberId,
     projectId,
     userId,
     role: "owner",
   });
 
-  if (memberError) {
-    throw new Error(`Unable to create project member: ${memberError}`);
+  if (memberResult.isErr()) {
+    return err(
+      new AppError(
+        "project-member-create-failed",
+        `Unable to create project member: ${memberResult.error.message}`,
+        500,
+      ),
+    );
   }
 
-  return {
+  return ok({
     id: projectId,
     name: input.name,
     description: input.description || null,
-  };
+  });
 };
 
 export const getProject = async (userId: string, projectId: string) => {
-  const { data: project } = await projectRepository.findById(projectId);
+  const projectResult = await projectRepository.findById(projectId);
+  if (projectResult.isErr()) return err(projectResult.error);
 
+  const project = projectResult.unwrap();
   if (!project || project.length === 0) {
-    throw new NotFoundError("Project");
+    return err(new NotFoundError("Project"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  return {
+  return ok({
     id: project[0].id,
     name: project[0].name,
     description: project[0].description,
     createdAt: project[0].createdAt,
     updatedAt: project[0].updatedAt,
-  };
+  });
 };
 
 export const updateProject = async (
@@ -86,65 +100,78 @@ export const updateProject = async (
   projectId: string,
   input: { name?: string; description?: string },
 ) => {
-  const { data: project } = await projectRepository.findById(projectId);
+  const projectResult = await projectRepository.findById(projectId);
+  if (projectResult.isErr()) return err(projectResult.error);
 
+  const project = projectResult.unwrap();
   if (!project || project.length === 0) {
-    throw new NotFoundError("Project");
+    return err(new NotFoundError("Project"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (membership[0].role === "member") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
-  const { error: updateError } = await projectRepository.update(projectId, {
+  const updateResult = await projectRepository.update(projectId, {
     name: input.name,
     description: input.description,
   });
 
-  if (updateError) {
-    throw new Error(`Unable to update project: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("project-update-failed", `Unable to update project: ${updateResult.error.message}`, 500));
   }
 
-  const { data: updatedProject } = await projectRepository.findById(projectId);
-  const updated = updatedProject?.[0];
+  const updatedProjectResult = await projectRepository.findById(projectId);
+  if (updatedProjectResult.isErr()) return err(updatedProjectResult.error);
+
+  const updated = updatedProjectResult.unwrap()?.[0];
 
   if (!updated) {
-    throw new NotFoundError("Project");
+    return err(new NotFoundError("Project"));
   }
 
-  return {
+  return ok({
     id: updated.id,
     name: updated.name,
     description: updated.description,
     updatedAt: updated.updatedAt,
-  };
+  });
 };
 
 export const deleteProject = async (userId: string, projectId: string) => {
-  const { data: project } = await projectRepository.findById(projectId);
+  const projectResult = await projectRepository.findById(projectId);
+  if (projectResult.isErr()) return err(projectResult.error);
 
+  const project = projectResult.unwrap();
   if (!project || project.length === 0) {
-    throw new NotFoundError("Project");
+    return err(new NotFoundError("Project"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (membership[0].role !== "owner") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
-  await memberRepository.deleteByProject(projectId);
-  await projectRepository.delete(projectId);
+  const deleteMembersResult = await memberRepository.deleteByProject(projectId);
+  if (deleteMembersResult.isErr()) return err(deleteMembersResult.error);
 
-  return { success: true };
+  const deleteProjectResult = await projectRepository.delete(projectId);
+  if (deleteProjectResult.isErr()) return err(deleteProjectResult.error);
+
+  return ok({ success: true });
 };

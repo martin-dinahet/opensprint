@@ -1,176 +1,207 @@
+import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { memberRepository } from "@/server/features/member/repositories";
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import type { CreateBoardInput, UpdateBoardInput } from "../dto";
 import { boardRepository } from "../repositories";
 
 export const listBoards = async (userId: string, projectId: string) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: boards, error: boardsError } = await boardRepository.findByProject(projectId);
+  const boardsResult = await boardRepository.findByProject(projectId);
 
-  if (boardsError) {
-    throw new Error(`Unable to fetch boards: ${boardsError}`);
+  if (boardsResult.isErr()) {
+    return err(new AppError("boards-fetch-failed", `Unable to fetch boards: ${boardsResult.error.message}`, 500));
   }
 
-  return (boards || []).map((b) => ({
-    id: b.id,
-    projectId: b.projectId,
-    name: b.name,
-    position: b.position,
-    createdAt: b.createdAt,
-    updatedAt: b.updatedAt,
-  }));
+  return ok(
+    (boardsResult.unwrap() || []).map((b) => ({
+      id: b.id,
+      projectId: b.projectId,
+      name: b.name,
+      position: b.position,
+      createdAt: b.createdAt,
+      updatedAt: b.updatedAt,
+    })),
+  );
 };
 
 export const createBoard = async (userId: string, projectId: string, input: CreateBoardInput) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: existingBoards, error: boardsError } = await boardRepository.findByProject(projectId);
+  const existingBoardsResult = await boardRepository.findByProject(projectId);
 
-  if (boardsError) {
-    throw new Error(`Unable to create board: ${boardsError}`);
+  if (existingBoardsResult.isErr()) {
+    return err(
+      new AppError("boards-fetch-failed", `Unable to create board: ${existingBoardsResult.error.message}`, 500),
+    );
   }
 
   const boardId = nanoid();
-  const position = existingBoards?.length || 0;
+  const position = existingBoardsResult.unwrap()?.length || 0;
 
-  const { error: createError } = await boardRepository.create({
+  const createResult = await boardRepository.create({
     id: boardId,
     projectId,
     name: input.name,
     position,
   });
 
-  if (createError) {
-    throw new Error(`Unable to create board: ${createError}`);
+  if (createResult.isErr()) {
+    return err(new AppError("board-create-failed", `Unable to create board: ${createResult.error.message}`, 500));
   }
 
-  const { data: newBoard } = await boardRepository.findById(boardId);
+  const newBoardResult = await boardRepository.findById(boardId);
+  if (newBoardResult.isErr()) return err(newBoardResult.error);
+
+  const newBoard = newBoardResult.unwrap();
   if (!newBoard || newBoard.length === 0) {
-    throw new Error("Unable to fetch new board");
+    return err(new AppError("board-fetch-failed", "Unable to fetch new board", 500));
   }
 
-  return {
+  return ok({
     id: newBoard[0].id,
     projectId: newBoard[0].projectId,
     name: newBoard[0].name,
     position: newBoard[0].position,
     createdAt: newBoard[0].createdAt,
     updatedAt: newBoard[0].updatedAt,
-  };
+  });
 };
 
 export const getBoard = async (userId: string, projectId: string, boardId: string) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  return {
+  return ok({
     id: board[0].id,
     projectId: board[0].projectId,
     name: board[0].name,
     position: board[0].position,
     createdAt: board[0].createdAt,
     updatedAt: board[0].updatedAt,
-  };
+  });
 };
 
 export const updateBoard = async (userId: string, projectId: string, boardId: string, input: UpdateBoardInput) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { error: updateError } = await boardRepository.update(boardId, input);
+  const updateResult = await boardRepository.update(boardId, input);
 
-  if (updateError) {
-    throw new Error(`Unable to update board: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("board-update-failed", `Unable to update board: ${updateResult.error.message}`, 500));
   }
 
-  const { data: updatedBoard } = await boardRepository.findById(boardId);
+  const updatedBoardResult = await boardRepository.findById(boardId);
+  if (updatedBoardResult.isErr()) return err(updatedBoardResult.error);
+
+  const updatedBoard = updatedBoardResult.unwrap();
   if (!updatedBoard || updatedBoard.length === 0) {
-    throw new Error("Unable to fetch updated board");
+    return err(new AppError("board-fetch-failed", "Unable to fetch updated board", 500));
   }
 
-  return {
+  return ok({
     id: updatedBoard[0].id,
     projectId: updatedBoard[0].projectId,
     name: updatedBoard[0].name,
     position: updatedBoard[0].position,
     updatedAt: updatedBoard[0].updatedAt,
-  };
+  });
 };
 
 export const deleteBoard = async (userId: string, projectId: string, boardId: string) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new ForbiddenError("Not authorized");
+    return err(new ForbiddenError("Not authorized"));
   }
 
   if (membership[0].role === "member") {
-    throw new ForbiddenError("Not authorized");
+    return err(new ForbiddenError("Not authorized"));
   }
 
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { error: deleteError } = await boardRepository.delete(boardId);
+  const deleteResult = await boardRepository.delete(boardId);
 
-  if (deleteError) {
-    throw new Error(`Unable to delete board: ${deleteError}`);
+  if (deleteResult.isErr()) {
+    return err(new AppError("board-delete-failed", `Unable to delete board: ${deleteResult.error.message}`, 500));
   }
 
-  return { success: true };
+  return ok({ success: true });
 };
 
 export const reorderBoards = async (userId: string, projectId: string, boardIds: string[]) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: boards } = await boardRepository.findByProject(projectId);
-  const validBoardIds = new Set(boards?.map((b) => b.id) || []);
+  const boardsResult = await boardRepository.findByProject(projectId);
+  if (boardsResult.isErr()) return err(boardsResult.error);
+
+  const validBoardIds = new Set(boardsResult.unwrap()?.map((b) => b.id) || []);
 
   if (boardIds.some((id) => !validBoardIds.has(id))) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
   for (let i = 0; i < boardIds.length; i++) {
-    const { error: updateError } = await boardRepository.updatePosition(boardIds[i], i);
-    if (updateError) {
-      throw new Error(`Unable to reorder boards: ${updateError}`);
+    const updateResult = await boardRepository.updatePosition(boardIds[i], i);
+    if (updateResult.isErr()) {
+      return err(new AppError("boards-reorder-failed", `Unable to reorder boards: ${updateResult.error.message}`, 500));
     }
   }
 
-  return { success: true };
+  return ok({ success: true });
 };

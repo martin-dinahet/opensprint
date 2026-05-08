@@ -1,73 +1,87 @@
+import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { boardRepository } from "@/server/features/board/repositories";
 import { memberRepository } from "@/server/features/member/repositories";
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import type { AssignTaskInput, CreateTaskInput, MoveTaskInput, ReorderTaskInput, UpdateTaskInput } from "../dto";
 import { taskRepository } from "../repositories";
 
 export const listTasks = async (userId: string, boardId: string) => {
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: tasks, error: tasksError } = await taskRepository.findByBoard(boardId);
+  const tasksResult = await taskRepository.findByBoard(boardId);
 
-  if (tasksError) {
-    throw new Error(`Unable to fetch tasks: ${tasksError}`);
+  if (tasksResult.isErr()) {
+    return err(new AppError("tasks-fetch-failed", `Unable to fetch tasks: ${tasksResult.error.message}`, 500));
   }
 
-  return (tasks || []).map((t) => ({
-    id: t.id,
-    boardId: t.boardId,
-    assigneeId: t.assigneeId,
-    title: t.title,
-    description: t.description,
-    priority: t.priority,
-    position: t.position,
-    dueDate: t.dueDate,
-    createdAt: t.createdAt,
-    updatedAt: t.updatedAt,
-  }));
+  return ok(
+    (tasksResult.unwrap() || []).map((t) => ({
+      id: t.id,
+      boardId: t.boardId,
+      assigneeId: t.assigneeId,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      position: t.position,
+      dueDate: t.dueDate,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    })),
+  );
 };
 
 export const createTask = async (userId: string, boardId: string, input: CreateTaskInput) => {
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
   if (input.assigneeId) {
-    const { data: assignee } = await memberRepository.findById(input.assigneeId);
+    const assigneeResult = await memberRepository.findById(input.assigneeId);
+    if (assigneeResult.isErr()) return err(assigneeResult.error);
+
+    const assignee = assigneeResult.unwrap();
     if (!assignee || assignee.length === 0 || assignee[0].projectId !== board[0].projectId) {
-      throw new NotFoundError("Assignee");
+      return err(new NotFoundError("Assignee"));
     }
   }
 
-  const { data: existingTasks, error: tasksError } = await taskRepository.findByBoard(boardId);
+  const existingTasksResult = await taskRepository.findByBoard(boardId);
 
-  if (tasksError) {
-    throw new Error(`Unable to create task: ${tasksError}`);
+  if (existingTasksResult.isErr()) {
+    return err(new AppError("tasks-fetch-failed", `Unable to create task: ${existingTasksResult.error.message}`, 500));
   }
 
   const taskId = nanoid();
-  const position = existingTasks?.length || 0;
+  const position = existingTasksResult.unwrap()?.length || 0;
 
-  const { error: createError } = await taskRepository.create({
+  const createResult = await taskRepository.create({
     id: taskId,
     boardId,
     title: input.title,
@@ -78,16 +92,19 @@ export const createTask = async (userId: string, boardId: string, input: CreateT
     position,
   });
 
-  if (createError) {
-    throw new Error(`Unable to create task: ${createError}`);
+  if (createResult.isErr()) {
+    return err(new AppError("task-create-failed", `Unable to create task: ${createResult.error.message}`, 500));
   }
 
-  const { data: newTask } = await taskRepository.findById(taskId);
+  const newTaskResult = await taskRepository.findById(taskId);
+  if (newTaskResult.isErr()) return err(newTaskResult.error);
+
+  const newTask = newTaskResult.unwrap();
   if (!newTask || newTask.length === 0) {
-    throw new Error("Unable to fetch new task");
+    return err(new AppError("task-fetch-failed", "Unable to fetch new task", 500));
   }
 
-  return {
+  return ok({
     id: newTask[0].id,
     boardId: newTask[0].boardId,
     assigneeId: newTask[0].assigneeId,
@@ -98,40 +115,49 @@ export const createTask = async (userId: string, boardId: string, input: CreateT
     dueDate: newTask[0].dueDate,
     createdAt: newTask[0].createdAt,
     updatedAt: newTask[0].updatedAt,
-  };
+  });
 };
 
 export const updateTask = async (userId: string, boardId: string, taskId: string, input: UpdateTaskInput) => {
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: task } = await taskRepository.findById(taskId);
+  const taskResult = await taskRepository.findById(taskId);
+  if (taskResult.isErr()) return err(taskResult.error);
 
+  const task = taskResult.unwrap();
   if (!task || task.length === 0) {
-    throw new NotFoundError("Task");
+    return err(new NotFoundError("Task"));
   }
 
-  const { error: updateError } = await taskRepository.update(taskId, input);
+  const updateResult = await taskRepository.update(taskId, input);
 
-  if (updateError) {
-    throw new Error(`Unable to update task: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("task-update-failed", `Unable to update task: ${updateResult.error.message}`, 500));
   }
 
-  const { data: updatedTask } = await taskRepository.findById(taskId);
+  const updatedTaskResult = await taskRepository.findById(taskId);
+  if (updatedTaskResult.isErr()) return err(updatedTaskResult.error);
+
+  const updatedTask = updatedTaskResult.unwrap();
   if (!updatedTask || updatedTask.length === 0) {
-    throw new Error("Unable to fetch updated task");
+    return err(new AppError("task-fetch-failed", "Unable to fetch updated task", 500));
   }
 
-  return {
+  return ok({
     id: updatedTask[0].id,
     boardId: updatedTask[0].boardId,
     assigneeId: updatedTask[0].assigneeId,
@@ -141,145 +167,174 @@ export const updateTask = async (userId: string, boardId: string, taskId: string
     position: updatedTask[0].position,
     dueDate: updatedTask[0].dueDate,
     updatedAt: updatedTask[0].updatedAt,
-  };
+  });
 };
 
 export const deleteTask = async (userId: string, boardId: string, taskId: string) => {
-  const { data: board } = await boardRepository.findById(boardId);
+  const boardResult = await boardRepository.findById(boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new ForbiddenError("Not authorized");
+    return err(new ForbiddenError("Not authorized"));
   }
 
   if (membership[0].role === "member") {
-    throw new ForbiddenError("Not authorized");
+    return err(new ForbiddenError("Not authorized"));
   }
 
-  const { data: task } = await taskRepository.findById(taskId);
+  const taskResult = await taskRepository.findById(taskId);
+  if (taskResult.isErr()) return err(taskResult.error);
 
+  const task = taskResult.unwrap();
   if (!task || task.length === 0) {
-    throw new NotFoundError("Task");
+    return err(new NotFoundError("Task"));
   }
 
-  const { error: deleteError } = await taskRepository.delete(taskId);
+  const deleteResult = await taskRepository.delete(taskId);
 
-  if (deleteError) {
-    throw new Error(`Unable to delete task: ${deleteError}`);
+  if (deleteResult.isErr()) {
+    return err(new AppError("task-delete-failed", `Unable to delete task: ${deleteResult.error.message}`, 500));
   }
 
-  return { success: true };
+  return ok({ success: true });
 };
 
 export const assignTask = async (userId: string, taskId: string, input: AssignTaskInput) => {
-  const { data: task } = await taskRepository.findById(taskId);
+  const taskResult = await taskRepository.findById(taskId);
+  if (taskResult.isErr()) return err(taskResult.error);
 
+  const task = taskResult.unwrap();
   if (!task || task.length === 0) {
-    throw new NotFoundError("Task");
+    return err(new NotFoundError("Task"));
   }
 
-  const { data: board } = await boardRepository.findById(task[0].boardId);
+  const boardResult = await boardRepository.findById(task[0].boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (membership[0].role === "member") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (input.assigneeId) {
-    const { data: assignee } = await memberRepository.findById(input.assigneeId);
+    const assigneeResult = await memberRepository.findById(input.assigneeId);
+    if (assigneeResult.isErr()) return err(assigneeResult.error);
+
+    const assignee = assigneeResult.unwrap();
     if (!assignee || assignee.length === 0 || assignee[0].projectId !== board[0].projectId) {
-      throw new NotFoundError("Assignee");
+      return err(new NotFoundError("Assignee"));
     }
   }
 
-  const { error: updateError } = await taskRepository.updateAssignee(taskId, input.assigneeId);
+  const updateResult = await taskRepository.updateAssignee(taskId, input.assigneeId);
 
-  if (updateError) {
-    throw new Error(`Unable to assign task: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("task-assign-failed", `Unable to assign task: ${updateResult.error.message}`, 500));
   }
 
-  return {
+  return ok({
     id: task[0].id,
     assigneeId: input.assigneeId,
-  };
+  });
 };
 
 export const moveTask = async (userId: string, taskId: string, input: MoveTaskInput) => {
-  const { data: task } = await taskRepository.findById(taskId);
+  const taskResult = await taskRepository.findById(taskId);
+  if (taskResult.isErr()) return err(taskResult.error);
 
+  const task = taskResult.unwrap();
   if (!task || task.length === 0) {
-    throw new NotFoundError("Task");
+    return err(new NotFoundError("Task"));
   }
 
-  const { data: targetBoard } = await boardRepository.findById(input.boardId);
+  const targetBoardResult = await boardRepository.findById(input.boardId);
+  if (targetBoardResult.isErr()) return err(targetBoardResult.error);
 
+  const targetBoard = targetBoardResult.unwrap();
   if (!targetBoard || targetBoard.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, targetBoard[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, targetBoard[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: existingTasks } = await taskRepository.findByBoard(input.boardId);
-  const newPosition = input.position ?? (existingTasks?.length || 0);
+  const existingTasksResult = await taskRepository.findByBoard(input.boardId);
+  if (existingTasksResult.isErr()) return err(existingTasksResult.error);
 
-  const { error: updateError } = await taskRepository.updateBoardAndPosition(taskId, input.boardId, newPosition);
+  const newPosition = input.position ?? (existingTasksResult.unwrap()?.length || 0);
 
-  if (updateError) {
-    throw new Error(`Unable to move task: ${updateError}`);
+  const updateResult = await taskRepository.updateBoardAndPosition(taskId, input.boardId, newPosition);
+
+  if (updateResult.isErr()) {
+    return err(new AppError("task-move-failed", `Unable to move task: ${updateResult.error.message}`, 500));
   }
 
-  return {
+  return ok({
     id: task[0].id,
     boardId: input.boardId,
     position: newPosition,
-  };
+  });
 };
 
 export const reorderTask = async (userId: string, taskId: string, input: ReorderTaskInput) => {
-  const { data: task } = await taskRepository.findById(taskId);
+  const taskResult = await taskRepository.findById(taskId);
+  if (taskResult.isErr()) return err(taskResult.error);
 
+  const task = taskResult.unwrap();
   if (!task || task.length === 0) {
-    throw new NotFoundError("Task");
+    return err(new NotFoundError("Task"));
   }
 
-  const { data: board } = await boardRepository.findById(task[0].boardId);
+  const boardResult = await boardRepository.findById(task[0].boardId);
+  if (boardResult.isErr()) return err(boardResult.error);
 
+  const board = boardResult.unwrap();
   if (!board || board.length === 0) {
-    throw new NotFoundError("Board");
+    return err(new NotFoundError("Board"));
   }
 
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { error: updateError } = await taskRepository.updatePosition(taskId, input.position);
+  const updateResult = await taskRepository.updatePosition(taskId, input.position);
 
-  if (updateError) {
-    throw new Error(`Unable to reorder task: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("task-reorder-failed", `Unable to reorder task: ${updateResult.error.message}`, 500));
   }
 
-  return {
+  return ok({
     id: task[0].id,
     position: input.position,
-  };
+  });
 };

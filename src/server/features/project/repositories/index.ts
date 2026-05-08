@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
+import { ok } from "@punpun-dev/ts-result";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { project } from "@/server/db/schema";
@@ -11,7 +12,7 @@ export class ProjectRepository {
 
   async findByIds(ids: string[]) {
     if (ids.length === 0) {
-      return { data: [], error: null };
+      return ok([]);
     }
     return handle(db.select().from(project).where(inArray(project.id, ids)));
   }

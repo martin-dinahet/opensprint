@@ -1,148 +1,173 @@
+import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
-import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import {
+  AppError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/server/features/shared/errors";
 import type { AddMemberInput, UpdateMemberInput } from "../dto";
 import { memberRepository } from "../repositories";
 
 export const listMembers = async (userId: string, projectId: string) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not a member of this project");
+    return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const { data: members, error: membersError } = await memberRepository.findByProject(projectId);
+  const membersResult = await memberRepository.findByProject(projectId);
 
-  if (membersError) {
-    throw new Error(`Unable to fetch members: ${membersError}`);
+  if (membersResult.isErr()) {
+    return err(new AppError("members-fetch-failed", `Unable to fetch members: ${membersResult.error.message}`, 500));
   }
 
-  const { data: allUsers } = await memberRepository.findUsers();
+  const allUsersResult = await memberRepository.findUsers();
+  if (allUsersResult.isErr()) return err(allUsersResult.error);
 
-  return (members || []).map((member) => {
-    const userData = allUsers?.find((u) => u.id === member.userId);
-    return {
-      id: member.id,
-      userId: member.userId,
-      projectId: member.projectId,
-      role: member.role,
-      joinedAt: member.joinedAt,
-      user: {
-        id: userData?.id,
-        name: userData?.name,
-        email: userData?.email,
-        image: userData?.image,
-      },
-    };
-  });
+  return ok(
+    (membersResult.unwrap() || []).map((member) => {
+      const userData = allUsersResult.unwrap()?.find((u) => u.id === member.userId);
+      return {
+        id: member.id,
+        userId: member.userId,
+        projectId: member.projectId,
+        role: member.role,
+        joinedAt: member.joinedAt,
+        user: {
+          id: userData?.id,
+          name: userData?.name,
+          email: userData?.email,
+          image: userData?.image,
+        },
+      };
+    }),
+  );
 };
 
 export const addMember = async (userId: string, projectId: string, input: AddMemberInput) => {
-  const { data: membership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
+  const membership = membershipResult.unwrap();
   if (!membership || membership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (membership[0].role === "member") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
-  const { data: targetUser } = await memberRepository.findUserByEmail(input.email);
+  const targetUserResult = await memberRepository.findUserByEmail(input.email);
+  if (targetUserResult.isErr()) return err(targetUserResult.error);
 
+  const targetUser = targetUserResult.unwrap();
   if (!targetUser || targetUser.length === 0) {
-    throw new NotFoundError("User");
+    return err(new NotFoundError("User"));
   }
 
-  const { data: existingMember } = await memberRepository.findByUserAndProject(targetUser[0].id, projectId);
+  const existingMemberResult = await memberRepository.findByUserAndProject(targetUser[0].id, projectId);
+  if (existingMemberResult.isErr()) return err(existingMemberResult.error);
 
-  if (existingMember && existingMember.length > 0) {
-    throw new ConflictError("User is already a member");
+  if (existingMemberResult.unwrap() && existingMemberResult.unwrap().length > 0) {
+    return err(new ConflictError("User is already a member"));
   }
 
   const memberId = nanoid();
 
-  const { error: addMemberError } = await memberRepository.create({
+  const addMemberResult = await memberRepository.create({
     id: memberId,
     projectId,
     userId: targetUser[0].id,
     role: input.role,
   });
 
-  if (addMemberError) {
-    throw new Error(`Unable to add member: ${addMemberError}`);
+  if (addMemberResult.isErr()) {
+    return err(new AppError("member-add-failed", `Unable to add member: ${addMemberResult.error.message}`, 500));
   }
 
-  return {
+  return ok({
     id: memberId,
     userId: targetUser[0].id,
     projectId,
     role: input.role,
     joinedAt: new Date(),
-  };
+  });
 };
 
 export const updateMember = async (userId: string, projectId: string, memberId: string, input: UpdateMemberInput) => {
-  const { data: currentMembership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const currentMembershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (currentMembershipResult.isErr()) return err(currentMembershipResult.error);
 
+  const currentMembership = currentMembershipResult.unwrap();
   if (!currentMembership || currentMembership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (currentMembership[0].role !== "owner") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
-  const { data: targetMember } = await memberRepository.findById(memberId);
+  const targetMemberResult = await memberRepository.findById(memberId);
+  if (targetMemberResult.isErr()) return err(targetMemberResult.error);
 
+  const targetMember = targetMemberResult.unwrap();
   if (!targetMember || targetMember.length === 0) {
-    throw new NotFoundError("Member");
+    return err(new NotFoundError("Member"));
   }
 
   if (targetMember[0].role === "owner") {
-    throw new ForbiddenError("Cannot change owner's role");
+    return err(new ForbiddenError("Cannot change owner's role"));
   }
 
-  const { error: updateError } = await memberRepository.update(memberId, input);
+  const updateResult = await memberRepository.update(memberId, input);
 
-  if (updateError) {
-    throw new Error(`Unable to update member: ${updateError}`);
+  if (updateResult.isErr()) {
+    return err(new AppError("member-update-failed", `Unable to update member: ${updateResult.error.message}`, 500));
   }
 
-  return {
+  return ok({
     id: targetMember[0].id,
     userId: targetMember[0].userId,
     projectId: targetMember[0].projectId,
     role: input.role,
     joinedAt: targetMember[0].joinedAt,
-  };
+  });
 };
 
 export const removeMember = async (userId: string, projectId: string, memberId: string) => {
-  const { data: currentMembership } = await memberRepository.findByUserAndProject(userId, projectId);
+  const currentMembershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  if (currentMembershipResult.isErr()) return err(currentMembershipResult.error);
 
+  const currentMembership = currentMembershipResult.unwrap();
   if (!currentMembership || currentMembership.length === 0) {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
   if (currentMembership[0].role === "member") {
-    throw new UnauthorizedError("Not authorized");
+    return err(new UnauthorizedError("Not authorized"));
   }
 
-  const { data: targetMember } = await memberRepository.findById(memberId);
+  const targetMemberResult = await memberRepository.findById(memberId);
+  if (targetMemberResult.isErr()) return err(targetMemberResult.error);
 
+  const targetMember = targetMemberResult.unwrap();
   if (!targetMember || targetMember.length === 0) {
-    throw new NotFoundError("Member");
+    return err(new NotFoundError("Member"));
   }
 
   if (targetMember[0].role === "owner") {
-    throw new ForbiddenError("Cannot remove owner");
+    return err(new ForbiddenError("Cannot remove owner"));
   }
 
-  const { error: deleteError } = await memberRepository.delete(memberId);
+  const deleteResult = await memberRepository.delete(memberId);
 
-  if (deleteError) {
-    throw new Error(`Unable to remove member: ${deleteError}`);
+  if (deleteResult.isErr()) {
+    return err(new AppError("member-remove-failed", `Unable to remove member: ${deleteResult.error.message}`, 500));
   }
 
-  return { success: true };
+  return ok({ success: true });
 };
