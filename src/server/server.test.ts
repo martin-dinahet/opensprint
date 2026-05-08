@@ -1,10 +1,10 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHonoTestClient } from "@/test/backend";
-import { makeProject, makeUser } from "@/test/factories";
+import { makeBoard, makeProject, makeTask, makeUser } from "@/test/factories";
 import { AppError } from "./features/shared/errors";
 
-const { authMock, projectUseCasesMock } = vi.hoisted(() => ({
+const { authMock, boardUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
   authMock: {
     api: {
       getSession: vi.fn(),
@@ -18,6 +18,29 @@ const { authMock, projectUseCasesMock } = vi.hoisted(() => ({
     listProjects: vi.fn(),
     updateProject: vi.fn(),
   },
+  boardUseCasesMock: {
+    createBoard: vi.fn(),
+    deleteBoard: vi.fn(),
+    getBoard: vi.fn(),
+    listBoards: vi.fn(),
+    reorderBoards: vi.fn(),
+    updateBoard: vi.fn(),
+  },
+  memberUseCasesMock: {
+    addMember: vi.fn(),
+    listMembers: vi.fn(),
+    removeMember: vi.fn(),
+    updateMember: vi.fn(),
+  },
+  taskUseCasesMock: {
+    assignTask: vi.fn(),
+    createTask: vi.fn(),
+    deleteTask: vi.fn(),
+    listTasks: vi.fn(),
+    moveTask: vi.fn(),
+    reorderTask: vi.fn(),
+    updateTask: vi.fn(),
+  },
 }));
 
 vi.mock("@/server/lib/auth", () => ({
@@ -25,6 +48,9 @@ vi.mock("@/server/lib/auth", () => ({
 }));
 
 vi.mock("@/server/features/project/usecases", () => projectUseCasesMock);
+vi.mock("@/server/features/board/usecases", () => boardUseCasesMock);
+vi.mock("@/server/features/member/usecases", () => memberUseCasesMock);
+vi.mock("@/server/features/task/usecases", () => taskUseCasesMock);
 
 const { server } = await import("@/server");
 
@@ -104,5 +130,96 @@ describe("server routes", () => {
 
     expect(response.status).toBe(200);
     expect(projectUseCasesMock.updateProject).toHaveBeenCalledWith("user-1", "project-1", { name: "Updated" });
+  });
+
+  it("routes board listing with project params", async () => {
+    boardUseCasesMock.listBoards.mockResolvedValue(ok([makeBoard()]));
+
+    const client = createHonoTestClient(server);
+    const response = await client.api.projects[":id"].boards.$get({ param: { id: "project-1" } });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ boards: [makeBoard()] });
+    expect(boardUseCasesMock.listBoards).toHaveBeenCalledWith("user-1", "project-1");
+  });
+
+  it("routes board reorder requests", async () => {
+    boardUseCasesMock.reorderBoards.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    const response = await client.api.projects[":id"].boards.reorder.$patch({
+      param: { id: "project-1" },
+      json: { boardIds: ["board-2", "board-1"] },
+    });
+
+    expect(response.status).toBe(200);
+    expect(boardUseCasesMock.reorderBoards).toHaveBeenCalledWith("user-1", "project-1", ["board-2", "board-1"]);
+  });
+
+  it("routes member creation requests", async () => {
+    memberUseCasesMock.addMember.mockResolvedValue(
+      ok({
+        id: "member-1",
+        userId: "user-2",
+        projectId: "project-1",
+        role: "admin",
+        joinedAt: new Date("2026-01-01T00:00:00.000Z"),
+      }),
+    );
+
+    const client = createHonoTestClient(server);
+    const response = await client.api.projects[":id"].members.$post({
+      param: { id: "project-1" },
+      json: { email: "user@example.com", role: "admin" },
+    });
+
+    expect(response.status).toBe(200);
+    expect(memberUseCasesMock.addMember).toHaveBeenCalledWith("user-1", "project-1", {
+      email: "user@example.com",
+      role: "admin",
+    });
+  });
+
+  it("validates member update roles", async () => {
+    const client = createHonoTestClient(server);
+    const response = await client.api.projects[":id"].members[":memberId"].$patch({
+      param: { id: "project-1", memberId: "member-1" },
+      json: { role: "owner" },
+    });
+
+    expect(response.status).toBe(403);
+    expect(memberUseCasesMock.updateMember).not.toHaveBeenCalled();
+  });
+
+  it("routes board task creation requests", async () => {
+    taskUseCasesMock.createTask.mockResolvedValue(ok(makeTask({ id: "task-new", title: "New task" })));
+
+    const client = createHonoTestClient(server);
+    const response = await client.api.boards[":boardId"].tasks.$post({
+      param: { boardId: "board-1" },
+      json: { title: "New task", priority: "high" },
+    });
+
+    expect(response.status).toBe(200);
+    expect(taskUseCasesMock.createTask).toHaveBeenCalledWith("user-1", "board-1", {
+      title: "New task",
+      priority: "high",
+    });
+  });
+
+  it("routes task movement requests", async () => {
+    taskUseCasesMock.moveTask.mockResolvedValue(ok({ id: "task-1", boardId: "board-2", position: 0 }));
+
+    const client = createHonoTestClient(server);
+    const response = await client.api.tasks[":taskId"].move.$patch({
+      param: { taskId: "task-1" },
+      json: { boardId: "board-2", position: 0 },
+    });
+
+    expect(response.status).toBe(200);
+    expect(taskUseCasesMock.moveTask).toHaveBeenCalledWith("user-1", "task-1", {
+      boardId: "board-2",
+      position: 0,
+    });
   });
 });

@@ -27,6 +27,7 @@ describe("API result helpers", () => {
     const result = await readApiResult(response, "Fallback");
 
     expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected result to be an error");
     expect(result.error).toBeInstanceOf(ClientApiError);
     expect(result.error.message).toBe("Nope");
     expect(result.error.status).toBe(403);
@@ -38,6 +39,7 @@ describe("API result helpers", () => {
     const result = await readApiResult(response, "Missing data", () => null);
 
     expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected result to be an error");
     expect(result.error.message).toBe("Missing data");
   });
 
