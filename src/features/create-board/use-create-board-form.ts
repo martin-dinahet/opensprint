@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import z from "zod";
 import { useCreateBoard } from "@/entities/board";
+import { handleClientResult } from "@/shared/api/result";
 import { parseFormData } from "@/shared/lib/forms";
 
 const createBoardSchema = z.object({
@@ -35,12 +36,14 @@ export function useCreateBoardForm({ onOpenChange, projectId }: Options) {
         return;
       }
 
-      try {
-        await createBoard.mutateAsync({ data, projectId });
-        onOpenChange(false);
-      } catch (error) {
-        setGlobalError(error instanceof Error ? error.message : "Unable to create column");
-      }
+      const result = await handleClientResult(
+        () => createBoard.mutateAsync({ data, projectId }),
+        "Unable to create column",
+      );
+      result.match({
+        ok: () => onOpenChange(false),
+        err: (error) => setGlobalError(error.message),
+      });
     });
   };
 

@@ -90,8 +90,9 @@ describe("task use cases", () => {
     const result = await listTasks("user-1", "missing-board");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(404);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
     expect(taskRepositoryMock.findByBoard).not.toHaveBeenCalled();
   });
 
@@ -130,8 +131,9 @@ describe("task use cases", () => {
     });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(404);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
     expect(taskRepositoryMock.create).not.toHaveBeenCalled();
   });
 
@@ -154,8 +156,9 @@ describe("task use cases", () => {
     const result = await deleteTask("user-1", "board-1", "task-1");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(taskRepositoryMock.delete).not.toHaveBeenCalled();
   });
 
@@ -196,8 +199,9 @@ describe("task use cases", () => {
     const result = await reorderTask("user-1", "task-1", { position: 3 });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(500);
-    expect(result.error.message).toContain("database unavailable");
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("database unavailable");
+    }
   });
 });

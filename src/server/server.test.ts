@@ -184,7 +184,7 @@ describe("server routes", () => {
     const client = createHonoTestClient(server);
     const response = await client.api.projects[":id"].members[":memberId"].$patch({
       param: { id: "project-1", memberId: "member-1" },
-      json: { role: "owner" },
+      json: { role: "owner" as never },
     });
 
     expect(response.status).toBe(403);

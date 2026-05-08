@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import z from "zod";
 import { type TaskOutput, type TaskPriority, useAssignTask, useUpdateTask } from "@/entities/task";
+import { handleClientResult } from "@/shared/api/result";
 import { parseFormData } from "@/shared/lib/forms";
 
 const editTaskSchema = z.object({
@@ -60,7 +61,7 @@ export function useEditTaskForm({ onOpenChange, task }: Options) {
         return;
       }
 
-      try {
+      const result = await handleClientResult(async () => {
         await updateTask.mutateAsync({
           boardId: task.boardId,
           data: {
@@ -74,11 +75,12 @@ export function useEditTaskForm({ onOpenChange, task }: Options) {
         if (data.assigneeId !== task.assigneeId) {
           await assignTask.mutateAsync({ assigneeId: data.assigneeId, taskId: task.id });
         }
+      }, "Unable to update task");
 
-        onOpenChange(false);
-      } catch (error) {
-        setGlobalError(error instanceof Error ? error.message : "Unable to update task");
-      }
+      result.match({
+        ok: () => onOpenChange(false),
+        err: (error) => setGlobalError(error.message),
+      });
     });
   };
 

@@ -27,10 +27,11 @@ describe("API result helpers", () => {
     const result = await readApiResult(response, "Fallback");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error).toBeInstanceOf(ClientApiError);
-    expect(result.error.message).toBe("Nope");
-    expect(result.error.status).toBe(403);
+    if (result.isErr()) {
+      expect(result.error).toBeInstanceOf(ClientApiError);
+      expect(result.error.message).toBe("Nope");
+      expect(result.error.status).toBe(403);
+    }
   });
 
   it("returns fallback errors when successful responses have no data", async () => {
@@ -39,8 +40,9 @@ describe("API result helpers", () => {
     const result = await readApiResult(response, "Missing data", () => null);
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.message).toBe("Missing data");
+    if (result.isErr()) {
+      expect(result.error.message).toBe("Missing data");
+    }
   });
 
   it("unwraps successful results and throws failed results", () => {

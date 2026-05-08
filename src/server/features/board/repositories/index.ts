@@ -6,15 +6,15 @@ import type { CreateBoardInput, UpdateBoardInput } from "../dto";
 
 export class BoardRepository {
   async findById(id: string) {
-    return handle(db.select().from(board).where(eq(board.id, id)));
+    return handle(() => db.select().from(board).where(eq(board.id, id)));
   }
 
   async findByProject(projectId: string) {
-    return handle(db.select().from(board).where(eq(board.projectId, projectId)));
+    return handle(() => db.select().from(board).where(eq(board.projectId, projectId)));
   }
 
   async create(data: CreateBoardInput & { id: string; projectId: string; position: number }) {
-    return handle(
+    return handle(() =>
       db.insert(board).values({
         id: data.id,
         projectId: data.projectId,
@@ -25,15 +25,15 @@ export class BoardRepository {
   }
 
   async update(id: string, data: UpdateBoardInput) {
-    return handle(db.update(board).set(data).where(eq(board.id, id)));
+    return handle(() => db.update(board).set(data).where(eq(board.id, id)));
   }
 
   async updatePosition(id: string, position: number) {
-    return handle(db.update(board).set({ position }).where(eq(board.id, id)));
+    return handle(() => db.update(board).set({ position }).where(eq(board.id, id)));
   }
 
   async delete(id: string) {
-    return handle(db.delete(board).where(eq(board.id, id)));
+    return handle(() => db.delete(board).where(eq(board.id, id)));
   }
 }
 

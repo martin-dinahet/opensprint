@@ -7,18 +7,18 @@ import type { CreateProjectInput, UpdateProjectInput } from "../dto";
 
 export class ProjectRepository {
   async findById(id: string) {
-    return handle(db.select().from(project).where(eq(project.id, id)));
+    return handle(() => db.select().from(project).where(eq(project.id, id)));
   }
 
   async findByIds(ids: string[]) {
     if (ids.length === 0) {
       return ok([]);
     }
-    return handle(db.select().from(project).where(inArray(project.id, ids)));
+    return handle(() => db.select().from(project).where(inArray(project.id, ids)));
   }
 
   async create(data: CreateProjectInput & { id: string }) {
-    return handle(
+    return handle(() =>
       db.insert(project).values({
         id: data.id,
         name: data.name,
@@ -28,11 +28,11 @@ export class ProjectRepository {
   }
 
   async update(id: string, data: UpdateProjectInput) {
-    return handle(db.update(project).set(data).where(eq(project.id, id)));
+    return handle(() => db.update(project).set(data).where(eq(project.id, id)));
   }
 
   async delete(id: string) {
-    return handle(db.delete(project).where(eq(project.id, id)));
+    return handle(() => db.delete(project).where(eq(project.id, id)));
   }
 }
 

@@ -5,7 +5,7 @@ import type {
   UpdateProjectOutput,
 } from "@/entities/project";
 import { api } from "@/shared/api/client";
-import { readApiResult } from "@/shared/api/result";
+import { requestApiResult } from "@/shared/api/result";
 
 const BASE_KEY = "projects";
 
@@ -19,29 +19,40 @@ export const projectKeys = {
 
 export const projectApi = {
   list: async () => {
-    const res = await api.projects.$get();
-    return readApiResult<{ projects: ProjectListOutput[] }>(res, "Failed to fetch projects", (body) => ({
-      projects: (body as { projects?: ProjectListOutput[] } | null)?.projects ?? [],
-    }));
+    return requestApiResult<{ projects: ProjectListOutput[] }>(
+      () => api.projects.$get(),
+      "Failed to fetch projects",
+      (body) => ({
+        projects: (body as { projects?: ProjectListOutput[] } | null)?.projects ?? [],
+      }),
+    );
   },
 
   get: async (id: string) => {
-    const res = await api.projects[":id"].$get({ param: { id } });
-    return readApiResult<ProjectListOutput>(res, "Failed to fetch project");
+    return requestApiResult<ProjectListOutput>(
+      () => api.projects[":id"].$get({ param: { id } }),
+      "Failed to fetch project",
+    );
   },
 
   create: async (data: CreateProjectInput) => {
-    const res = await api.projects.$post({ json: data });
-    return readApiResult<{ id: string; name: string; description: string | null }>(res, "Failed to create project");
+    return requestApiResult<{ id: string; name: string; description: string | null }>(
+      () => api.projects.$post({ json: data }),
+      "Failed to create project",
+    );
   },
 
   update: async (id: string, data: UpdateProjectInput) => {
-    const res = await api.projects[":id"].$patch({ param: { id }, json: data });
-    return readApiResult<UpdateProjectOutput>(res, "Failed to update project");
+    return requestApiResult<UpdateProjectOutput>(
+      () => api.projects[":id"].$patch({ param: { id }, json: data }),
+      "Failed to update project",
+    );
   },
 
   delete: async (id: string) => {
-    const res = await api.projects[":id"].$delete({ param: { id } });
-    return readApiResult<{ success: boolean }>(res, "Failed to delete project");
+    return requestApiResult<{ success: boolean }>(
+      () => api.projects[":id"].$delete({ param: { id } }),
+      "Failed to delete project",
+    );
   },
 };

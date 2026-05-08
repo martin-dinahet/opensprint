@@ -10,7 +10,7 @@ export const toAppError = (error: unknown): AppError => {
   return new AppError("database-error", message, 500);
 };
 
-export const handle = async <T>(promise: Promise<T>) => {
-  const result = await handleResult(() => promise);
+export const handle = async <T>(fn: () => T | Promise<T>) => {
+  const result = await handleResult(fn);
   return result.mapErr(toAppError);
 };

@@ -74,8 +74,9 @@ describe("board use cases", () => {
     const result = await listBoards("user-2", "project-1");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(boardRepositoryMock.findByProject).not.toHaveBeenCalled();
   });
 
@@ -102,9 +103,10 @@ describe("board use cases", () => {
     const result = await createBoard("user-1", "project-1", { name: "Doing" });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error).toBeInstanceOf(AppError);
-    expect(result.error.message).toContain("database unavailable");
+    if (result.isErr()) {
+      expect(result.error).toBeInstanceOf(AppError);
+      expect(result.error.message).toContain("database unavailable");
+    }
   });
 
   it("allows owners and admins to delete boards", async () => {
@@ -124,8 +126,9 @@ describe("board use cases", () => {
     const result = await deleteBoard("user-1", "project-1", "board-1");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(boardRepositoryMock.delete).not.toHaveBeenCalled();
   });
 
@@ -146,8 +149,9 @@ describe("board use cases", () => {
     const result = await reorderBoards("user-1", "project-1", ["board-1", "other-board"]);
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(404);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
     expect(boardRepositoryMock.updatePosition).not.toHaveBeenCalled();
   });
 });

@@ -68,8 +68,9 @@ describe("member use cases", () => {
     const result = await listMembers("outsider", "project-1");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(memberRepositoryMock.findByProject).not.toHaveBeenCalled();
   });
 
@@ -106,8 +107,9 @@ describe("member use cases", () => {
     const result = await addMember("owner-user", "project-1", { email: "regular@example.com", role: "member" });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(409);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(409);
+    }
     expect(memberRepositoryMock.create).not.toHaveBeenCalled();
   });
 
@@ -128,8 +130,9 @@ describe("member use cases", () => {
     const result = await updateMember("owner-user", "project-1", "owner-member", { role: "admin" });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(memberRepositoryMock.update).not.toHaveBeenCalled();
   });
 
@@ -151,8 +154,9 @@ describe("member use cases", () => {
     const result = await removeMember("owner-user", "project-1", "regular-member");
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(500);
-    expect(result.error.message).toContain("database unavailable");
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("database unavailable");
+    }
   });
 });

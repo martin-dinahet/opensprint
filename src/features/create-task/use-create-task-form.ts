@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import z from "zod";
 import { type TaskPriority, useCreateTask } from "@/entities/task";
+import { handleClientResult } from "@/shared/api/result";
 import { parseFormData } from "@/shared/lib/forms";
 
 const defaultPriority: TaskPriority = "medium";
@@ -55,13 +56,14 @@ export function useCreateTaskForm({ boardId, onOpenChange }: Options) {
         return;
       }
 
-      try {
-        await createTask.mutateAsync({ boardId, data });
-        reset();
-        onOpenChange(false);
-      } catch (error) {
-        setGlobalError(error instanceof Error ? error.message : "Unable to create task");
-      }
+      const result = await handleClientResult(() => createTask.mutateAsync({ boardId, data }), "Unable to create task");
+      result.match({
+        ok: () => {
+          reset();
+          onOpenChange(false);
+        },
+        err: (error) => setGlobalError(error.message),
+      });
     });
   };
 

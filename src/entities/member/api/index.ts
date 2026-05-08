@@ -1,6 +1,6 @@
 import type { MemberWithUserOutput } from "@/entities/member";
 import { api } from "@/shared/api/client";
-import { readApiResult } from "@/shared/api/result";
+import { requestApiResult } from "@/shared/api/result";
 
 const BASE_KEY = "members";
 
@@ -12,9 +12,12 @@ export const memberKeys = {
 
 export const memberApi = {
   list: async (projectId: string) => {
-    const res = await api.projects[":id"].members.$get({ param: { id: projectId } });
-    return readApiResult<{ members: MemberWithUserOutput[] }>(res, "Failed to fetch project members", (body) => ({
-      members: (body as { members?: MemberWithUserOutput[] } | null)?.members ?? [],
-    }));
+    return requestApiResult<{ members: MemberWithUserOutput[] }>(
+      () => api.projects[":id"].members.$get({ param: { id: projectId } }),
+      "Failed to fetch project members",
+      (body) => ({
+        members: (body as { members?: MemberWithUserOutput[] } | null)?.members ?? [],
+      }),
+    );
   },
 };

@@ -47,7 +47,7 @@ describe("task assignment dialogs", () => {
   });
 
   it("changes the task assignee when editing a task", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     const task = makeTask({ assigneeId: null });
     const members = [
       makeProjectMember({

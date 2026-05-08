@@ -6,15 +6,15 @@ import type { CreateTaskInput, UpdateTaskInput } from "../dto";
 
 export class TaskRepository {
   async findById(id: string) {
-    return handle(db.select().from(task).where(eq(task.id, id)));
+    return handle(() => db.select().from(task).where(eq(task.id, id)));
   }
 
   async findByBoard(boardId: string) {
-    return handle(db.select().from(task).where(eq(task.boardId, boardId)));
+    return handle(() => db.select().from(task).where(eq(task.boardId, boardId)));
   }
 
   async create(data: CreateTaskInput & { id: string; boardId: string; position: number }) {
-    return handle(
+    return handle(() =>
       db.insert(task).values({
         id: data.id,
         boardId: data.boardId,
@@ -37,23 +37,23 @@ export class TaskRepository {
       updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
     }
 
-    return handle(db.update(task).set(updateData).where(eq(task.id, id)));
+    return handle(() => db.update(task).set(updateData).where(eq(task.id, id)));
   }
 
   async updateAssignee(id: string, assigneeId: string | null) {
-    return handle(db.update(task).set({ assigneeId }).where(eq(task.id, id)));
+    return handle(() => db.update(task).set({ assigneeId }).where(eq(task.id, id)));
   }
 
   async updateBoardAndPosition(id: string, boardId: string, position: number) {
-    return handle(db.update(task).set({ boardId, position }).where(eq(task.id, id)));
+    return handle(() => db.update(task).set({ boardId, position }).where(eq(task.id, id)));
   }
 
   async updatePosition(id: string, position: number) {
-    return handle(db.update(task).set({ position }).where(eq(task.id, id)));
+    return handle(() => db.update(task).set({ position }).where(eq(task.id, id)));
   }
 
   async delete(id: string) {
-    return handle(db.delete(task).where(eq(task.id, id)));
+    return handle(() => db.delete(task).where(eq(task.id, id)));
   }
 }
 

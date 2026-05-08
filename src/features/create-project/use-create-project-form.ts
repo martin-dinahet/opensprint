@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import z from "zod";
 import { useCreateProject } from "@/entities/project";
+import { handleClientResult } from "@/shared/api/result";
 import { parseFormData } from "@/shared/lib/forms";
 
 const createProjectSchema = z.object({
@@ -40,13 +41,14 @@ export function useCreateProjectForm({ onOpenChange }: Options) {
         return;
       }
 
-      try {
-        const project = await createProject.mutateAsync(data);
-        onOpenChange(false);
-        router.push(`/projects/${project.id}`);
-      } catch (error) {
-        setGlobalError(error instanceof Error ? error.message : "Unable to create project");
-      }
+      const result = await handleClientResult(() => createProject.mutateAsync(data), "Unable to create project");
+      result.match({
+        ok: (project) => {
+          onOpenChange(false);
+          router.push(`/projects/${project.id}`);
+        },
+        err: (error) => setGlobalError(error.message),
+      });
     });
   };
 

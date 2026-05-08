@@ -104,9 +104,10 @@ describe("project use cases", () => {
     const result = await createProject("user-1", { name: "New Project" });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(500);
-    expect(result.error.message).toContain("database unavailable");
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("database unavailable");
+    }
   });
 
   it("gets a project only when the user is a member", async () => {
@@ -126,8 +127,9 @@ describe("project use cases", () => {
     const result = await updateProject("user-1", "project-1", { name: "Updated" });
 
     expect(result.isErr()).toBe(true);
-    if (result.isOk()) throw new Error("Expected result to be an error");
-    expect(result.error.statusCode).toBe(403);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
     expect(projectRepositoryMock.update).not.toHaveBeenCalled();
   });
 

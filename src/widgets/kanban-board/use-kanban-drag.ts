@@ -240,8 +240,7 @@ export function useKanbanDrag(moveTask: MoveTaskMutation) {
           task: { ...task, boardId: targetBoardId },
           taskId: activeId,
         })
-        .then(reset)
-        .catch(reset);
+        .then(reset, reset);
     },
     [activeTask, findTaskBoardId, moveTask, reset],
   );
