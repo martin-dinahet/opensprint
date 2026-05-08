@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProjectKanbanPage } from "@/features/project/components/project-kanban-page";
+import { ProjectKanbanPage } from "@/pages/project-kanban";
 
 type Props = {
   params: Promise<{ id: string }>;

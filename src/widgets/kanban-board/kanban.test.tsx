@@ -1,10 +1,10 @@
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { KanbanBoard } from "@/features/board/components/kanban-board";
-import { TaskCard } from "@/features/task/components/task-card";
+import { TaskCard } from "@/entities/task";
 import { makeBoard, makeProjectMember, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
+import { KanbanBoard } from "@/widgets/kanban-board";
 
 vi.mock("@dnd-kit/core", () => ({
   useDroppable: () => ({

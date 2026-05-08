@@ -2,8 +2,8 @@
 
 import { IconArrowRight, IconCheck, IconLayoutKanban, IconUsersGroup } from "@tabler/icons-react";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/shared/lib/auth-client";
+import { Button, buttonVariants } from "@/shared/ui/button";
 
 const columns = [
   { name: "Backlog", tasks: ["Scope release notes", "Review onboarding copy", "Invite product team"] },

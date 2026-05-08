@@ -1,11 +1,7 @@
 "use client";
 
-import { SignUpForm } from "@/features/auth/components/sign-up-form.tsx";
+import { SignUpPage } from "@/pages/auth";
 
-export default function SignUpPage() {
-  return (
-    <div className="flex h-screen w-screen items-center justify-center">
-      <SignUpForm />
-    </div>
-  );
+export default function Page() {
+  return <SignUpPage />;
 }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/features/auth/hooks/use-sign-out";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 type Props = {
   className?: string;

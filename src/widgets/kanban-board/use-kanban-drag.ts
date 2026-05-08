@@ -11,9 +11,8 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { BoardOutput } from "@/features/board/types";
-import type { useMoveTask } from "@/features/task/hooks";
-import type { TaskOutput } from "@/features/task/types";
+import type { BoardOutput } from "@/entities/board";
+import type { TaskOutput, useMoveTask } from "@/entities/task";
 
 type DragData = {
   board?: BoardOutput;
