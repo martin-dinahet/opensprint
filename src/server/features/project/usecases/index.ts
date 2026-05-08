@@ -114,11 +114,15 @@ export const updateProject = async (
   const { data: updatedProject } = await projectRepository.findById(projectId);
   const updated = updatedProject?.[0];
 
+  if (!updated) {
+    throw new NotFoundError("Project");
+  }
+
   return {
-    id: updated?.id,
-    name: updated?.name,
-    description: updated?.description,
-    updatedAt: updated?.updatedAt,
+    id: updated.id,
+    name: updated.name,
+    description: updated.description,
+    updatedAt: updated.updatedAt,
   };
 };
 
