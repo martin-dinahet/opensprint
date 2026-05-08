@@ -1,16 +1,5 @@
-import type { Result } from "@/lib/types/result";
-
-type HttpStatusCode = 400 | 401 | 403 | 404 | 409 | 500;
-
-export const handle = async <T>(promise: Promise<T>): Promise<Result<T>> => {
-  try {
-    const data = await promise;
-    return { data, error: null };
-  } catch (err) {
-    const error = err instanceof Error ? err.message : String(err);
-    return { data: null, error };
-  }
-};
+import type { Result } from "@punpun-dev/ts-result";
+import type { AppError, HttpStatusCode } from "@/server/features/shared/errors";
 
 export interface UseCaseError {
   code: string;
@@ -23,15 +12,20 @@ export interface UseCaseResult<T> {
   error: UseCaseError | null;
 }
 
-export const handleUseCase = async <T>(promise: Promise<T>): Promise<UseCaseResult<T>> => {
-  const result = await handle(promise);
-  if (result.error) {
+export const handleUseCase = async <T>(
+  resultOrPromise: Result<T, AppError> | Promise<Result<T, AppError>>,
+): Promise<UseCaseResult<T>> => {
+  const result = await resultOrPromise;
+
+  if (result.isErr()) {
+    const error = result.error;
     const useCaseError: UseCaseError = {
-      code: "unknown",
-      message: result.error,
-      statusCode: 500,
+      code: error.code,
+      message: error.message,
+      statusCode: error.statusCode,
     };
     return { data: null, error: useCaseError };
   }
-  return { data: result.data, error: null };
+
+  return { data: result.unwrap(), error: null };
 };
