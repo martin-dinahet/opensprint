@@ -67,41 +67,26 @@ function BoardWithTasks({
   board,
   dragInFlight,
   optimisticTasks,
-  movedTaskId,
   onAddTask,
   onEditTask,
   onDeleteTask,
   isHovered,
   onTasksReady,
-  onServerConfirmed,
 }: {
   board: BoardOutput;
   dragInFlight: boolean;
   optimisticTasks: TaskOutput[];
-  /** The task id that was moved cross-board, so we can detect when the
-   *  server data has caught up before switching off optimistic mode. */
-  movedTaskId: string | null;
   onAddTask: () => void;
   onEditTask: (task: TaskOutput) => void;
   onDeleteTask: (taskId: string) => void;
   isHovered: boolean;
   onTasksReady: (boardId: string, tasks: TaskOutput[]) => void;
-  /** Called by the destination board once fresh server data contains the task */
-  onServerConfirmed: () => void;
 }) {
   const { data: serverTasks = [] } = useTasks(board.id);
 
   useEffect(() => {
     onTasksReady(board.id, serverTasks);
   }, [board.id, onTasksReady, serverTasks]);
-
-  const serverHasTask = movedTaskId !== null && serverTasks.some((t) => t.id === movedTaskId);
-
-  useEffect(() => {
-    if (serverHasTask && dragInFlight) {
-      onServerConfirmed();
-    }
-  }, [dragInFlight, onServerConfirmed, serverHasTask]);
 
   const tasks = dragInFlight ? optimisticTasks : serverTasks;
 
@@ -152,9 +137,6 @@ export default function KanbanPage({ params }: Props) {
   // True from dragStart until the destination board's server data confirms
   // the moved task has arrived. This ensures we never flash stale data.
   const [dragInFlight, setDragInFlight] = useState(false);
-
-  // The task id being moved cross-board, used to detect server confirmation.
-  const [movedTaskId, setMovedTaskId] = useState<string | null>(null);
 
   // ------------------------------------------------------------------
   // Drag state
@@ -223,17 +205,6 @@ export default function KanbanPage({ params }: Props) {
     });
     setEditTask(null);
   };
-
-  // Called by the destination BoardWithTasks once it sees the moved task
-  // in its fresh server data. This is the earliest safe moment to drop
-  // the optimistic override without any visible flash.
-  const handleServerConfirmed = useCallback(() => {
-    setActiveTask(null);
-    setDragInFlight(false);
-    setIsCrossBoardDrop(false);
-    setMovedTaskId(null);
-    setOptimisticBoards(new Map());
-  }, []);
 
   // ------------------------------------------------------------------
   // Helper: find which board a task currently lives in, checking the
@@ -361,7 +332,6 @@ export default function KanbanPage({ params }: Props) {
       setActiveTask(null);
       setDragInFlight(false);
       setIsCrossBoardDrop(false);
-      setMovedTaskId(null);
       setOptimisticBoards(new Map());
       return;
     }
@@ -381,7 +351,6 @@ export default function KanbanPage({ params }: Props) {
       setActiveTask(null);
       setDragInFlight(false);
       setIsCrossBoardDrop(false);
-      setMovedTaskId(null);
       setOptimisticBoards(new Map());
       return;
     }
@@ -414,24 +383,23 @@ export default function KanbanPage({ params }: Props) {
       });
       setActiveTask(null);
       setIsCrossBoardDrop(true);
-      setMovedTaskId(activeId);
-      moveTask.mutate(
-        { taskId: activeId, data: { boardId: targetBoardId } },
-        {
-          onError: () => {
-            setActiveTask(null);
-            setDragInFlight(false);
-            setIsCrossBoardDrop(false);
-            setMovedTaskId(null);
-            setOptimisticBoards(new Map());
-          },
-        },
-      );
+      void moveTask
+        .mutateAsync({ taskId: activeId, data: { boardId: targetBoardId }, task: { ...task, boardId: targetBoardId } })
+        .then(() => {
+          setDragInFlight(false);
+          setIsCrossBoardDrop(false);
+          setOptimisticBoards(new Map());
+        })
+        .catch(() => {
+          setActiveTask(null);
+          setDragInFlight(false);
+          setIsCrossBoardDrop(false);
+          setOptimisticBoards(new Map());
+        });
     } else {
       setActiveTask(null);
       setDragInFlight(false);
       setIsCrossBoardDrop(false);
-      setMovedTaskId(null);
       setOptimisticBoards(new Map());
     }
   };
@@ -441,7 +409,6 @@ export default function KanbanPage({ params }: Props) {
     setOverBoardId(null);
     setDragInFlight(false);
     setIsCrossBoardDrop(false);
-    setMovedTaskId(null);
     setOptimisticBoards(new Map());
   };
 
@@ -491,8 +458,6 @@ export default function KanbanPage({ params }: Props) {
                   optimisticTasks={
                     dragInFlight ? (optimisticBoards.get(board.id) ?? []) : (serverTasksRef.current.get(board.id) ?? [])
                   }
-                  movedTaskId={movedTaskId}
-                  onServerConfirmed={handleServerConfirmed}
                   onAddTask={() => {
                     setActiveBoardId(board.id);
                     setCreateTaskOpen(true);

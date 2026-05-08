@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unwrapClientResult } from "@/features/shared/api/result";
 import { taskApi, taskKeys } from "@/features/task/api";
-import type { CreateTaskInput, MoveTaskInput, UpdateTaskInput } from "@/features/task/types";
+import type { CreateTaskInput, MoveTaskInput, TaskOutput, UpdateTaskInput } from "@/features/task/types";
 
 export function useTasks(boardId: string) {
   return useQuery({
@@ -63,10 +63,51 @@ export function useMoveTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ taskId, data }: { taskId: string; data: MoveTaskInput }) =>
+    mutationFn: async ({ taskId, data }: { data: MoveTaskInput; task?: TaskOutput; taskId: string }) =>
       unwrapClientResult(await taskApi.move(taskId, data)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    onMutate: async ({ data, task, taskId }) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+
+      const previousTaskLists = queryClient.getQueriesData<TaskOutput[]>({ queryKey: taskKeys.lists() });
+      const movedTask =
+        task ??
+        previousTaskLists.flatMap(([, tasks]) => tasks ?? []).find((candidate) => candidate.id === taskId) ??
+        null;
+
+      if (!movedTask) {
+        return { previousTaskLists };
+      }
+
+      for (const [queryKey, tasks] of previousTaskLists) {
+        queryClient.setQueryData<TaskOutput[]>(
+          queryKey,
+          (tasks ?? []).filter((candidate) => candidate.id !== taskId),
+        );
+      }
+
+      queryClient.setQueryData<TaskOutput[]>(taskKeys.list(data.boardId), (tasks = []) => {
+        const nextTasks = tasks.filter((candidate) => candidate.id !== taskId);
+        const nextTask = {
+          ...movedTask,
+          boardId: data.boardId,
+          position: data.position ?? movedTask.position,
+        };
+        const insertAt = data.position ?? nextTasks.length;
+
+        nextTasks.splice(Math.max(0, Math.min(insertAt, nextTasks.length)), 0, nextTask);
+
+        return nextTasks;
+      });
+
+      return { previousTaskLists };
+    },
+    onError: (_error, _variables, context) => {
+      for (const [queryKey, tasks] of context?.previousTaskLists ?? []) {
+        queryClient.setQueryData(queryKey, tasks);
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
 }
