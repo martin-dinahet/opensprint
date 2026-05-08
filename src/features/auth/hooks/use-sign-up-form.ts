@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import z from "zod";
-import { handle } from "@/lib/handle";
 import { parseFormData } from "@/lib/parse-form-data";
 import { signUpEmail } from "../api/sign-up-email";
 
@@ -32,9 +31,9 @@ export const useSignUpForm = () => {
         setFieldErrors(fieldErrors);
         return;
       }
-      const { error } = await handle(signUpEmail(data.email, data.name, data.password));
-      if (error) {
-        setGlobalError(error);
+      const result = await signUpEmail(data.email, data.name, data.password);
+      if (result.isErr()) {
+        setGlobalError(result.error.message);
         return;
       }
       router.push("/dashboard");

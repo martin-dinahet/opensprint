@@ -1,4 +1,5 @@
 import { api } from "@/features/shared/api/client";
+import { readApiResult } from "@/features/shared/api/result";
 import type {
   AssignTaskInput,
   CreateTaskInput,
@@ -20,68 +21,40 @@ export const taskKeys = {
 } as const;
 
 export const taskApi = {
-  list: async (boardId: string): Promise<{ tasks: TaskOutput[] }> => {
+  list: async (boardId: string) => {
     const res = await api.boards[":boardId"].tasks.$get({ param: { boardId } });
-    if (!res.ok) {
-      throw new Error("Failed to fetch tasks");
-    }
-    const body = await res.json();
-    return { tasks: body.tasks ?? [] };
+    return readApiResult<{ tasks: TaskOutput[] }>(res, "Failed to fetch tasks", (body) => ({
+      tasks: (body as { tasks?: TaskOutput[] } | null)?.tasks ?? [],
+    }));
   },
 
-  create: async (boardId: string, data: CreateTaskInput): Promise<TaskOutput> => {
+  create: async (boardId: string, data: CreateTaskInput) => {
     const res = await api.boards[":boardId"].tasks.$post({ param: { boardId }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to create task");
-    }
-    const body = await res.json();
-    if (!body) {
-      throw new Error("Failed to create task");
-    }
-    return body;
+    return readApiResult<TaskOutput>(res, "Failed to create task");
   },
 
-  update: async (boardId: string, taskId: string, data: UpdateTaskInput): Promise<UpdateTaskOutput> => {
+  update: async (boardId: string, taskId: string, data: UpdateTaskInput) => {
     const res = await api.boards[":boardId"].tasks[":taskId"].$patch({ param: { boardId, taskId }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to update task");
-    }
-    const body = await res.json();
-    if (!body) {
-      throw new Error("Failed to update task");
-    }
-    return body;
+    return readApiResult<UpdateTaskOutput>(res, "Failed to update task");
   },
 
-  delete: async (boardId: string, taskId: string): Promise<{ success: boolean }> => {
+  delete: async (boardId: string, taskId: string) => {
     const res = await api.boards[":boardId"].tasks[":taskId"].$delete({ param: { boardId, taskId } });
-    if (!res.ok) {
-      throw new Error("Failed to delete task");
-    }
-    return res.json() as Promise<{ success: boolean }>;
+    return readApiResult<{ success: boolean }>(res, "Failed to delete task");
   },
 
-  assign: async (taskId: string, data: AssignTaskInput): Promise<{ id: string; assigneeId: string | null }> => {
+  assign: async (taskId: string, data: AssignTaskInput) => {
     const res = await api.tasks[":taskId"].assign.$patch({ param: { taskId }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to assign task");
-    }
-    return res.json() as Promise<{ id: string; assigneeId: string | null }>;
+    return readApiResult<{ id: string; assigneeId: string | null }>(res, "Failed to assign task");
   },
 
-  move: async (taskId: string, data: MoveTaskInput): Promise<{ id: string; boardId: string; position: number }> => {
+  move: async (taskId: string, data: MoveTaskInput) => {
     const res = await api.tasks[":taskId"].move.$patch({ param: { taskId }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to move task");
-    }
-    return res.json() as Promise<{ id: string; boardId: string; position: number }>;
+    return readApiResult<{ id: string; boardId: string; position: number }>(res, "Failed to move task");
   },
 
-  reorder: async (taskId: string, data: ReorderTaskInput): Promise<{ id: string; position: number }> => {
+  reorder: async (taskId: string, data: ReorderTaskInput) => {
     const res = await api.tasks[":taskId"].reorder.$patch({ param: { taskId }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to reorder task");
-    }
-    return res.json() as Promise<{ id: string; position: number }>;
+    return readApiResult<{ id: string; position: number }>(res, "Failed to reorder task");
   },
 };

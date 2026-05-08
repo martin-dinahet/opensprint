@@ -5,6 +5,7 @@ import type {
   UpdateProjectOutput,
 } from "@/features/project/types";
 import { api } from "@/features/shared/api/client";
+import { readApiResult } from "@/features/shared/api/result";
 
 const BASE_KEY = "projects";
 
@@ -17,56 +18,30 @@ export const projectKeys = {
 } as const;
 
 export const projectApi = {
-  list: async (): Promise<{ projects: ProjectListOutput[] }> => {
+  list: async () => {
     const res = await api.projects.$get();
-    if (!res.ok) {
-      throw new Error("Failed to fetch projects");
-    }
-    const body = await res.json();
-    return { projects: body.projects ?? [] };
+    return readApiResult<{ projects: ProjectListOutput[] }>(res, "Failed to fetch projects", (body) => ({
+      projects: (body as { projects?: ProjectListOutput[] } | null)?.projects ?? [],
+    }));
   },
 
-  get: async (id: string): Promise<ProjectListOutput> => {
+  get: async (id: string) => {
     const res = await api.projects[":id"].$get({ param: { id } });
-    if (!res.ok) {
-      throw new Error("Failed to fetch project");
-    }
-    const body = await res.json();
-    if (!body) {
-      throw new Error("Project not found");
-    }
-    return body;
+    return readApiResult<ProjectListOutput>(res, "Failed to fetch project");
   },
 
-  create: async (data: CreateProjectInput): Promise<{ id: string; name: string; description: string | null }> => {
+  create: async (data: CreateProjectInput) => {
     const res = await api.projects.$post({ json: data });
-    if (!res.ok) {
-      throw new Error("Failed to create project");
-    }
-    const body = await res.json();
-    if (!body) {
-      throw new Error("Failed to create project");
-    }
-    return body;
+    return readApiResult<{ id: string; name: string; description: string | null }>(res, "Failed to create project");
   },
 
-  update: async (id: string, data: UpdateProjectInput): Promise<UpdateProjectOutput> => {
+  update: async (id: string, data: UpdateProjectInput) => {
     const res = await api.projects[":id"].$patch({ param: { id }, json: data });
-    if (!res.ok) {
-      throw new Error("Failed to update project");
-    }
-    const body = await res.json();
-    if (!body) {
-      throw new Error("Failed to update project");
-    }
-    return body;
+    return readApiResult<UpdateProjectOutput>(res, "Failed to update project");
   },
 
-  delete: async (id: string): Promise<{ success: boolean }> => {
+  delete: async (id: string) => {
     const res = await api.projects[":id"].$delete({ param: { id } });
-    if (!res.ok) {
-      throw new Error("Failed to delete project");
-    }
-    return res.json() as Promise<{ success: boolean }>;
+    return readApiResult<{ success: boolean }>(res, "Failed to delete project");
   },
 };
