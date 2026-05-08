@@ -1,8 +1,8 @@
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { KanbanBoard } from "@/components/features/kanban-board";
-import { TaskCard } from "@/components/features/task-card";
+import { KanbanBoard } from "@/features/board/components/kanban-board";
+import { TaskCard } from "@/features/task/components/task-card";
 import { makeBoard, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 
@@ -28,7 +28,7 @@ vi.mock("@dnd-kit/sortable", () => ({
 
 vi.mock("@dnd-kit/utilities", () => ({
   CSS: {
-    Translate: {
+    Transform: {
       toString: () => undefined,
     },
   },

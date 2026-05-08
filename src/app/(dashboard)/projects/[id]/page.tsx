@@ -18,16 +18,17 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
-import { use, useCallback, useRef, useState } from "react";
-import { CreateBoardDialog } from "@/components/features/create-board-dialog";
-import { CreateTaskDialog } from "@/components/features/create-task-dialog";
-import { EditTaskDialog } from "@/components/features/edit-task-dialog";
-import { KanbanBoard } from "@/components/features/kanban-board";
-import { TaskCard } from "@/components/features/task-card";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
+import { CreateBoardDialog } from "@/features/board/components/create-board-dialog";
+import { KanbanBoard } from "@/features/board/components/kanban-board";
 import { useBoards, useCreateBoard } from "@/features/board/hooks";
 import type { BoardOutput } from "@/features/board/types";
+import { AppHeader } from "@/features/shared/components/app-header";
+import { CreateTaskDialog } from "@/features/task/components/create-task-dialog";
+import { EditTaskDialog } from "@/features/task/components/edit-task-dialog";
+import { TaskCardContent } from "@/features/task/components/task-card";
 import { useCreateTask, useDeleteTask, useMoveTask, useTasks, useUpdateTask } from "@/features/task/hooks";
 import type { TaskOutput } from "@/features/task/types";
 import { authClient } from "@/lib/auth-client";
@@ -36,7 +37,7 @@ import { authClient } from "@/lib/auth-client";
 // Custom collision detection
 //
 // Strategy:
-//   1. Try pointerWithin first — uses raw pointer coordinates, so the column
+//   1. Try pointerWithin first. It uses raw pointer coordinates, so the column
 //      you're "in" matches exactly where your cursor is, not where the dragged
 //      card's bounding box is. This fixes the "have to drag all the way to the
 //      far edge" problem with closestCorners.
@@ -44,24 +45,22 @@ import { authClient } from "@/lib/auth-client";
 //      columns), fall back to closestCorners for the nearest target.
 // ---------------------------------------------------------------------------
 const kanbanCollisionDetection: CollisionDetection = (args) => {
-  // Phase 1: exact pointer hit-test
   const pointerCollisions = pointerWithin(args);
   if (pointerCollisions.length > 0) {
-    // Prefer the board column hit over any task inside it, so the column
-    // highlight fires as soon as the cursor crosses the border.
-    const boardHit = pointerCollisions.find(
-      (c) => (c.data?.droppableContainer?.data?.current as { type?: string } | undefined)?.type === "board",
+    const taskHits = pointerCollisions.filter(
+      (collision) =>
+        (collision.data?.droppableContainer?.data?.current as { type?: string } | undefined)?.type === "task",
     );
-    if (boardHit) return [boardHit];
+    if (taskHits.length > 0) return taskHits;
+
     return pointerCollisions;
   }
 
-  // Phase 2: cursor is in dead space between columns — nearest wins
   return closestCorners(args);
 };
 
 // ---------------------------------------------------------------------------
-// Per-board column — useTasks is called here (a real component), never in a
+// Per-board column. useTasks is called here (a real component), never in a
 // loop or .map(), so the Rules of Hooks are always satisfied.
 // ---------------------------------------------------------------------------
 function BoardWithTasks({
@@ -92,16 +91,17 @@ function BoardWithTasks({
 }) {
   const { data: serverTasks = [] } = useTasks(board.id);
 
-  // Sync server data into parent ref synchronously.
-  onTasksReady(board.id, serverTasks);
+  useEffect(() => {
+    onTasksReady(board.id, serverTasks);
+  }, [board.id, onTasksReady, serverTasks]);
 
-  // Once the destination board's server data actually contains the moved task,
-  // it's safe to hand off from optimistic → server data with no visible flash.
   const serverHasTask = movedTaskId !== null && serverTasks.some((t) => t.id === movedTaskId);
-  if (serverHasTask && dragInFlight) {
-    // Use a microtask to avoid setState-during-render on the parent
-    Promise.resolve().then(onServerConfirmed);
-  }
+
+  useEffect(() => {
+    if (serverHasTask && dragInFlight) {
+      onServerConfirmed();
+    }
+  }, [dragInFlight, onServerConfirmed, serverHasTask]);
 
   const tasks = dragInFlight ? optimisticTasks : serverTasks;
 
@@ -133,8 +133,8 @@ export default function KanbanPage({ params }: Props) {
   const moveTask = useMoveTask();
 
   // ------------------------------------------------------------------
-  // Server task map (ref, not state — writes don't need to trigger renders)
-  // boardId → TaskOutput[]
+  // Server task map (ref, not state; writes don't need to trigger renders)
+  // boardId -> TaskOutput[]
   // ------------------------------------------------------------------
   const serverTasksRef = useRef<Map<string, TaskOutput[]>>(new Map());
 
@@ -143,9 +143,9 @@ export default function KanbanPage({ params }: Props) {
   }, []);
 
   // ------------------------------------------------------------------
-  // Optimistic board state — only populated while a drag is in flight.
+  // Optimistic board state, only populated while a drag is in flight.
   // An absent key means "use server data for that board".
-  // boardId → TaskOutput[]
+  // boardId -> TaskOutput[]
   // ------------------------------------------------------------------
   const [optimisticBoards, setOptimisticBoards] = useState<Map<string, TaskOutput[]>>(new Map());
 
@@ -161,9 +161,10 @@ export default function KanbanPage({ params }: Props) {
   // ------------------------------------------------------------------
   const [activeTask, setActiveTask] = useState<TaskOutput | null>(null);
   const [overBoardId, setOverBoardId] = useState<string | null>(null);
+  const [isCrossBoardDrop, setIsCrossBoardDrop] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -214,16 +215,22 @@ export default function KanbanPage({ params }: Props) {
     await updateTask.mutateAsync({
       boardId: editTask.boardId,
       taskId: editTask.id,
-      data: { title: editTask.title, priority: editTask.priority },
+      data: {
+        title: editTask.title,
+        description: editTask.description || undefined,
+        priority: editTask.priority,
+      },
     });
     setEditTask(null);
   };
 
   // Called by the destination BoardWithTasks once it sees the moved task
-  // in its fresh server data — this is the earliest safe moment to drop
+  // in its fresh server data. This is the earliest safe moment to drop
   // the optimistic override without any visible flash.
   const handleServerConfirmed = useCallback(() => {
+    setActiveTask(null);
     setDragInFlight(false);
+    setIsCrossBoardDrop(false);
     setMovedTaskId(null);
     setOptimisticBoards(new Map());
   }, []);
@@ -254,6 +261,7 @@ export default function KanbanPage({ params }: Props) {
     if (data?.type === "task" && data.task) {
       setActiveTask(data.task);
       setDragInFlight(true);
+      setIsCrossBoardDrop(false);
       // Snapshot server state into optimistic map so we can mutate freely
       setOptimisticBoards(new Map(serverTasksRef.current));
     }
@@ -264,6 +272,7 @@ export default function KanbanPage({ params }: Props) {
 
     if (!over) {
       setOverBoardId(null);
+      setIsCrossBoardDrop(false);
       return;
     }
 
@@ -282,6 +291,7 @@ export default function KanbanPage({ params }: Props) {
 
     if (!targetBoardId) {
       setOverBoardId(null);
+      setIsCrossBoardDrop(false);
       return;
     }
 
@@ -289,6 +299,8 @@ export default function KanbanPage({ params }: Props) {
 
     const sourceBoardId = getTaskBoardId(activeId);
     if (!sourceBoardId) return;
+
+    setIsCrossBoardDrop(sourceBoardId !== targetBoardId);
 
     if (sourceBoardId === targetBoardId) {
       // Same-board reorder
@@ -309,7 +321,6 @@ export default function KanbanPage({ params }: Props) {
 
     const destinationBoardId = targetBoardId;
 
-    // Cross-board move: remove from source, insert at target position
     setOptimisticBoards((prev) => {
       const next = new Map(prev);
 
@@ -320,6 +331,11 @@ export default function KanbanPage({ params }: Props) {
       next.set(sourceBoardId, sourceCol);
 
       const targetCol = [...(next.get(destinationBoardId) ?? [])];
+      const existingIdx = targetCol.findIndex((t) => t.id === activeId);
+      if (existingIdx !== -1) {
+        targetCol.splice(existingIdx, 1);
+      }
+
       if (overData?.type === "task") {
         const overIdx = targetCol.findIndex((t) => t.id === overId);
         targetCol.splice(overIdx >= 0 ? overIdx : targetCol.length, 0, {
@@ -344,6 +360,7 @@ export default function KanbanPage({ params }: Props) {
     if (!over || !task) {
       setActiveTask(null);
       setDragInFlight(false);
+      setIsCrossBoardDrop(false);
       setMovedTaskId(null);
       setOptimisticBoards(new Map());
       return;
@@ -363,21 +380,48 @@ export default function KanbanPage({ params }: Props) {
     if (!targetBoardId) {
       setActiveTask(null);
       setDragInFlight(false);
+      setIsCrossBoardDrop(false);
       setMovedTaskId(null);
       setOptimisticBoards(new Map());
       return;
     }
 
     if (task.boardId !== targetBoardId) {
+      setDragInFlight(true);
+      setOptimisticBoards((prev) => {
+        const next = new Map(prev.size > 0 ? prev : serverTasksRef.current);
+
+        for (const [boardId, tasks] of next) {
+          next.set(
+            boardId,
+            tasks.filter((candidate) => candidate.id !== activeId),
+          );
+        }
+
+        const targetCol = [...(next.get(targetBoardId) ?? [])];
+        const movedTask = { ...task, boardId: targetBoardId };
+
+        if (overData?.type === "task" && overId !== activeId) {
+          const overIdx = targetCol.findIndex((candidate) => candidate.id === overId);
+          targetCol.splice(overIdx >= 0 ? overIdx : targetCol.length, 0, movedTask);
+        } else {
+          targetCol.push(movedTask);
+        }
+
+        next.set(targetBoardId, targetCol);
+
+        return next;
+      });
+      setActiveTask(null);
+      setIsCrossBoardDrop(true);
       setMovedTaskId(activeId);
       moveTask.mutate(
         { taskId: activeId, data: { boardId: targetBoardId } },
         {
-          onSettled: () => {
-            setActiveTask(null);
-          },
           onError: () => {
+            setActiveTask(null);
             setDragInFlight(false);
+            setIsCrossBoardDrop(false);
             setMovedTaskId(null);
             setOptimisticBoards(new Map());
           },
@@ -386,6 +430,7 @@ export default function KanbanPage({ params }: Props) {
     } else {
       setActiveTask(null);
       setDragInFlight(false);
+      setIsCrossBoardDrop(false);
       setMovedTaskId(null);
       setOptimisticBoards(new Map());
     }
@@ -395,6 +440,7 @@ export default function KanbanPage({ params }: Props) {
     setActiveTask(null);
     setOverBoardId(null);
     setDragInFlight(false);
+    setIsCrossBoardDrop(false);
     setMovedTaskId(null);
     setOptimisticBoards(new Map());
   };
@@ -419,18 +465,18 @@ export default function KanbanPage({ params }: Props) {
       }}
     >
       <div className="flex h-screen flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-              Projects
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="font-medium">Kanban</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => authClient.signOut()}>
-            Sign out
-          </Button>
-        </header>
+        <AppHeader
+          className="shrink-0"
+          leading={
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+                Projects
+              </Link>
+              <span className="text-muted-foreground">/</span>
+              <span className="font-medium">Kanban</span>
+            </div>
+          }
+        />
 
         <main className="flex-1 overflow-x-auto overflow-y-hidden">
           {isLoading ? (
@@ -472,12 +518,16 @@ export default function KanbanPage({ params }: Props) {
       </div>
 
       <DragOverlay
-        dropAnimation={{
-          duration: 200,
-          easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-        }}
+        dropAnimation={
+          isCrossBoardDrop
+            ? null
+            : {
+                duration: 180,
+                easing: "cubic-bezier(0.2, 0, 0, 1)",
+              }
+        }
       >
-        {activeTask ? <TaskCard task={activeTask} onEdit={() => {}} onDelete={() => {}} isOverlay /> : null}
+        {activeTask ? <TaskCardContent task={activeTask} onEdit={() => {}} onDelete={() => {}} isOverlay /> : null}
       </DragOverlay>
 
       <CreateBoardDialog

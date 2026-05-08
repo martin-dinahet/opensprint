@@ -1,3 +1,4 @@
+import { IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,18 +31,33 @@ export function CreateBoardDialog({ open, onOpenChange, onCreate, isPending, nam
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="boardName">Column Name</Label>
-            <Input
-              id="boardName"
-              placeholder="e.g., In Progress"
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onCreate()}
-            />
+            <div className="relative">
+              <IconLayoutColumns className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="boardName"
+                placeholder="In progress"
+                value={name}
+                onChange={(e) => onNameChange(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onCreate()}
+                disabled={isPending}
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
         <DialogFooter>
           <Button onClick={onCreate} disabled={isPending || !name.trim()}>
-            Create
+            {isPending ? (
+              <>
+                <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <IconPlus className="mr-2 h-4 w-4" />
+                Create
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

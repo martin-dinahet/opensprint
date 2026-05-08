@@ -1,3 +1,4 @@
+import { IconFileText, IconFlag, IconLoader2, IconPlus, IconTextCaption } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
   open: boolean;
@@ -46,27 +48,38 @@ export function CreateTaskDialog({
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="taskTitle">Title</Label>
-            <Input
-              id="taskTitle"
-              placeholder="Task title"
-              value={title}
-              onChange={(e) => onTitleChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onCreate()}
-            />
+            <div className="relative">
+              <IconTextCaption className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="taskTitle"
+                placeholder="Draft sprint plan"
+                value={title}
+                onChange={(e) => onTitleChange(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onCreate()}
+                disabled={isPending}
+                className="pl-9"
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="taskDesc">Description</Label>
-            <Input
-              id="taskDesc"
-              placeholder="Optional description..."
-              value={description}
-              onChange={(e) => onDescriptionChange(e.target.value)}
-            />
+            <div className="relative">
+              <IconFileText className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+              <Textarea
+                id="taskDesc"
+                placeholder="Optional notes, links, or acceptance criteria"
+                value={description}
+                onChange={(e) => onDescriptionChange(e.target.value)}
+                disabled={isPending}
+                className="min-h-24 pl-9"
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="taskPriority">Priority</Label>
             <Select value={priority} onValueChange={(v) => onPriorityChange(v as typeof priority)}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
+                <IconFlag className="h-4 w-4 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -80,7 +93,17 @@ export function CreateTaskDialog({
         </div>
         <DialogFooter>
           <Button onClick={onCreate} disabled={isPending || !title.trim()}>
-            Create
+            {isPending ? (
+              <>
+                <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <IconPlus className="mr-2 h-4 w-4" />
+                Create
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

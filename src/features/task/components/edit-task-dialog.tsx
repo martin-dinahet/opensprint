@@ -1,3 +1,4 @@
+import { IconDeviceFloppy, IconFileText, IconFlag, IconTextCaption } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { TaskOutput } from "@/features/task/types";
 
 type Props = {
@@ -40,11 +42,27 @@ export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="editTitle">Title</Label>
-              <Input
-                id="editTitle"
-                value={task.title}
-                onChange={(e) => onTaskChange({ ...task, title: e.target.value })}
-              />
+              <div className="relative">
+                <IconTextCaption className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="editTitle"
+                  value={task.title}
+                  onChange={(e) => onTaskChange({ ...task, title: e.target.value })}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editDescription">Description</Label>
+              <div className="relative">
+                <IconFileText className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                <Textarea
+                  id="editDescription"
+                  value={task.description ?? ""}
+                  onChange={(e) => onTaskChange({ ...task, description: e.target.value })}
+                  className="min-h-24 pl-9"
+                />
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editPriority">Priority</Label>
@@ -52,7 +70,8 @@ export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange 
                 value={task.priority}
                 onValueChange={(v) => onTaskChange({ ...task, priority: v as TaskOutput["priority"] })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
+                  <IconFlag className="h-4 w-4 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -66,7 +85,10 @@ export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange 
           </div>
         )}
         <DialogFooter>
-          <Button onClick={onSave}>Save</Button>
+          <Button onClick={onSave}>
+            <IconDeviceFloppy className="mr-2 h-4 w-4" />
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,22 +1,15 @@
 "use client";
 
+import { err, ok } from "@punpun-dev/ts-result";
 import { IconPlus, IconStack } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { CreateProjectDialog } from "@/features/project/components/create-project-dialog";
+import { ProjectCard } from "@/features/project/components/project-card";
 import { useCreateProject, useProjects } from "@/features/project/hooks";
+import { AppHeader } from "@/features/shared/components/app-header";
 import { authClient } from "@/lib/auth-client";
 
 export default function DashboardPage() {
@@ -28,74 +21,48 @@ export default function DashboardPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!newProjectName.trim()) return;
-    const result = await createProject.mutateAsync({
-      name: newProjectName,
-      description: newProjectDesc || undefined,
+
+    const result = await createProject
+      .mutateAsync({
+        name: newProjectName,
+        description: newProjectDesc || undefined,
+      })
+      .then(ok)
+      .catch((error: unknown) => err(error instanceof Error ? error : new Error("Unable to create project")));
+
+    result.match({
+      ok: (project) => {
+        setCreateOpen(false);
+        setCreateError(null);
+        setNewProjectName("");
+        setNewProjectDesc("");
+        router.push(`/projects/${project.id}`);
+      },
+      err: (error) => setCreateError(error.message),
     });
-    setCreateOpen(false);
-    setNewProjectName("");
-    setNewProjectDesc("");
-    router.push(`/projects/${result.id}`);
   };
 
   if (!session.data?.user) return <LoadingScreen />;
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <span className="font-semibold tracking-tight">OpenSprint</span>
-        <Button variant="ghost" size="sm" onClick={() => authClient.signOut()}>
-          Sign out
-        </Button>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-semibold text-2xl tracking-tight">Projects</h1>
-              <p className="text-sm text-muted-foreground">Manage your projects</p>
+              <p className="text-sm text-muted-foreground">Pick up active work or start a new board.</p>
             </div>
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
-                <IconPlus className="mr-2 h-4 w-4" />
-                New Project
-              </Button>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create new project</DialogTitle>
-                  <DialogDescription>Add a new project to get started.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="My Project"
-                      value={newProjectName}
-                      onChange={(e) => setNewProjectName(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      placeholder="Project description..."
-                      value={newProjectDesc}
-                      onChange={(e) => setNewProjectDesc(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleCreate} disabled={createProject.isPending || !newProjectName.trim()}>
-                    {createProject.isPending ? "Creating..." : "Create"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <IconPlus className="mr-2 h-4 w-4" />
+              New Project
+            </Button>
           </div>
 
           {isLoading ? (
@@ -111,28 +78,26 @@ export default function DashboardPage() {
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {projects.map((project) => (
-                <Card
-                  key={project.id}
-                  className="cursor-pointer transition-colors hover:bg-muted/50"
-                  onClick={() => router.push(`/projects/${project.id}`)}
-                >
-                  <CardHeader>
-                    <CardTitle className="font-semibold text-lg">{project.name}</CardTitle>
-                    {project.description && (
-                      <CardDescription className="line-clamp-2">{project.description}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground">
-                      Created {new Date(project.createdAt).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
+                <ProjectCard key={project.id} project={project} onOpen={() => router.push(`/projects/${project.id}`)} />
               ))}
             </div>
           )}
         </div>
       </main>
+      <CreateProjectDialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) setCreateError(null);
+        }}
+        onCreate={handleCreate}
+        isPending={createProject.isPending}
+        name={newProjectName}
+        onNameChange={setNewProjectName}
+        description={newProjectDesc}
+        onDescriptionChange={setNewProjectDesc}
+        error={createError}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { CreateBoardDialog } from "@/components/features/create-board-dialog";
+import { CreateBoardDialog } from "@/features/board/components/create-board-dialog";
 import { renderWithClient } from "@/test/render";
 
 describe("CreateBoardDialog", () => {
@@ -51,6 +51,6 @@ describe("CreateBoardDialog", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Creating..." })).toBeDisabled();
   });
 });
