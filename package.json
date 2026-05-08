@@ -12,7 +12,8 @@
     "db:down": "docker compose down",
     "db:clean": "docker compose down -v",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "prepare": "husky"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -59,6 +60,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.10",
+    "husky": "^9.1.7",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }
