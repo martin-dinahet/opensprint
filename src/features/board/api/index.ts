@@ -1,5 +1,11 @@
-import { api } from "@/lib/api";
-import type { BoardOutput } from "@/lib/types";
+import { api } from "@/features/shared/api/client";
+import type {
+  BoardOutput,
+  CreateBoardInput,
+  ReorderBoardsInput,
+  UpdateBoardInput,
+  UpdateBoardOutput,
+} from "@/features/board/types";
 
 const BASE_KEY = "boards";
 
@@ -17,7 +23,8 @@ export const boardApi = {
     if (!res.ok) {
       throw new Error("Failed to fetch boards");
     }
-    return res.json() as Promise<{ boards: BoardOutput[] }>;
+    const body = await res.json();
+    return { boards: body.boards ?? [] };
   },
 
   get: async (projectId: string, boardId: string): Promise<BoardOutput> => {
@@ -25,22 +32,26 @@ export const boardApi = {
     if (!res.ok) {
       throw new Error("Failed to fetch board");
     }
-    return res.json() as Promise<BoardOutput>;
+    const body = await res.json();
+    if (!body) {
+      throw new Error("Board not found");
+    }
+    return body;
   },
 
-  create: async (projectId: string, data: { name: string }): Promise<BoardOutput> => {
+  create: async (projectId: string, data: CreateBoardInput): Promise<BoardOutput> => {
     const res = await api.projects[":id"].boards.$post({ param: { id: projectId }, json: data });
     if (!res.ok) {
       throw new Error("Failed to create board");
     }
-    return res.json() as Promise<BoardOutput>;
+    const body = await res.json();
+    if (!body) {
+      throw new Error("Failed to create board");
+    }
+    return body;
   },
 
-  update: async (
-    projectId: string,
-    boardId: string,
-    data: { name?: string; position?: number },
-  ): Promise<BoardOutput> => {
+  update: async (projectId: string, boardId: string, data: UpdateBoardInput): Promise<UpdateBoardOutput> => {
     const res = await api.projects[":id"].boards[":boardId"].$patch({
       param: { id: projectId, boardId },
       json: data,
@@ -48,7 +59,11 @@ export const boardApi = {
     if (!res.ok) {
       throw new Error("Failed to update board");
     }
-    return res.json() as Promise<BoardOutput>;
+    const body = await res.json();
+    if (!body) {
+      throw new Error("Failed to update board");
+    }
+    return body;
   },
 
   delete: async (projectId: string, boardId: string): Promise<{ success: boolean }> => {
@@ -59,7 +74,7 @@ export const boardApi = {
     return res.json() as Promise<{ success: boolean }>;
   },
 
-  reorder: async (projectId: string, data: { boardIds: string[] }): Promise<{ success: boolean }> => {
+  reorder: async (projectId: string, data: ReorderBoardsInput): Promise<{ success: boolean }> => {
     const res = await api.projects[":id"].boards.reorder.$patch({ param: { id: projectId }, json: data });
     if (!res.ok) {
       throw new Error("Failed to reorder boards");

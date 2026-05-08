@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconPencil, IconX } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import type { TaskOutput } from "@/lib/types";
+import type { TaskOutput } from "@/features/task/types";
 
 type TaskPriority = "low" | "medium" | "high" | "urgent";
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { boardApi, boardKeys } from "./boards";
+import { boardApi, boardKeys } from "@/features/board/api";
+import type { CreateBoardInput, UpdateBoardInput } from "@/features/board/types";
 
 export function useBoards(projectId: string) {
   return useQuery({
@@ -21,7 +22,7 @@ export function useCreateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: { name: string } }) =>
+    mutationFn: ({ projectId, data }: { projectId: string; data: CreateBoardInput }) =>
       boardApi.create(projectId, data),
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });
@@ -33,15 +34,8 @@ export function useUpdateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      projectId,
-      boardId,
-      data,
-    }: {
-      projectId: string;
-      boardId: string;
-      data: { name?: string; position?: number };
-    }) => boardApi.update(projectId, boardId, data),
+    mutationFn: ({ projectId, boardId, data }: { projectId: string; boardId: string; data: UpdateBoardInput }) =>
+      boardApi.update(projectId, boardId, data),
     onSuccess: (_, { projectId, boardId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });
       queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });

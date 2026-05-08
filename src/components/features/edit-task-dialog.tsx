@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TaskOutput } from "@/lib/types";
+import type { TaskOutput } from "@/features/task/types";
 
 type Props = {
   open: boolean;
@@ -22,7 +22,15 @@ type Props = {
 
 export function EditTaskDialog({ open, onOpenChange, onSave, task, onTaskChange }: Props) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onTaskChange(null)}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onTaskChange(null);
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>

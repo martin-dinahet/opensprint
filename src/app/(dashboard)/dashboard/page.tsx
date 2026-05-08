@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCreateProject, useProjects } from "@/features/project/hooks";
 import { authClient } from "@/lib/auth-client";
-import { useCreateProject, useProjects } from "@/lib/queries";
 
 export default function DashboardPage() {
   const router = useRouter();

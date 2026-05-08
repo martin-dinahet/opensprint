@@ -26,17 +26,11 @@ import { KanbanBoard } from "@/components/features/kanban-board";
 import { TaskCard } from "@/components/features/task-card";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
+import { useBoards, useCreateBoard } from "@/features/board/hooks";
+import type { BoardOutput } from "@/features/board/types";
+import { useCreateTask, useDeleteTask, useMoveTask, useTasks, useUpdateTask } from "@/features/task/hooks";
+import type { TaskOutput } from "@/features/task/types";
 import { authClient } from "@/lib/auth-client";
-import {
-  useBoards,
-  useCreateBoard,
-  useCreateTask,
-  useDeleteTask,
-  useMoveTask,
-  useTasks,
-  useUpdateTask,
-} from "@/lib/queries";
-import type { BoardOutput, TaskOutput } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Custom collision detection
@@ -313,6 +307,8 @@ export default function KanbanPage({ params }: Props) {
       return;
     }
 
+    const destinationBoardId = targetBoardId;
+
     // Cross-board move: remove from source, insert at target position
     setOptimisticBoards((prev) => {
       const next = new Map(prev);
@@ -323,17 +319,17 @@ export default function KanbanPage({ params }: Props) {
       const [movedTask] = sourceCol.splice(taskIdx, 1);
       next.set(sourceBoardId, sourceCol);
 
-      const targetCol = [...(next.get(targetBoardId!) ?? [])];
+      const targetCol = [...(next.get(destinationBoardId) ?? [])];
       if (overData?.type === "task") {
         const overIdx = targetCol.findIndex((t) => t.id === overId);
         targetCol.splice(overIdx >= 0 ? overIdx : targetCol.length, 0, {
           ...movedTask,
-          boardId: targetBoardId!,
+          boardId: destinationBoardId,
         });
       } else {
-        targetCol.push({ ...movedTask, boardId: targetBoardId! });
+        targetCol.push({ ...movedTask, boardId: destinationBoardId });
       }
-      next.set(targetBoardId!, targetCol);
+      next.set(destinationBoardId, targetCol);
 
       return next;
     });

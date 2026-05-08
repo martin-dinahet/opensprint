@@ -4,7 +4,8 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import type { BoardOutput, TaskOutput } from "@/lib/types";
+import type { BoardOutput } from "@/features/board/types";
+import type { TaskOutput } from "@/features/task/types";
 import { TaskCard } from "./task-card";
 
 type Props = {
