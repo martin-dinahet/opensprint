@@ -132,6 +132,27 @@ describe("server routes", () => {
     expect(projectUseCasesMock.updateProject).toHaveBeenCalledWith("user-1", "project-1", { name: "Updated" });
   });
 
+  it("routes project creation and deletion requests", async () => {
+    projectUseCasesMock.createProject.mockResolvedValue(
+      ok({ id: "project-new", name: "New project", description: null }),
+    );
+    projectUseCasesMock.deleteProject.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    const createResponse = await client.api.projects.$post({
+      json: { name: "New project", description: "Detailed enough" },
+    });
+    const deleteResponse = await client.api.projects[":id"].$delete({ param: { id: "project-1" } });
+
+    expect(createResponse.status).toBe(200);
+    expect(deleteResponse.status).toBe(200);
+    expect(projectUseCasesMock.createProject).toHaveBeenCalledWith("user-1", {
+      name: "New project",
+      description: "Detailed enough",
+    });
+    expect(projectUseCasesMock.deleteProject).toHaveBeenCalledWith("user-1", "project-1");
+  });
+
   it("routes board listing with project params", async () => {
     boardUseCasesMock.listBoards.mockResolvedValue(ok([makeBoard()]));
 
@@ -141,6 +162,34 @@ describe("server routes", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ boards: [makeBoard()] });
     expect(boardUseCasesMock.listBoards).toHaveBeenCalledWith("user-1", "project-1");
+  });
+
+  it("routes board create, get, update, and delete requests", async () => {
+    boardUseCasesMock.createBoard.mockResolvedValue(ok(makeBoard({ id: "board-new", name: "Doing" })));
+    boardUseCasesMock.getBoard.mockResolvedValue(ok(makeBoard()));
+    boardUseCasesMock.updateBoard.mockResolvedValue(ok({ ...makeBoard(), name: "Done" }));
+    boardUseCasesMock.deleteBoard.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.projects[":id"].boards.$post({
+      param: { id: "project-1" },
+      json: { name: "Doing" },
+    });
+    await client.api.projects[":id"].boards[":boardId"].$get({
+      param: { id: "project-1", boardId: "board-1" },
+    });
+    await client.api.projects[":id"].boards[":boardId"].$patch({
+      param: { id: "project-1", boardId: "board-1" },
+      json: { name: "Done" },
+    });
+    await client.api.projects[":id"].boards[":boardId"].$delete({
+      param: { id: "project-1", boardId: "board-1" },
+    });
+
+    expect(boardUseCasesMock.createBoard).toHaveBeenCalledWith("user-1", "project-1", { name: "Doing" });
+    expect(boardUseCasesMock.getBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1");
+    expect(boardUseCasesMock.updateBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1", { name: "Done" });
+    expect(boardUseCasesMock.deleteBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1");
   });
 
   it("routes board reorder requests", async () => {
@@ -180,6 +229,36 @@ describe("server routes", () => {
     });
   });
 
+  it("routes member list, update, and delete requests", async () => {
+    memberUseCasesMock.listMembers.mockResolvedValue(ok([]));
+    memberUseCasesMock.updateMember.mockResolvedValue(
+      ok({
+        id: "member-1",
+        userId: "user-2",
+        projectId: "project-1",
+        role: "admin",
+        joinedAt: new Date("2026-01-01T00:00:00.000Z"),
+      }),
+    );
+    memberUseCasesMock.removeMember.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.projects[":id"].members.$get({ param: { id: "project-1" } });
+    await client.api.projects[":id"].members[":memberId"].$patch({
+      param: { id: "project-1", memberId: "member-1" },
+      json: { role: "admin" },
+    });
+    await client.api.projects[":id"].members[":memberId"].$delete({
+      param: { id: "project-1", memberId: "member-1" },
+    });
+
+    expect(memberUseCasesMock.listMembers).toHaveBeenCalledWith("user-1", "project-1");
+    expect(memberUseCasesMock.updateMember).toHaveBeenCalledWith("user-1", "project-1", "member-1", {
+      role: "admin",
+    });
+    expect(memberUseCasesMock.removeMember).toHaveBeenCalledWith("user-1", "project-1", "member-1");
+  });
+
   it("validates member update roles", async () => {
     const client = createHonoTestClient(server);
     const response = await client.api.projects[":id"].members[":memberId"].$patch({
@@ -205,6 +284,44 @@ describe("server routes", () => {
       title: "New task",
       priority: "high",
     });
+  });
+
+  it("routes task list, update, and delete requests", async () => {
+    taskUseCasesMock.listTasks.mockResolvedValue(ok([makeTask()]));
+    taskUseCasesMock.updateTask.mockResolvedValue(ok(makeTask({ title: "Updated" })));
+    taskUseCasesMock.deleteTask.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.boards[":boardId"].tasks.$get({ param: { boardId: "board-1" } });
+    await client.api.boards[":boardId"].tasks[":taskId"].$patch({
+      param: { boardId: "board-1", taskId: "task-1" },
+      json: { title: "Updated" },
+    });
+    await client.api.boards[":boardId"].tasks[":taskId"].$delete({
+      param: { boardId: "board-1", taskId: "task-1" },
+    });
+
+    expect(taskUseCasesMock.listTasks).toHaveBeenCalledWith("user-1", "board-1");
+    expect(taskUseCasesMock.updateTask).toHaveBeenCalledWith("user-1", "board-1", "task-1", { title: "Updated" });
+    expect(taskUseCasesMock.deleteTask).toHaveBeenCalledWith("user-1", "board-1", "task-1");
+  });
+
+  it("routes task assignment and reorder requests", async () => {
+    taskUseCasesMock.assignTask.mockResolvedValue(ok({ id: "task-1", assigneeId: null }));
+    taskUseCasesMock.reorderTask.mockResolvedValue(ok({ id: "task-1", position: 2 }));
+
+    const client = createHonoTestClient(server);
+    await client.api.tasks[":taskId"].assign.$patch({
+      param: { taskId: "task-1" },
+      json: { assigneeId: null },
+    });
+    await client.api.tasks[":taskId"].reorder.$patch({
+      param: { taskId: "task-1" },
+      json: { position: 2 },
+    });
+
+    expect(taskUseCasesMock.assignTask).toHaveBeenCalledWith("user-1", "task-1", { assigneeId: null });
+    expect(taskUseCasesMock.reorderTask).toHaveBeenCalledWith("user-1", "task-1", { position: 2 });
   });
 
   it("routes task movement requests", async () => {

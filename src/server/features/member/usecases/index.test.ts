@@ -62,6 +62,18 @@ describe("member use cases", () => {
     ]);
   });
 
+  it("wraps member listing failures", async () => {
+    memberRepositoryMock.findByProject.mockResolvedValue(err(new Error("read failed")));
+
+    const result = await listMembers("owner-user", "project-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("read failed");
+    }
+  });
+
   it("rejects member listing for non-members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
@@ -98,6 +110,30 @@ describe("member use cases", () => {
     });
   });
 
+  it("rejects member adds from regular members", async () => {
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([regularMembership]));
+
+    const result = await addMember("regular-user", "project-1", { email: "new@example.com", role: "member" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+    expect(memberRepositoryMock.findUserByEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when adding an unknown user", async () => {
+    memberRepositoryMock.findUserByEmail.mockResolvedValue(ok([]));
+
+    const result = await addMember("owner-user", "project-1", { email: "missing@example.com", role: "member" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
+    expect(memberRepositoryMock.create).not.toHaveBeenCalled();
+  });
+
   it("rejects adding an existing project member", async () => {
     memberRepositoryMock.findUserByEmail.mockResolvedValue(ok([regularUser]));
     memberRepositoryMock.findByUserAndProject
@@ -113,6 +149,22 @@ describe("member use cases", () => {
     expect(memberRepositoryMock.create).not.toHaveBeenCalled();
   });
 
+  it("wraps member add failures", async () => {
+    memberRepositoryMock.findUserByEmail.mockResolvedValue(ok([regularUser]));
+    memberRepositoryMock.findByUserAndProject
+      .mockResolvedValueOnce(ok([ownerMembership]))
+      .mockResolvedValueOnce(ok([]));
+    memberRepositoryMock.create.mockResolvedValue(err(new Error("insert failed")));
+
+    const result = await addMember("owner-user", "project-1", { email: "regular@example.com", role: "member" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("insert failed");
+    }
+  });
+
   it("allows only owners to update member roles", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.update.mockResolvedValue(ok(undefined));
@@ -122,6 +174,29 @@ describe("member use cases", () => {
     expect(result.isOk()).toBe(true);
     expect(memberRepositoryMock.update).toHaveBeenCalledWith("regular-member", { role: "admin" });
     expect(result.unwrap()).toMatchObject({ id: "regular-member", role: "admin" });
+  });
+
+  it("rejects member updates from admins and members", async () => {
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "admin" }]));
+
+    const result = await updateMember("owner-user", "project-1", "regular-member", { role: "admin" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+    expect(memberRepositoryMock.findById).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when updating a missing member", async () => {
+    memberRepositoryMock.findById.mockResolvedValue(ok([]));
+
+    const result = await updateMember("owner-user", "project-1", "missing-member", { role: "admin" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
   });
 
   it("does not allow changing the owner role", async () => {
@@ -136,6 +211,19 @@ describe("member use cases", () => {
     expect(memberRepositoryMock.update).not.toHaveBeenCalled();
   });
 
+  it("wraps member update failures", async () => {
+    memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
+    memberRepositoryMock.update.mockResolvedValue(err(new Error("update failed")));
+
+    const result = await updateMember("owner-user", "project-1", "regular-member", { role: "admin" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("update failed");
+    }
+  });
+
   it("removes non-owner members for owners and admins", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.delete.mockResolvedValue(ok(undefined));
@@ -145,6 +233,30 @@ describe("member use cases", () => {
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
     expect(memberRepositoryMock.delete).toHaveBeenCalledWith("regular-member");
+  });
+
+  it("returns not found when removing a missing member", async () => {
+    memberRepositoryMock.findById.mockResolvedValue(ok([]));
+
+    const result = await removeMember("owner-user", "project-1", "missing-member");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
+    expect(memberRepositoryMock.delete).not.toHaveBeenCalled();
+  });
+
+  it("does not allow removing the owner", async () => {
+    memberRepositoryMock.findById.mockResolvedValue(ok([ownerMembership]));
+
+    const result = await removeMember("owner-user", "project-1", "owner-member");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+    expect(memberRepositoryMock.delete).not.toHaveBeenCalled();
   });
 
   it("wraps member removal failures", async () => {

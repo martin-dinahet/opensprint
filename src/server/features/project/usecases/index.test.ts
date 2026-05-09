@@ -110,6 +110,20 @@ describe("project use cases", () => {
     }
   });
 
+  it("wraps owner membership creation failures", async () => {
+    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
+    projectRepositoryMock.create.mockResolvedValue(ok(undefined));
+    memberRepositoryMock.create.mockResolvedValue(err(new Error("member insert failed")));
+
+    const result = await createProject("user-1", { name: "New Project" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("member insert failed");
+    }
+  });
+
   it("gets a project only when the user is a member", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
@@ -118,6 +132,47 @@ describe("project use cases", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual(project);
+  });
+
+  it("returns not found when a project does not exist", async () => {
+    projectRepositoryMock.findById.mockResolvedValue(ok([]));
+
+    const result = await getProject("user-1", "missing-project");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
+    expect(memberRepositoryMock.findByUserAndProject).not.toHaveBeenCalled();
+  });
+
+  it("rejects project reads for non-members", async () => {
+    projectRepositoryMock.findById.mockResolvedValue(ok([project]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
+
+    const result = await getProject("user-2", "project-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+  });
+
+  it("updates projects for owners and admins", async () => {
+    projectRepositoryMock.findById
+      .mockResolvedValueOnce(ok([project]))
+      .mockResolvedValueOnce(ok([{ ...project, name: "Updated" }]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    projectRepositoryMock.update.mockResolvedValue(ok(undefined));
+
+    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+
+    expect(result.isOk()).toBe(true);
+    expect(projectRepositoryMock.update).toHaveBeenCalledWith("project-1", {
+      name: "Updated",
+      description: undefined,
+    });
+    expect(result.unwrap()).toMatchObject({ id: "project-1", name: "Updated" });
   });
 
   it("rejects project updates from regular members", async () => {
@@ -133,6 +188,33 @@ describe("project use cases", () => {
     expect(projectRepositoryMock.update).not.toHaveBeenCalled();
   });
 
+  it("wraps project update failures", async () => {
+    projectRepositoryMock.findById.mockResolvedValue(ok([project]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    projectRepositoryMock.update.mockResolvedValue(err(new Error("update failed")));
+
+    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("update failed");
+    }
+  });
+
+  it("returns not found when the updated project cannot be reloaded", async () => {
+    projectRepositoryMock.findById.mockResolvedValueOnce(ok([project])).mockResolvedValueOnce(ok([]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    projectRepositoryMock.update.mockResolvedValue(ok(undefined));
+
+    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
+  });
+
   it("deletes projects for owners", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
@@ -145,5 +227,18 @@ describe("project use cases", () => {
     expect(result.unwrap()).toEqual({ success: true });
     expect(memberRepositoryMock.deleteByProject).toHaveBeenCalledWith("project-1");
     expect(projectRepositoryMock.delete).toHaveBeenCalledWith("project-1");
+  });
+
+  it("rejects project deletes from non-owners", async () => {
+    projectRepositoryMock.findById.mockResolvedValue(ok([project]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "admin" }]));
+
+    const result = await deleteProject("user-1", "project-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+    expect(memberRepositoryMock.deleteByProject).not.toHaveBeenCalled();
   });
 });
