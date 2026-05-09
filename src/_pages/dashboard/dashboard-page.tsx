@@ -1,7 +1,6 @@
 "use client";
 
 import { IconPlus, IconStack } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProjectCard, useProjects } from "@/entities/project";
 import { CreateProjectDialog } from "@/features/create-project";
@@ -10,7 +9,6 @@ import { LoadingScreen } from "@/shared/ui/loading-screen";
 import { AppShellHeader } from "@/widgets/app-sidebar";
 
 export function DashboardPage() {
-  const router = useRouter();
   const { data: projects, isLoading } = useProjects();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -32,7 +30,7 @@ export function DashboardPage() {
           <p className="text-sm text-muted-foreground">Pick up active work or start a new board.</p>
 
           {isLoading ? (
-            <LoadingScreen />
+            <LoadingScreen label="Loading projects..." variant="shell" />
           ) : !projects?.length ? (
             <div className="mt-12 flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
               <IconStack className="h-12 w-12 text-muted-foreground" />
@@ -44,7 +42,7 @@ export function DashboardPage() {
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} onOpen={() => router.push(`/projects/${project.id}`)} />
+                <ProjectCard key={project.id} project={project} />
               ))}
             </div>
           )}

@@ -1,7 +1,8 @@
 "use client";
 
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
 import Link from "next/link";
+import { useProject } from "@/entities/project";
 import { CreateBoardDialog } from "@/features/create-board";
 import { CreateTaskDialog } from "@/features/create-task";
 import { EditTaskDialog } from "@/features/edit-task";
@@ -37,26 +38,28 @@ function ProjectKanbanContent() {
     setCreateTaskOpen,
     setEditTask,
   } = useProjectKanban();
+  const { data: project } = useProject(projectId);
 
   return (
     <Kanban.Root>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppShellHeader
-          title="Board"
+          title={project?.name ?? "Board"}
           eyebrow={
             <span className="flex items-center gap-2">
               <Link href="/dashboard" className="hover:text-foreground">
                 Projects
               </Link>
               <span>/</span>
-              <span>Kanban</span>
+              <span>Board</span>
             </span>
           }
           actions={
             <Link
               href={`/projects/${projectId}/members`}
-              className="text-muted-foreground text-sm hover:text-foreground"
+              className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-muted-foreground text-sm outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
+              <IconUsersGroup className="h-3.5 w-3.5" />
               Members
             </Link>
           }
@@ -64,7 +67,7 @@ function ProjectKanbanContent() {
 
         <main className="flex-1 overflow-x-auto overflow-y-hidden">
           {isLoading ? (
-            <LoadingScreen />
+            <LoadingScreen label="Loading board..." variant="shell" />
           ) : (
             <Kanban.Columns>
               {boards?.map((board) => (
