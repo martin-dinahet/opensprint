@@ -1,4 +1,4 @@
-import type { MemberWithUserOutput } from "@/entities/member";
+import type { AddMemberInput, MemberWithUserOutput, UpdateMemberInput } from "@/entities/member";
 import { api } from "@/shared/api/client";
 import { requestApiResult } from "@/shared/api/result";
 
@@ -18,6 +18,27 @@ export const memberApi = {
       (body) => ({
         members: (body as { members?: MemberWithUserOutput[] } | null)?.members ?? [],
       }),
+    );
+  },
+
+  add: async (projectId: string, data: AddMemberInput) => {
+    return requestApiResult<MemberWithUserOutput>(
+      () => api.projects[":id"].members.$post({ param: { id: projectId }, json: data }),
+      "Failed to add project member",
+    );
+  },
+
+  update: async (projectId: string, memberId: string, data: UpdateMemberInput) => {
+    return requestApiResult<MemberWithUserOutput>(
+      () => api.projects[":id"].members[":memberId"].$patch({ param: { id: projectId, memberId }, json: data }),
+      "Failed to update project member",
+    );
+  },
+
+  remove: async (projectId: string, memberId: string) => {
+    return requestApiResult<{ success: boolean }>(
+      () => api.projects[":id"].members[":memberId"].$delete({ param: { id: projectId, memberId } }),
+      "Failed to remove project member",
     );
   },
 };

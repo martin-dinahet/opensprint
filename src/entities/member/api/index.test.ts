@@ -7,6 +7,11 @@ const { apiMock, requestApiResultMock } = vi.hoisted(() => ({
       ":id": {
         members: {
           $get: vi.fn(),
+          $post: vi.fn(),
+          ":memberId": {
+            $patch: vi.fn(),
+            $delete: vi.fn(),
+          },
         },
       },
     },
@@ -52,5 +57,40 @@ describe("member API", () => {
       "Failed to fetch project members",
       expect.any(Function),
     );
+  });
+
+  it("adds members with project params and request body", async () => {
+    apiMock.projects[":id"].members.$post.mockResolvedValue({ id: "member-1" });
+
+    await memberApi.add("project-1", { email: "teammate@example.com", role: "member" });
+
+    expect(apiMock.projects[":id"].members.$post).toHaveBeenCalledWith({
+      param: { id: "project-1" },
+      json: { email: "teammate@example.com", role: "member" },
+    });
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to add project member");
+  });
+
+  it("updates member roles with route params", async () => {
+    apiMock.projects[":id"].members[":memberId"].$patch.mockResolvedValue({ id: "member-1" });
+
+    await memberApi.update("project-1", "member-1", { role: "admin" });
+
+    expect(apiMock.projects[":id"].members[":memberId"].$patch).toHaveBeenCalledWith({
+      param: { id: "project-1", memberId: "member-1" },
+      json: { role: "admin" },
+    });
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to update project member");
+  });
+
+  it("removes members with route params", async () => {
+    apiMock.projects[":id"].members[":memberId"].$delete.mockResolvedValue({ success: true });
+
+    await memberApi.remove("project-1", "member-1");
+
+    expect(apiMock.projects[":id"].members[":memberId"].$delete).toHaveBeenCalledWith({
+      param: { id: "project-1", memberId: "member-1" },
+    });
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to remove project member");
   });
 });
