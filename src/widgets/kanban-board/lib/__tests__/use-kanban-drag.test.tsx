@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoard, makeTask } from "@/test/factories";
-import { useKanbanDrag } from "./use-kanban-drag";
+import { useKanbanDrag } from "../use-kanban-drag";
 
 vi.mock("@dnd-kit/core", () => ({
   KeyboardSensor: vi.fn(),
@@ -41,13 +41,18 @@ function boardEvent(board = doing) {
 }
 
 describe("useKanbanDrag", () => {
+  const setup = () => ({
+    moveTask: { mutateAsync: vi.fn().mockResolvedValue({ id: taskOne.id }) },
+    reorderTask: { mutateAsync: vi.fn().mockResolvedValue({ id: taskOne.id }) },
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("registers board tasks and exposes configured sensors", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne]);
@@ -59,8 +64,8 @@ describe("useKanbanDrag", () => {
   });
 
   it("starts and cancels task dragging", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne]);
@@ -79,8 +84,8 @@ describe("useKanbanDrag", () => {
   });
 
   it("reorders tasks optimistically within a board while hovering", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne, taskTwo]);
@@ -97,8 +102,8 @@ describe("useKanbanDrag", () => {
   });
 
   it("moves tasks optimistically across boards while hovering", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne, taskTwo]);
@@ -117,8 +122,8 @@ describe("useKanbanDrag", () => {
   });
 
   it("clears hover state when dragging over no target or an unknown target", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne]);
@@ -143,8 +148,8 @@ describe("useKanbanDrag", () => {
   });
 
   it("persists cross-board drops and resets after the mutation resolves", async () => {
-    const moveTask = { mutateAsync: vi.fn().mockResolvedValue({ id: taskOne.id }) };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne]);
@@ -160,7 +165,7 @@ describe("useKanbanDrag", () => {
     });
 
     expect(moveTask.mutateAsync).toHaveBeenCalledWith({
-      data: { boardId: doing.id },
+      data: { boardId: doing.id, position: 1 },
       task: { ...taskOne, boardId: doing.id },
       taskId: taskOne.id,
     });
@@ -170,9 +175,9 @@ describe("useKanbanDrag", () => {
     expect(result.current.isCrossBoardDrop).toBe(false);
   });
 
-  it("resets without mutating when a drop is cancelled or stays on the same board", () => {
-    const moveTask = { mutateAsync: vi.fn() };
-    const { result } = renderHook(() => useKanbanDrag(moveTask as never));
+  it("persists same-board reorder and resets after the mutation resolves", async () => {
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
     act(() => {
       result.current.registerBoardTasks(todo.id, [taskOne]);
@@ -186,7 +191,12 @@ describe("useKanbanDrag", () => {
     expect(result.current.dragInFlight).toBe(false);
 
     act(() => {
+      result.current.registerBoardTasks(todo.id, [taskOne, taskTwo]);
       result.current.handleDragStart({ active: taskEvent(taskOne.id) } as never);
+      result.current.handleDragOver({
+        active: taskEvent(taskOne.id),
+        over: taskEvent(taskTwo.id, taskTwo),
+      } as never);
     });
 
     act(() => {
@@ -197,6 +207,25 @@ describe("useKanbanDrag", () => {
     });
 
     expect(moveTask.mutateAsync).not.toHaveBeenCalled();
+    expect(reorderTask.mutateAsync).toHaveBeenCalledWith({ taskId: taskOne.id, position: 1 });
+    await waitFor(() => expect(result.current.dragInFlight).toBe(false));
+  });
+
+  it("resets without mutating when a drop is cancelled", () => {
+    const { moveTask, reorderTask } = setup();
+    const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
+
+    act(() => {
+      result.current.registerBoardTasks(todo.id, [taskOne]);
+      result.current.handleDragStart({ active: taskEvent(taskOne.id) } as never);
+    });
+
+    act(() => {
+      result.current.handleDragEnd({ active: taskEvent(taskOne.id), over: null } as never);
+    });
+
+    expect(moveTask.mutateAsync).not.toHaveBeenCalled();
+    expect(reorderTask.mutateAsync).not.toHaveBeenCalled();
     expect(result.current.dragInFlight).toBe(false);
   });
 });

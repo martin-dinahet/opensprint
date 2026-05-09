@@ -12,7 +12,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { BoardOutput } from "@/entities/board";
-import type { TaskOutput, useMoveTask } from "@/entities/task";
+import type { TaskOutput, useMoveTask, useReorderTask } from "@/entities/task";
 
 type DragData = {
   board?: BoardOutput;
@@ -21,37 +21,38 @@ type DragData = {
 };
 
 type MoveTaskMutation = ReturnType<typeof useMoveTask>;
+type ReorderTaskMutation = ReturnType<typeof useReorderTask>;
 
-function getDragData(data: unknown): DragData | undefined {
+const getDragData = (data: unknown): DragData | undefined => {
   return data as DragData | undefined;
-}
+};
 
-function getTargetBoardId(
+const getTargetBoardId = (
   overId: string,
   overData: DragData | undefined,
   findTaskBoardId: (taskId: string) => string | null,
-) {
+) => {
   if (overData?.type === "board") return overId;
   if (overData?.type === "task") return findTaskBoardId(overId);
 
   return null;
-}
+};
 
-function resetDragState(
+const resetDragState = (
   setActiveTask: (task: TaskOutput | null) => void,
   setOverBoardId: (boardId: string | null) => void,
   setDragInFlight: (dragInFlight: boolean) => void,
   setIsCrossBoardDrop: (isCrossBoardDrop: boolean) => void,
   setOptimisticBoards: (boards: Map<string, TaskOutput[]>) => void,
-) {
+) => {
   setActiveTask(null);
   setOverBoardId(null);
   setDragInFlight(false);
   setIsCrossBoardDrop(false);
   setOptimisticBoards(new Map());
-}
+};
 
-export function useKanbanDrag(moveTask: MoveTaskMutation) {
+export const useKanbanDrag = (moveTask: MoveTaskMutation, reorderTask: ReorderTaskMutation) => {
   const serverTasksRef = useRef<Map<string, TaskOutput[]>>(new Map());
   const [activeTask, setActiveTask] = useState<TaskOutput | null>(null);
   const [dragInFlight, setDragInFlight] = useState(false);
@@ -202,9 +203,35 @@ export function useKanbanDrag(moveTask: MoveTaskMutation) {
       }
 
       if (task.boardId === targetBoardId) {
-        reset();
+        const reorderedTasks = optimisticBoards.get(targetBoardId) ?? serverTasksRef.current.get(targetBoardId) ?? [];
+        const position = reorderedTasks.findIndex((candidate) => candidate.id === activeId);
+
+        if (position < 0 || position === task.position) {
+          reset();
+          return;
+        }
+
+        setDragInFlight(true);
+        setIsCrossBoardDrop(false);
+        setActiveTask(null);
+
+        void reorderTask
+          .mutateAsync({
+            position,
+            taskId: activeId,
+          })
+          .then(reset, reset);
         return;
       }
+
+      const currentTargetTasks = [
+        ...((optimisticBoards.size > 0 ? optimisticBoards : serverTasksRef.current).get(targetBoardId) ?? []),
+      ].filter((candidate) => candidate.id !== activeId);
+      const overTaskIndex = currentTargetTasks.findIndex((candidate) => candidate.id === overId);
+      const targetPosition =
+        overData?.type === "task" && overId !== activeId && overTaskIndex >= 0
+          ? overTaskIndex
+          : currentTargetTasks.length;
 
       setDragInFlight(true);
       setIsCrossBoardDrop(true);
@@ -236,13 +263,13 @@ export function useKanbanDrag(moveTask: MoveTaskMutation) {
 
       void moveTask
         .mutateAsync({
-          data: { boardId: targetBoardId },
+          data: { boardId: targetBoardId, position: targetPosition },
           task: { ...task, boardId: targetBoardId },
           taskId: activeId,
         })
         .then(reset, reset);
     },
-    [activeTask, findTaskBoardId, moveTask, reset],
+    [activeTask, findTaskBoardId, moveTask, optimisticBoards, reorderTask, reset],
   );
 
   return useMemo(
@@ -273,4 +300,4 @@ export function useKanbanDrag(moveTask: MoveTaskMutation) {
       sensors,
     ],
   );
-}
+};

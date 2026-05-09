@@ -25,9 +25,14 @@ vi.mock("@/shared/lib/auth-client", () => ({
   },
 }));
 
-vi.mock("@/features/auth/hooks/use-sign-out", () => ({
-  useSignOut: () => ({ action: mocks.signOut, pending: false }),
-}));
+vi.mock("@/features/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/auth")>();
+
+  return {
+    ...actual,
+    useSignOut: () => ({ action: mocks.signOut, pending: false }),
+  };
+});
 
 vi.mock("@/entities/project", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/entities/project")>();
@@ -52,7 +57,7 @@ describe("AppSidebar", () => {
     mocks.signOut.mockReset();
   });
 
-  it("opens the account menu without crashing and navigates through client routing", async () => {
+  it("navigates to account settings through the sidebar footer", async () => {
     renderWithClient(
       <Wrapper>
         <AppSidebar />
@@ -61,8 +66,8 @@ describe("AppSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /ada lovelace/i }));
 
-    const accountItem = await screen.findByRole("menuitem", { name: "Account" });
-    fireEvent.click(accountItem);
+    const accountSettings = await screen.findByRole("button", { name: "Account settings" });
+    fireEvent.click(accountSettings);
 
     expect(mocks.push).toHaveBeenCalledWith("/account");
   });

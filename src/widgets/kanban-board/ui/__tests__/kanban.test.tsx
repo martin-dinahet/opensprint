@@ -47,8 +47,10 @@ describe("KanbanBoard", () => {
           makeProjectMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } }),
         ]}
         onAddTask={vi.fn()}
+        onDeleteBoard={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
+        onViewTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -67,8 +69,10 @@ describe("KanbanBoard", () => {
         board={makeBoard()}
         tasks={[]}
         onAddTask={vi.fn()}
+        onDeleteBoard={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
+        onViewTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -84,8 +88,10 @@ describe("KanbanBoard", () => {
         board={makeBoard()}
         tasks={[]}
         onAddTask={onAddTask}
+        onDeleteBoard={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
+        onViewTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -104,13 +110,16 @@ describe("KanbanBoard", () => {
         board={makeBoard()}
         tasks={[task]}
         onAddTask={vi.fn()}
+        onDeleteBoard={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={onDeleteTask}
+        onViewTask={vi.fn()}
         isHovered={false}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
 
     expect(onDeleteTask).not.toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "Delete task?" })).toBeInTheDocument();
@@ -119,26 +128,59 @@ describe("KanbanBoard", () => {
 
     expect(onDeleteTask).toHaveBeenCalledWith(task.id);
   });
+
+  it("confirms before deleting a board", () => {
+    const onDeleteBoard = vi.fn();
+    const board = makeBoard({ id: "board-1", name: "Archive" });
+
+    renderWithClient(
+      <KanbanBoard
+        board={board}
+        tasks={[makeTask()]}
+        onAddTask={vi.fn()}
+        onDeleteBoard={onDeleteBoard}
+        onEditTask={vi.fn()}
+        onDeleteTask={vi.fn()}
+        onViewTask={vi.fn()}
+        isHovered={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Board actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete board" }));
+
+    expect(onDeleteBoard).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Delete board?" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete board" }));
+
+    expect(onDeleteBoard).toHaveBeenCalledWith(board.id);
+  });
 });
 
 describe("TaskCard", () => {
-  it("renders task details and fires edit/delete callbacks", () => {
+  it("renders task details and fires view/edit/delete callbacks", () => {
     const task = makeTask({ title: "Design API", priority: "high", assigneeId: "member-1" });
     const members = [
       makeProjectMember({ user: { id: "user-1", name: null, email: "owner@example.com", image: null } }),
     ];
     const onEdit = vi.fn();
     const onDelete = vi.fn();
+    const onView = vi.fn();
 
-    renderWithClient(<TaskCard task={task} onEdit={onEdit} onDelete={onDelete} members={members} />);
+    renderWithClient(<TaskCard task={task} onEdit={onEdit} onView={onView} onDelete={onDelete} members={members} />);
 
     expect(screen.getByText("Design API")).toBeInTheDocument();
     expect(screen.getByText("high")).toBeInTheDocument();
     expect(screen.getByText("owner@example.com")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: /Design API/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
 
+    expect(onView).toHaveBeenCalledWith(task);
     expect(onEdit).toHaveBeenCalledWith(task);
     expect(onDelete).toHaveBeenCalledWith("task-1");
   });

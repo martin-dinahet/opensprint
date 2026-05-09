@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useSignOut } from "@/features/auth/hooks/use-sign-out";
+import { useSignOut } from "@/features/auth";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 

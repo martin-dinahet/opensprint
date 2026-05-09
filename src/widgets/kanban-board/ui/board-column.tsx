@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import type { BoardOutput } from "@/entities/board";
 import { useTasks } from "@/entities/task";
-import { Kanban, useProjectKanban } from "@/widgets/kanban-board";
+import { useProjectKanban } from "../lib/project-kanban-context";
+import { Kanban } from "./kanban";
 
 type Props = {
   board: BoardOutput;

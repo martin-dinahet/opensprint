@@ -1,18 +1,29 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoard, makeProjectMember, makeTask } from "@/test/factories";
-import { ProjectKanbanProvider, useProjectKanban } from "./project-kanban-context";
+import { ProjectKanbanProvider, useProjectKanban } from "../project-kanban-context";
 
-const { deleteTaskMock, useBoardsMock, useKanbanDragMock, useMoveTaskMock, useProjectMembersMock } = vi.hoisted(() => ({
+const {
+  deleteBoardMock,
+  deleteTaskMock,
+  useBoardsMock,
+  useKanbanDragMock,
+  useMoveTaskMock,
+  useProjectMembersMock,
+  useReorderTaskMock,
+} = vi.hoisted(() => ({
+  deleteBoardMock: { mutate: vi.fn(), isPending: false },
   deleteTaskMock: { mutate: vi.fn(), isPending: false },
   useBoardsMock: vi.fn(),
   useKanbanDragMock: vi.fn(),
   useMoveTaskMock: vi.fn(),
   useProjectMembersMock: vi.fn(),
+  useReorderTaskMock: vi.fn(),
 }));
 
 vi.mock("@/entities/board", () => ({
   useBoards: useBoardsMock,
+  useDeleteBoard: () => deleteBoardMock,
 }));
 
 vi.mock("@/entities/member", () => ({
@@ -22,9 +33,10 @@ vi.mock("@/entities/member", () => ({
 vi.mock("@/entities/task", () => ({
   useDeleteTask: () => deleteTaskMock,
   useMoveTask: useMoveTaskMock,
+  useReorderTask: useReorderTaskMock,
 }));
 
-vi.mock("./use-kanban-drag", () => ({
+vi.mock("../use-kanban-drag", () => ({
   useKanbanDrag: useKanbanDragMock,
 }));
 
@@ -40,6 +52,7 @@ function Consumer() {
       <span data-testid="create-board">{String(context.createBoardOpen)}</span>
       <span data-testid="create-task">{String(context.createTaskOpen)}</span>
       <span data-testid="edit-task">{context.editTask?.id ?? ""}</span>
+      <span data-testid="view-task">{context.viewTask?.id ?? ""}</span>
       <button type="button" onClick={context.openCreateBoard}>
         open board
       </button>
@@ -51,6 +64,12 @@ function Consumer() {
       </button>
       <button type="button" onClick={() => context.openEditTask(makeTask({ id: "task-1" }))}>
         edit task
+      </button>
+      <button type="button" onClick={() => context.openViewTask(makeTask({ id: "task-2" }))}>
+        view task
+      </button>
+      <button type="button" onClick={() => context.removeBoard("board-1")}>
+        remove board
       </button>
       <button type="button" onClick={() => context.removeTask("board-1", "task-1")}>
         remove task
@@ -65,6 +84,7 @@ describe("ProjectKanbanProvider", () => {
     useBoardsMock.mockReturnValue({ data: [makeBoard()], isLoading: false });
     useProjectMembersMock.mockReturnValue({ data: [makeProjectMember()] });
     useMoveTaskMock.mockReturnValue({ mutateAsync: vi.fn() });
+    useReorderTaskMock.mockReturnValue({ mutateAsync: vi.fn() });
     useKanbanDragMock.mockReturnValue({
       activeTask: null,
       dragInFlight: false,
@@ -104,6 +124,12 @@ describe("ProjectKanbanProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "edit task" }));
     expect(screen.getByTestId("edit-task")).toHaveTextContent("task-1");
+
+    fireEvent.click(screen.getByRole("button", { name: "view task" }));
+    expect(screen.getByTestId("view-task")).toHaveTextContent("task-2");
+
+    fireEvent.click(screen.getByRole("button", { name: "remove board" }));
+    expect(deleteBoardMock.mutate).toHaveBeenCalledWith({ projectId: "project-1", boardId: "board-1" });
 
     fireEvent.click(screen.getByRole("button", { name: "remove task" }));
     expect(deleteTaskMock.mutate).toHaveBeenCalledWith({ boardId: "board-1", taskId: "task-1" });

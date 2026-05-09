@@ -2,8 +2,8 @@ import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useTasks } from "@/entities/task";
 import { makeBoard, makeTask } from "@/test/factories";
-import { BoardColumn } from "./board-column";
-import { useProjectKanban } from "./project-kanban-context";
+import { useProjectKanban } from "../../lib/project-kanban-context";
+import { BoardColumn } from "../board-column";
 
 const { kanbanColumnMock, useProjectKanbanMock, useTasksMock } = vi.hoisted(() => ({
   kanbanColumnMock: vi.fn(() => null),
@@ -15,15 +15,14 @@ vi.mock("@/entities/task", () => ({
   useTasks: useTasksMock,
 }));
 
-vi.mock("./project-kanban-context", () => ({
+vi.mock("../../lib/project-kanban-context", () => ({
   useProjectKanban: useProjectKanbanMock,
 }));
 
-vi.mock("@/widgets/kanban-board", () => ({
+vi.mock("../kanban", () => ({
   Kanban: {
     Column: kanbanColumnMock,
   },
-  useProjectKanban: useProjectKanbanMock,
 }));
 
 describe("BoardColumn", () => {
