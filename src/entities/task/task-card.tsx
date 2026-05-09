@@ -3,7 +3,7 @@
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { defaultAnimateLayoutChanges, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconPencil, IconX } from "@tabler/icons-react";
+import { IconGripVertical, IconPencil, IconX } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
@@ -13,10 +13,10 @@ import { Button } from "@/shared/ui/button";
 type TaskPriority = "low" | "medium" | "high" | "urgent";
 
 const priorityColors: Record<TaskPriority, string> = {
-  low: "bg-blue-500",
-  medium: "bg-yellow-500",
-  high: "bg-orange-500",
-  urgent: "bg-red-500",
+  low: "bg-priority-low",
+  medium: "bg-priority-medium",
+  high: "bg-priority-high",
+  urgent: "bg-priority-urgent",
 };
 
 type Props = {
@@ -53,39 +53,42 @@ export function TaskCardContent({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group cursor-grab rounded-lg border bg-card shadow-sm transition-shadow active:cursor-grabbing hover:shadow-md ${
+      className={`group cursor-grab rounded-lg border bg-card shadow-sm transition-shadow active:cursor-grabbing hover:shadow-md focus-within:shadow-md ${
         isOverlay ? "cursor-grabbing shadow-xl ring-1 ring-primary/30" : ""
       }`}
     >
       <div {...attributes} {...listeners} className="p-3">
         <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0 flex-1 break-words font-medium text-sm leading-snug">{task.title}</span>
+          <div className="flex min-w-0 flex-1 gap-2">
+            <IconGripVertical className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-muted-foreground" />
+            <span className="min-w-0 flex-1 break-words font-medium text-sm leading-snug">{task.title}</span>
+          </div>
           <div
-            className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+            className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-8 w-8"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(task);
               }}
             >
-              <IconPencil className="h-3 w-3" />
+              <IconPencil className="h-3.5 w-3.5" />
               <span className="sr-only">Edit</span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 hover:text-destructive"
+              className="h-8 w-8 hover:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(task.id);
               }}
             >
-              <IconX className="h-3 w-3" />
+              <IconX className="h-3.5 w-3.5" />
               <span className="sr-only">Delete</span>
             </Button>
           </div>

@@ -2,12 +2,23 @@
 
 import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { IconPlus } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useState, type ReactNode } from "react";
 import type { BoardOutput } from "@/entities/board";
 import { kanbanCollisionDetection } from "@/entities/board/lib/kanban-dnd";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard, TaskCardContent } from "@/entities/task";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
 import { useProjectKanban } from "./project-kanban-context";
 
@@ -103,11 +114,15 @@ function ColumnView({
 
             {tasks.length === 0 && (
               <div
-                className={`flex h-20 items-center justify-center rounded-md border-2 border-dashed text-muted-foreground text-xs transition-colors ${
+                className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
                   isHighlighted ? "border-primary/40 bg-primary/5 text-primary/60" : "border-border/50"
                 }`}
               >
-                Drop here
+                <span>Drop tasks here</span>
+                <Button variant="ghost" size="sm" onClick={onAddTask}>
+                  <IconPlus className="h-3.5 w-3.5" />
+                  Add first task
+                </Button>
               </div>
             )}
           </div>
@@ -121,12 +136,55 @@ function TaskCard({ boardId, task }: TaskCardProps) {
   const { members, openEditTask, removeTask } = useProjectKanban();
 
   return (
-    <EntityTaskCard
-      task={task}
-      onEdit={openEditTask}
-      onDelete={(taskId) => removeTask(boardId, taskId)}
+    <ConfirmableTaskCard
       members={members}
+      onDelete={() => removeTask(boardId, task.id)}
+      onEdit={openEditTask}
+      task={task}
     />
+  );
+}
+
+function ConfirmableTaskCard({
+  members,
+  onDelete,
+  onEdit,
+  task,
+}: {
+  members: Parameters<typeof EntityTaskCard>[0]["members"];
+  onDelete: () => void;
+  onEdit: (task: TaskOutput) => void;
+  task: TaskOutput;
+}) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  return (
+    <>
+      <EntityTaskCard task={task} onEdit={onEdit} onDelete={() => setDeleteOpen(true)} members={members} />
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <IconTrash />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete task?</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently remove "{task.title}" from the board.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                onDelete();
+                setDeleteOpen(false);
+              }}
+            >
+              Delete task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -142,7 +200,13 @@ export function KanbanBoard({
   return (
     <ColumnView board={board} isHovered={isHovered} onAddTask={onAddTask} tasks={tasks}>
       {tasks.map((task) => (
-        <EntityTaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} members={members} />
+        <ConfirmableTaskCard
+          key={task.id}
+          members={members}
+          onDelete={() => onDeleteTask(task.id)}
+          onEdit={onEditTask}
+          task={task}
+        />
       ))}
     </ColumnView>
   );

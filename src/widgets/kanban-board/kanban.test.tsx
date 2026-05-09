@@ -73,7 +73,7 @@ describe("KanbanBoard", () => {
       />,
     );
 
-    expect(screen.getByText("Drop here")).toBeInTheDocument();
+    expect(screen.getByText("Drop tasks here")).toBeInTheDocument();
   });
 
   it("calls the add-task callback", () => {
@@ -90,9 +90,34 @@ describe("KanbanBoard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add first task" }));
 
     expect(onAddTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("confirms before deleting a task", () => {
+    const onDeleteTask = vi.fn();
+    const task = makeTask({ title: "Delete carefully" });
+
+    renderWithClient(
+      <KanbanBoard
+        board={makeBoard()}
+        tasks={[task]}
+        onAddTask={vi.fn()}
+        onEditTask={vi.fn()}
+        onDeleteTask={onDeleteTask}
+        isHovered={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(onDeleteTask).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Delete task?" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete task" }));
+
+    expect(onDeleteTask).toHaveBeenCalledWith(task.id);
   });
 });
 
