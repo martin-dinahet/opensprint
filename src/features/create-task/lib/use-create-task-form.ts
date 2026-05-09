@@ -26,7 +26,7 @@ type Options = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function useCreateTaskForm({ boardId, onOpenChange }: Options) {
+export const useCreateTaskForm = ({ boardId, onOpenChange }: Options) => {
   const createTask = useCreateTask();
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -78,4 +78,4 @@ export function useCreateTaskForm({ boardId, onOpenChange }: Options) {
     setAssigneeId,
     setPriority,
   };
-}
+};

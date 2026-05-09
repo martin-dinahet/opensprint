@@ -24,7 +24,7 @@ type Options = {
   task: TaskOutput | null;
 };
 
-export function useEditTaskForm({ onOpenChange, task }: Options) {
+export const useEditTaskForm = ({ onOpenChange, task }: Options) => {
   const updateTask = useUpdateTask();
   const assignTask = useAssignTask();
   const [pending, startTransition] = useTransition();
@@ -99,4 +99,4 @@ export function useEditTaskForm({ onOpenChange, task }: Options) {
     setTitle,
     title,
   };
-}
+};
