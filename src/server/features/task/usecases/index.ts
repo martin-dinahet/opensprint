@@ -1,6 +1,7 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { boardRepository } from "@/server/features/board/repositories";
+import { columnRepository } from "@/server/features/column/repositories";
 import { memberRepository } from "@/server/features/member/repositories";
 import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import type { AssignTaskInput, CreateTaskInput, MoveTaskInput, ReorderTaskInput, UpdateTaskInput } from "../dto";
@@ -28,8 +29,16 @@ const insertTaskAtPosition = <T extends { id: string }>(tasks: T[], taskId: stri
   return nextTasks;
 };
 
-export const listTasks = async (userId: string, boardId: string) => {
-  const boardResult = await boardRepository.findById(boardId);
+const getColumnForMember = async (userId: string, columnId: string) => {
+  const columnResult = await columnRepository.findById(columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
+
+  const column = columnResult.unwrap();
+  if (!column || column.length === 0) {
+    return err(new NotFoundError("Column"));
+  }
+
+  const boardResult = await boardRepository.findById(column[0].boardId);
   if (boardResult.isErr()) return err(boardResult.error);
 
   const board = boardResult.unwrap();
@@ -45,7 +54,14 @@ export const listTasks = async (userId: string, boardId: string) => {
     return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const tasksResult = await taskRepository.findByBoard(boardId);
+  return ok({ board: board[0], column: column[0], membership: membership[0] });
+};
+
+export const listTasks = async (userId: string, columnId: string) => {
+  const columnResult = await getColumnForMember(userId, columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
+
+  const tasksResult = await taskRepository.findByColumn(columnId);
 
   if (tasksResult.isErr()) {
     return err(new AppError("tasks-fetch-failed", `Unable to fetch tasks: ${tasksResult.error.message}`, 500));
@@ -54,7 +70,7 @@ export const listTasks = async (userId: string, boardId: string) => {
   return ok(
     (tasksResult.unwrap() || []).map((t) => ({
       id: t.id,
-      boardId: t.boardId,
+      columnId: t.columnId,
       assigneeId: t.assigneeId,
       title: t.title,
       description: t.description,
@@ -67,34 +83,23 @@ export const listTasks = async (userId: string, boardId: string) => {
   );
 };
 
-export const createTask = async (userId: string, boardId: string, input: CreateTaskInput) => {
-  const boardResult = await boardRepository.findById(boardId);
-  if (boardResult.isErr()) return err(boardResult.error);
+export const createTask = async (userId: string, columnId: string, input: CreateTaskInput) => {
+  const columnResult = await getColumnForMember(userId, columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
 
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
-
-  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
+  const { board } = columnResult.unwrap();
 
   if (input.assigneeId) {
     const assigneeResult = await memberRepository.findById(input.assigneeId);
     if (assigneeResult.isErr()) return err(assigneeResult.error);
 
     const assignee = assigneeResult.unwrap();
-    if (!assignee || assignee.length === 0 || assignee[0].projectId !== board[0].projectId) {
+    if (!assignee || assignee.length === 0 || assignee[0].projectId !== board.projectId) {
       return err(new NotFoundError("Assignee"));
     }
   }
 
-  const existingTasksResult = await taskRepository.findByBoard(boardId);
+  const existingTasksResult = await taskRepository.findByColumn(columnId);
 
   if (existingTasksResult.isErr()) {
     return err(new AppError("tasks-fetch-failed", `Unable to create task: ${existingTasksResult.error.message}`, 500));
@@ -105,7 +110,7 @@ export const createTask = async (userId: string, boardId: string, input: CreateT
 
   const createResult = await taskRepository.create({
     id: taskId,
-    boardId,
+    columnId,
     title: input.title,
     description: input.description,
     priority: input.priority,
@@ -128,7 +133,7 @@ export const createTask = async (userId: string, boardId: string, input: CreateT
 
   return ok({
     id: newTask[0].id,
-    boardId: newTask[0].boardId,
+    columnId: newTask[0].columnId,
     assigneeId: newTask[0].assigneeId,
     title: newTask[0].title,
     description: newTask[0].description,
@@ -140,28 +145,15 @@ export const createTask = async (userId: string, boardId: string, input: CreateT
   });
 };
 
-export const updateTask = async (userId: string, boardId: string, taskId: string, input: UpdateTaskInput) => {
-  const boardResult = await boardRepository.findById(boardId);
-  if (boardResult.isErr()) return err(boardResult.error);
-
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
-
-  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
+export const updateTask = async (userId: string, columnId: string, taskId: string, input: UpdateTaskInput) => {
+  const columnResult = await getColumnForMember(userId, columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
 
   const taskResult = await taskRepository.findById(taskId);
   if (taskResult.isErr()) return err(taskResult.error);
 
   const task = taskResult.unwrap();
-  if (!task || task.length === 0) {
+  if (!task || task.length === 0 || task[0].columnId !== columnId) {
     return err(new NotFoundError("Task"));
   }
 
@@ -181,7 +173,7 @@ export const updateTask = async (userId: string, boardId: string, taskId: string
 
   return ok({
     id: updatedTask[0].id,
-    boardId: updatedTask[0].boardId,
+    columnId: updatedTask[0].columnId,
     assigneeId: updatedTask[0].assigneeId,
     title: updatedTask[0].title,
     description: updatedTask[0].description,
@@ -192,24 +184,11 @@ export const updateTask = async (userId: string, boardId: string, taskId: string
   });
 };
 
-export const deleteTask = async (userId: string, boardId: string, taskId: string) => {
-  const boardResult = await boardRepository.findById(boardId);
-  if (boardResult.isErr()) return err(boardResult.error);
+export const deleteTask = async (userId: string, columnId: string, taskId: string) => {
+  const columnResult = await getColumnForMember(userId, columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
 
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
-
-  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new ForbiddenError("Not authorized"));
-  }
-
-  if (membership[0].role === "member") {
+  if (columnResult.unwrap().membership.role === "member") {
     return err(new ForbiddenError("Not authorized"));
   }
 
@@ -217,7 +196,7 @@ export const deleteTask = async (userId: string, boardId: string, taskId: string
   if (taskResult.isErr()) return err(taskResult.error);
 
   const task = taskResult.unwrap();
-  if (!task || task.length === 0) {
+  if (!task || task.length === 0 || task[0].columnId !== columnId) {
     return err(new NotFoundError("Task"));
   }
 
@@ -239,23 +218,12 @@ export const assignTask = async (userId: string, taskId: string, input: AssignTa
     return err(new NotFoundError("Task"));
   }
 
-  const boardResult = await boardRepository.findById(task[0].boardId);
-  if (boardResult.isErr()) return err(boardResult.error);
+  const columnResult = await getColumnForMember(userId, task[0].columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
 
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
+  const { board, membership } = columnResult.unwrap();
 
-  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not authorized"));
-  }
-
-  if (membership[0].role === "member") {
+  if (membership.role === "member") {
     return err(new UnauthorizedError("Not authorized"));
   }
 
@@ -264,7 +232,7 @@ export const assignTask = async (userId: string, taskId: string, input: AssignTa
     if (assigneeResult.isErr()) return err(assigneeResult.error);
 
     const assignee = assigneeResult.unwrap();
-    if (!assignee || assignee.length === 0 || assignee[0].projectId !== board[0].projectId) {
+    if (!assignee || assignee.length === 0 || assignee[0].projectId !== board.projectId) {
       return err(new NotFoundError("Assignee"));
     }
   }
@@ -290,29 +258,26 @@ export const moveTask = async (userId: string, taskId: string, input: MoveTaskIn
     return err(new NotFoundError("Task"));
   }
 
-  const targetBoardResult = await boardRepository.findById(input.boardId);
-  if (targetBoardResult.isErr()) return err(targetBoardResult.error);
+  const sourceColumnResult = await getColumnForMember(userId, task[0].columnId);
+  if (sourceColumnResult.isErr()) return err(sourceColumnResult.error);
 
-  const targetBoard = targetBoardResult.unwrap();
-  if (!targetBoard || targetBoard.length === 0) {
-    return err(new NotFoundError("Board"));
+  const targetColumnResult = await getColumnForMember(userId, input.columnId);
+  if (targetColumnResult.isErr()) return err(targetColumnResult.error);
+
+  const sourceProjectId = sourceColumnResult.unwrap().board.projectId;
+  const targetProjectId = targetColumnResult.unwrap().board.projectId;
+
+  if (sourceProjectId !== targetProjectId) {
+    return err(new NotFoundError("Column"));
   }
 
-  const membershipResult = await memberRepository.findByUserAndProject(userId, targetBoard[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
-
-  const existingTasksResult = await taskRepository.findByBoard(input.boardId);
+  const existingTasksResult = await taskRepository.findByColumn(input.columnId);
   if (existingTasksResult.isErr()) return err(existingTasksResult.error);
 
   const targetTasks = existingTasksResult.unwrap() ?? [];
   const newPosition = Math.max(0, Math.min(input.position ?? targetTasks.length, targetTasks.length));
 
-  const updateResult = await taskRepository.updateBoardAndPosition(taskId, input.boardId, newPosition);
+  const updateResult = await taskRepository.updateColumnAndPosition(taskId, input.columnId, newPosition);
 
   if (updateResult.isErr()) {
     return err(new AppError("task-move-failed", `Unable to move task: ${updateResult.error.message}`, 500));
@@ -320,19 +285,23 @@ export const moveTask = async (userId: string, taskId: string, input: MoveTaskIn
 
   const normalizedTargetTasks = [
     ...targetTasks.filter((candidate) => candidate.id !== taskId).slice(0, newPosition),
-    { ...task[0], boardId: input.boardId },
+    { ...task[0], columnId: input.columnId },
     ...targetTasks.filter((candidate) => candidate.id !== taskId).slice(newPosition),
   ];
   const targetNormalizeResult = await normalizeTaskPositions(normalizedTargetTasks);
 
   if (targetNormalizeResult.isErr()) {
     return err(
-      new AppError("task-move-failed", `Unable to normalize target board: ${targetNormalizeResult.error.message}`, 500),
+      new AppError(
+        "task-move-failed",
+        `Unable to normalize target column: ${targetNormalizeResult.error.message}`,
+        500,
+      ),
     );
   }
 
-  if (task[0].boardId !== input.boardId) {
-    const sourceTasksResult = await taskRepository.findByBoard(task[0].boardId);
+  if (task[0].columnId !== input.columnId) {
+    const sourceTasksResult = await taskRepository.findByColumn(task[0].columnId);
     if (sourceTasksResult.isErr()) return err(sourceTasksResult.error);
 
     const sourceNormalizeResult = await normalizeTaskPositions(
@@ -343,7 +312,7 @@ export const moveTask = async (userId: string, taskId: string, input: MoveTaskIn
       return err(
         new AppError(
           "task-move-failed",
-          `Unable to normalize source board: ${sourceNormalizeResult.error.message}`,
+          `Unable to normalize source column: ${sourceNormalizeResult.error.message}`,
           500,
         ),
       );
@@ -352,7 +321,7 @@ export const moveTask = async (userId: string, taskId: string, input: MoveTaskIn
 
   return ok({
     id: task[0].id,
-    boardId: input.boardId,
+    columnId: input.columnId,
     position: newPosition,
   });
 };
@@ -366,23 +335,10 @@ export const reorderTask = async (userId: string, taskId: string, input: Reorder
     return err(new NotFoundError("Task"));
   }
 
-  const boardResult = await boardRepository.findById(task[0].boardId);
-  if (boardResult.isErr()) return err(boardResult.error);
+  const columnResult = await getColumnForMember(userId, task[0].columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
 
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
-
-  const membershipResult = await memberRepository.findByUserAndProject(userId, board[0].projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
-
-  const tasksResult = await taskRepository.findByBoard(task[0].boardId);
+  const tasksResult = await taskRepository.findByColumn(task[0].columnId);
   if (tasksResult.isErr()) return err(tasksResult.error);
 
   const reorderedTasks = insertTaskAtPosition(tasksResult.unwrap() ?? [], taskId, input.position);

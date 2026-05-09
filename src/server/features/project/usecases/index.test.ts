@@ -1,7 +1,17 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { memberRepositoryMock, nanoidMock, projectRepositoryMock } = vi.hoisted(() => ({
+const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, projectRepositoryMock, taskRepositoryMock } =
+  vi.hoisted(() => ({
+    boardRepositoryMock: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findByProject: vi.fn(),
+    },
+    columnRepositoryMock: {
+      deleteByBoard: vi.fn(),
+      findByBoard: vi.fn(),
+    },
   memberRepositoryMock: {
     create: vi.fn(),
     deleteByProject: vi.fn(),
@@ -16,7 +26,10 @@ const { memberRepositoryMock, nanoidMock, projectRepositoryMock } = vi.hoisted((
     findByIds: vi.fn(),
     update: vi.fn(),
   },
-}));
+    taskRepositoryMock: {
+      deleteByColumn: vi.fn(),
+    },
+  }));
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
@@ -26,8 +39,20 @@ vi.mock("@/server/features/member/repositories", () => ({
   memberRepository: memberRepositoryMock,
 }));
 
+vi.mock("@/server/features/board/repositories", () => ({
+  boardRepository: boardRepositoryMock,
+}));
+
+vi.mock("@/server/features/column/repositories", () => ({
+  columnRepository: columnRepositoryMock,
+}));
+
 vi.mock("@/server/features/project/repositories", () => ({
   projectRepository: projectRepositoryMock,
+}));
+
+vi.mock("@/server/features/task/repositories", () => ({
+  taskRepository: taskRepositoryMock,
 }));
 
 const { createProject, deleteProject, getProject, listProjects, updateProject } = await import(
@@ -43,6 +68,8 @@ const project = {
   updatedAt: now,
 };
 const ownerMembership = { id: "member-1", projectId: "project-1", userId: "user-1", role: "owner" };
+const board = { id: "board-1", projectId: "project-1", name: "Launch", description: null, position: 0 };
+const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0 };
 
 describe("project use cases", () => {
   beforeEach(() => {
@@ -72,9 +99,10 @@ describe("project use cases", () => {
   });
 
   it("creates a project and owner membership", async () => {
-    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
+    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new").mockReturnValueOnce("board-new");
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
+    boardRepositoryMock.create.mockResolvedValue(ok(undefined));
 
     const result = await createProject("user-1", { name: "New Project", description: "Useful description" });
 
@@ -90,10 +118,18 @@ describe("project use cases", () => {
       userId: "user-1",
       role: "owner",
     });
+    expect(boardRepositoryMock.create).toHaveBeenCalledWith({
+      id: "board-new",
+      projectId: "project-new",
+      name: "New Project",
+      description: "Useful description",
+      position: 0,
+    });
     expect(result.unwrap()).toEqual({
       id: "project-new",
       name: "New Project",
       description: "Useful description",
+      defaultBoardId: "board-new",
     });
   });
 
@@ -218,6 +254,11 @@ describe("project use cases", () => {
   it("deletes projects for owners", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
+    columnRepositoryMock.findByBoard.mockResolvedValue(ok([column]));
+    taskRepositoryMock.deleteByColumn.mockResolvedValue(ok(undefined));
+    columnRepositoryMock.deleteByBoard.mockResolvedValue(ok(undefined));
+    boardRepositoryMock.delete.mockResolvedValue(ok(undefined));
     memberRepositoryMock.deleteByProject.mockResolvedValue(ok(undefined));
     projectRepositoryMock.delete.mockResolvedValue(ok(undefined));
 

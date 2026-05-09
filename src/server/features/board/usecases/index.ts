@@ -1,12 +1,13 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
+import { columnRepository } from "@/server/features/column/repositories";
 import { memberRepository } from "@/server/features/member/repositories";
 import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import { taskRepository } from "@/server/features/task/repositories";
 import type { CreateBoardInput, UpdateBoardInput } from "../dto";
 import { boardRepository } from "../repositories";
 
-export const listBoards = async (userId: string, projectId: string) => {
+const getProjectMembership = async (userId: string, projectId: string) => {
   const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
   if (membershipResult.isErr()) return err(membershipResult.error);
 
@@ -14,6 +15,13 @@ export const listBoards = async (userId: string, projectId: string) => {
   if (!membership || membership.length === 0) {
     return err(new UnauthorizedError("Not a member of this project"));
   }
+
+  return ok(membership[0]);
+};
+
+export const listBoards = async (userId: string, projectId: string) => {
+  const membershipResult = await getProjectMembership(userId, projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
 
   const boardsResult = await boardRepository.findByProject(projectId);
 
@@ -26,6 +34,7 @@ export const listBoards = async (userId: string, projectId: string) => {
       id: b.id,
       projectId: b.projectId,
       name: b.name,
+      description: b.description,
       position: b.position,
       createdAt: b.createdAt,
       updatedAt: b.updatedAt,
@@ -34,13 +43,8 @@ export const listBoards = async (userId: string, projectId: string) => {
 };
 
 export const createBoard = async (userId: string, projectId: string, input: CreateBoardInput) => {
-  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await getProjectMembership(userId, projectId);
   if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
 
   const existingBoardsResult = await boardRepository.findByProject(projectId);
 
@@ -57,6 +61,7 @@ export const createBoard = async (userId: string, projectId: string, input: Crea
     id: boardId,
     projectId,
     name: input.name,
+    description: input.description,
     position,
   });
 
@@ -76,6 +81,7 @@ export const createBoard = async (userId: string, projectId: string, input: Crea
     id: newBoard[0].id,
     projectId: newBoard[0].projectId,
     name: newBoard[0].name,
+    description: newBoard[0].description,
     position: newBoard[0].position,
     createdAt: newBoard[0].createdAt,
     updatedAt: newBoard[0].updatedAt,
@@ -83,19 +89,14 @@ export const createBoard = async (userId: string, projectId: string, input: Crea
 };
 
 export const getBoard = async (userId: string, projectId: string, boardId: string) => {
-  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await getProjectMembership(userId, projectId);
   if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
 
   const boardResult = await boardRepository.findById(boardId);
   if (boardResult.isErr()) return err(boardResult.error);
 
   const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
+  if (!board || board.length === 0 || board[0].projectId !== projectId) {
     return err(new NotFoundError("Board"));
   }
 
@@ -103,6 +104,7 @@ export const getBoard = async (userId: string, projectId: string, boardId: strin
     id: board[0].id,
     projectId: board[0].projectId,
     name: board[0].name,
+    description: board[0].description,
     position: board[0].position,
     createdAt: board[0].createdAt,
     updatedAt: board[0].updatedAt,
@@ -110,21 +112,8 @@ export const getBoard = async (userId: string, projectId: string, boardId: strin
 };
 
 export const updateBoard = async (userId: string, projectId: string, boardId: string, input: UpdateBoardInput) => {
-  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
-  if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
-
-  const boardResult = await boardRepository.findById(boardId);
+  const boardResult = await getBoard(userId, projectId, boardId);
   if (boardResult.isErr()) return err(boardResult.error);
-
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
-  }
 
   const updateResult = await boardRepository.update(boardId, input);
 
@@ -144,39 +133,47 @@ export const updateBoard = async (userId: string, projectId: string, boardId: st
     id: updatedBoard[0].id,
     projectId: updatedBoard[0].projectId,
     name: updatedBoard[0].name,
+    description: updatedBoard[0].description,
     position: updatedBoard[0].position,
     updatedAt: updatedBoard[0].updatedAt,
   });
 };
 
 export const deleteBoard = async (userId: string, projectId: string, boardId: string) => {
-  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await getProjectMembership(userId, projectId);
   if (membershipResult.isErr()) return err(membershipResult.error);
 
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
+  if (membershipResult.unwrap().role === "member") {
     return err(new ForbiddenError("Not authorized"));
   }
 
-  if (membership[0].role === "member") {
-    return err(new ForbiddenError("Not authorized"));
-  }
-
-  const boardResult = await boardRepository.findById(boardId);
+  const boardResult = await getBoard(userId, projectId, boardId);
   if (boardResult.isErr()) return err(boardResult.error);
 
-  const board = boardResult.unwrap();
-  if (!board || board.length === 0) {
-    return err(new NotFoundError("Board"));
+  const columnsResult = await columnRepository.findByBoard(boardId);
+  if (columnsResult.isErr()) return err(columnsResult.error);
+
+  for (const column of columnsResult.unwrap() ?? []) {
+    const deleteTasksResult = await taskRepository.deleteByColumn(column.id);
+
+    if (deleteTasksResult.isErr()) {
+      return err(
+        new AppError(
+          "board-tasks-delete-failed",
+          `Unable to delete board tasks: ${deleteTasksResult.error.message}`,
+          500,
+        ),
+      );
+    }
   }
 
-  const deleteTasksResult = await taskRepository.deleteByBoard(boardId);
+  const deleteColumnsResult = await columnRepository.deleteByBoard(boardId);
 
-  if (deleteTasksResult.isErr()) {
+  if (deleteColumnsResult.isErr()) {
     return err(
       new AppError(
-        "board-tasks-delete-failed",
-        `Unable to delete board tasks: ${deleteTasksResult.error.message}`,
+        "board-columns-delete-failed",
+        `Unable to delete board columns: ${deleteColumnsResult.error.message}`,
         500,
       ),
     );
@@ -192,13 +189,8 @@ export const deleteBoard = async (userId: string, projectId: string, boardId: st
 };
 
 export const reorderBoards = async (userId: string, projectId: string, boardIds: string[]) => {
-  const membershipResult = await memberRepository.findByUserAndProject(userId, projectId);
+  const membershipResult = await getProjectMembership(userId, projectId);
   if (membershipResult.isErr()) return err(membershipResult.error);
-
-  const membership = membershipResult.unwrap();
-  if (!membership || membership.length === 0) {
-    return err(new UnauthorizedError("Not a member of this project"));
-  }
 
   const boardsResult = await boardRepository.findByProject(projectId);
   if (boardsResult.isErr()) return err(boardsResult.error);

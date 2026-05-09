@@ -1,7 +1,10 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
+import { boardRepository } from "@/server/features/board/repositories";
+import { columnRepository } from "@/server/features/column/repositories";
 import { memberRepository } from "@/server/features/member/repositories";
 import { AppError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import { taskRepository } from "@/server/features/task/repositories";
 import type { CreateProjectInput } from "../dto";
 import { projectRepository } from "../repositories";
 
@@ -34,6 +37,7 @@ export const listProjects = async (userId: string) => {
 export const createProject = async (userId: string, input: CreateProjectInput) => {
   const projectId = nanoid();
   const memberId = nanoid();
+  const boardId = nanoid();
 
   const projectResult = await projectRepository.create({
     id: projectId,
@@ -62,10 +66,23 @@ export const createProject = async (userId: string, input: CreateProjectInput) =
     );
   }
 
+  const boardResult = await boardRepository.create({
+    id: boardId,
+    projectId,
+    name: input.name,
+    description: input.description,
+    position: 0,
+  });
+
+  if (boardResult.isErr()) {
+    return err(new AppError("board-create-failed", `Unable to create default board: ${boardResult.error.message}`, 500));
+  }
+
   return ok({
     id: projectId,
     name: input.name,
     description: input.description || null,
+    defaultBoardId: boardId,
   });
 };
 
@@ -165,6 +182,25 @@ export const deleteProject = async (userId: string, projectId: string) => {
 
   if (membership[0].role !== "owner") {
     return err(new UnauthorizedError("Not authorized"));
+  }
+
+  const boardsResult = await boardRepository.findByProject(projectId);
+  if (boardsResult.isErr()) return err(boardsResult.error);
+
+  for (const board of boardsResult.unwrap() ?? []) {
+    const columnsResult = await columnRepository.findByBoard(board.id);
+    if (columnsResult.isErr()) return err(columnsResult.error);
+
+    for (const column of columnsResult.unwrap() ?? []) {
+      const deleteTasksResult = await taskRepository.deleteByColumn(column.id);
+      if (deleteTasksResult.isErr()) return err(deleteTasksResult.error);
+    }
+
+    const deleteColumnsResult = await columnRepository.deleteByBoard(board.id);
+    if (deleteColumnsResult.isErr()) return err(deleteColumnsResult.error);
+
+    const deleteBoardResult = await boardRepository.delete(board.id);
+    if (deleteBoardResult.isErr()) return err(deleteBoardResult.error);
   }
 
   const deleteMembersResult = await memberRepository.deleteByProject(projectId);

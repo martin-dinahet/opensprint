@@ -55,6 +55,7 @@ export function makeBoard(overrides: Partial<BoardOutput> = {}): BoardOutput {
     id: "board-1",
     projectId: "project-1",
     name: "Todo",
+    description: null,
     position: 0,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -65,7 +66,7 @@ export function makeBoard(overrides: Partial<BoardOutput> = {}): BoardOutput {
 export function makeTask(overrides: Partial<TaskOutput> = {}): TaskOutput {
   return {
     id: "task-1",
-    boardId: "board-1",
+    columnId: "column-1",
     assigneeId: null,
     title: "Write tests",
     description: "Add useful coverage",

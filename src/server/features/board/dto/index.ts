@@ -2,10 +2,12 @@ import z from "zod";
 
 export const CreateBoardInput = z.object({
   name: z.string().min(1).max(130),
+  description: z.string().min(3).max(800).optional(),
 });
 
 export const UpdateBoardInput = z.object({
   name: z.string().min(1).max(130).optional(),
+  description: z.string().min(3).max(800).optional(),
   position: z.number().int().min(0).optional(),
 });
 
@@ -17,6 +19,7 @@ export const BoardOutput = z.object({
   id: z.string(),
   projectId: z.string(),
   name: z.string(),
+  description: z.string().nullable(),
   position: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),

@@ -2,7 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/server/features/shared/errors";
 
-const { boardRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
+const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
   boardRepositoryMock: {
     create: vi.fn(),
     delete: vi.fn(),
@@ -11,12 +11,16 @@ const { boardRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMoc
     update: vi.fn(),
     updatePosition: vi.fn(),
   },
+  columnRepositoryMock: {
+    deleteByBoard: vi.fn(),
+    findByBoard: vi.fn(),
+  },
   memberRepositoryMock: {
     findByUserAndProject: vi.fn(),
   },
   nanoidMock: vi.fn(),
   taskRepositoryMock: {
-    deleteByBoard: vi.fn(),
+    deleteByColumn: vi.fn(),
   },
 }));
 
@@ -26,6 +30,10 @@ vi.mock("nanoid", () => ({
 
 vi.mock("@/server/features/board/repositories", () => ({
   boardRepository: boardRepositoryMock,
+}));
+
+vi.mock("@/server/features/column/repositories", () => ({
+  columnRepository: columnRepositoryMock,
 }));
 
 vi.mock("@/server/features/member/repositories", () => ({
@@ -46,17 +54,21 @@ const board = {
   id: "board-1",
   projectId: "project-1",
   name: "Todo",
+  description: null,
   position: 0,
   createdAt: now,
   updatedAt: now,
 };
+const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
 
 describe("board use cases", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("board-new");
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([membership]));
-    taskRepositoryMock.deleteByBoard.mockResolvedValue(ok(undefined));
+    columnRepositoryMock.findByBoard.mockResolvedValue(ok([column]));
+    columnRepositoryMock.deleteByBoard.mockResolvedValue(ok(undefined));
+    taskRepositoryMock.deleteByColumn.mockResolvedValue(ok(undefined));
   });
 
   it("lists boards for project members", async () => {
@@ -70,6 +82,7 @@ describe("board use cases", () => {
         id: "board-1",
         projectId: "project-1",
         name: "Todo",
+        description: null,
         position: 0,
         createdAt: now,
         updatedAt: now,
@@ -102,6 +115,7 @@ describe("board use cases", () => {
       id: "board-new",
       projectId: "project-1",
       name: "Doing",
+      description: undefined,
       position: 1,
     });
     expect(result.unwrap()).toMatchObject({ id: "board-new", name: "Todo", position: 1 });
@@ -225,13 +239,14 @@ describe("board use cases", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
-    expect(taskRepositoryMock.deleteByBoard).toHaveBeenCalledWith("board-1");
+    expect(taskRepositoryMock.deleteByColumn).toHaveBeenCalledWith("column-1");
+    expect(columnRepositoryMock.deleteByBoard).toHaveBeenCalledWith("board-1");
     expect(boardRepositoryMock.delete).toHaveBeenCalledWith("board-1");
   });
 
   it("wraps task deletion failures before deleting boards", async () => {
     boardRepositoryMock.findById.mockResolvedValue(ok([board]));
-    taskRepositoryMock.deleteByBoard.mockResolvedValue(err(new Error("task delete failed")));
+    taskRepositoryMock.deleteByColumn.mockResolvedValue(err(new Error("task delete failed")));
 
     const result = await deleteBoard("user-1", "project-1", "board-1");
 

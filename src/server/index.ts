@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { AuthRoute } from "./features/auth/route";
 import { boardRoute } from "./features/board/route";
+import { columnRoute } from "./features/column/route";
 import { HealthRoute } from "./features/health/route";
 import { projectRoute } from "./features/project/route";
 import { projectMemberRoute } from "./features/project-member/route";
@@ -22,7 +23,8 @@ const app = new Hono<ServerVariables>()
   .route("/projects", projectRoute)
   .route("/projects", projectMemberRoute)
   .route("/projects", boardRoute)
-  .route("/boards", taskRoute)
+  .route("/boards", columnRoute)
+  .route("/columns", taskRoute)
   .route("/tasks", taskManagementRoute);
 
 export type ServerType = typeof app;

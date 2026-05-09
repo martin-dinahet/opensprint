@@ -13,12 +13,13 @@ export class BoardRepository {
     return handle(() => db.select().from(board).where(eq(board.projectId, projectId)).orderBy(asc(board.position)));
   }
 
-  async create(data: CreateBoardInput & { id: string; projectId: string; position: number }) {
+  async create(data: CreateBoardInput & { id: string; position: number; projectId: string }) {
     return handle(() =>
       db.insert(board).values({
         id: data.id,
         projectId: data.projectId,
         name: data.name,
+        description: data.description || null,
         position: data.position,
       }),
     );
