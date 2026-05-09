@@ -4,6 +4,7 @@ export * from "./schemas/auth/session-schema";
 export * from "./schemas/auth/user-schema";
 export * from "./schemas/auth/verification-schema";
 export * from "./schemas/business/board-schema";
+export * from "./schemas/business/column-schema";
 export * from "./schemas/business/project-member-schema";
 export * from "./schemas/business/project-schema";
 export * from "./schemas/business/task-schema";

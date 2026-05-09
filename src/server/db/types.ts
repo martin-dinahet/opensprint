@@ -1,5 +1,6 @@
 import type { user } from "./schemas/auth/user-schema";
 import type { board } from "./schemas/business/board-schema";
+import type { column } from "./schemas/business/column-schema";
 import type { projectMember } from "./schemas/business/project-member-schema";
 import type { project } from "./schemas/business/project-schema";
 import type { task } from "./schemas/business/task-schema";
@@ -7,6 +8,10 @@ import type { task } from "./schemas/business/task-schema";
 export type Board = typeof board.$inferSelect;
 export type BoardCreate = Omit<Board, "id" | "createdAt" | "updatedAt">;
 export type BoardUpdate = Partial<BoardCreate>;
+
+export type Column = typeof column.$inferSelect;
+export type ColumnCreate = Omit<Column, "id" | "createdAt" | "updatedAt">;
+export type ColumnUpdate = Partial<ColumnCreate>;
 
 export type Project = typeof project.$inferSelect;
 export type ProjectCreate = Omit<Project, "id" | "createdAt" | "updatedAt">;

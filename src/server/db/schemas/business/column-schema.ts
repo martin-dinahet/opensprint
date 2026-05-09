@@ -1,21 +1,19 @@
 import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { project } from "./project-schema";
+import { board } from "./board-schema";
 
-export const board = pgTable(
-  "board",
+export const column = pgTable(
+  "column",
   {
     // ID
     id: text("id") //
       .primaryKey(),
-    // PROJECT_ID
-    projectId: text("project_id") //
+    // BOARD_ID
+    boardId: text("board_id") //
       .notNull()
-      .references(() => project.id),
+      .references(() => board.id),
     // NAME
     name: text("name") //
       .notNull(),
-    // DESCRIPTION
-    description: text("description"),
     // POSITION
     position:
       integer("position") //
@@ -30,5 +28,5 @@ export const board = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("board_project_id_idx").on(table.projectId)],
+  (table) => [index("column_board_id_idx").on(table.boardId)],
 );

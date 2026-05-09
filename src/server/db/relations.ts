@@ -3,6 +3,7 @@ import { account } from "./schemas/auth/account-schema";
 import { session } from "./schemas/auth/session-schema";
 import { user } from "./schemas/auth/user-schema";
 import { board } from "./schemas/business/board-schema";
+import { column } from "./schemas/business/column-schema";
 import { projectMember } from "./schemas/business/project-member-schema";
 import { project } from "./schemas/business/project-schema";
 import { task } from "./schemas/business/task-schema";
@@ -49,13 +50,21 @@ export const boardRelations = relations(board, ({ one, many }) => ({
     fields: [board.projectId],
     references: [project.id],
   }),
+  columns: many(column),
+}));
+
+export const columnRelations = relations(column, ({ one, many }) => ({
+  board: one(board, {
+    fields: [column.boardId],
+    references: [board.id],
+  }),
   tasks: many(task),
 }));
 
 export const taskRelations = relations(task, ({ one }) => ({
-  board: one(board, {
-    fields: [task.boardId],
-    references: [board.id],
+  column: one(column, {
+    fields: [task.columnId],
+    references: [column.id],
   }),
   assignee: one(projectMember, {
     fields: [task.assigneeId],
