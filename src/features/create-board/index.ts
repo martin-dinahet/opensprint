@@ -1,2 +1,2 @@
-export { CreateBoardDialog } from "./create-board-dialog";
-export { useCreateBoardForm } from "./use-create-board-form";
+export { useCreateBoardForm } from "./lib/use-create-board-form";
+export { CreateBoardDialog } from "./ui/create-board-dialog";

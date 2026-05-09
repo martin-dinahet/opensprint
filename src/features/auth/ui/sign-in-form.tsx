@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Field, FieldError, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import { useSignInForm } from "./hooks/use-sign-in-form";
+import { useSignInForm } from "../lib/use-sign-in-form";
 
 export const SignInForm: FC = () => {
   const { action, fieldErrors, globalError, pending } = useSignInForm();

@@ -1,3 +1,3 @@
-export { useSignOut } from "./hooks/use-sign-out";
-export { SignInForm } from "./sign-in-form";
-export { SignUpForm } from "./sign-up-form";
+export { useSignOut } from "./lib/use-sign-out";
+export { SignInForm } from "./ui/sign-in-form";
+export { SignUpForm } from "./ui/sign-up-form";

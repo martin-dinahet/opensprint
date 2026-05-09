@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import z from "zod";
-import { useSignOut } from "@/features/auth/hooks/use-sign-out";
+import { useSignOut } from "@/features/auth";
 import { handleClientResult } from "@/shared/api/result";
 import { authClient } from "@/shared/lib/auth-client";
 import { parseFormData } from "@/shared/lib/forms";
