@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
-import { QueryProvider } from "@/shared/providers/query-provider";
-import { TooltipProvider } from "@/shared/ui/tooltip";
+import { AppProviders } from "@/shared/providers/app-providers";
 import "@/app/globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -19,12 +18,10 @@ type Props = {
 
 export default function RootLayout({ children }: Props) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <QueryProvider>
-        <TooltipProvider>
-          <body className="antialiased">{children}</body>
-        </TooltipProvider>
-      </QueryProvider>
+    <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+      <body className="antialiased">
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

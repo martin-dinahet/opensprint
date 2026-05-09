@@ -5,10 +5,9 @@ import Link from "next/link";
 import { CreateBoardDialog } from "@/features/create-board";
 import { CreateTaskDialog } from "@/features/create-task";
 import { EditTaskDialog } from "@/features/edit-task";
-import { authClient } from "@/shared/lib/auth-client";
 import { Button } from "@/shared/ui/button";
 import { LoadingScreen } from "@/shared/ui/loading-screen";
-import { AppHeader } from "@/widgets/app-header";
+import { AppShellHeader } from "@/widgets/app-sidebar";
 import { BoardColumn, Kanban, ProjectKanbanProvider, useProjectKanban } from "@/widgets/kanban-board";
 
 type Props = {
@@ -16,10 +15,6 @@ type Props = {
 };
 
 export function ProjectKanbanPage({ projectId }: Props) {
-  const session = authClient.useSession();
-
-  if (!session.data?.user) return <LoadingScreen />;
-
   return (
     <ProjectKanbanProvider projectId={projectId}>
       <ProjectKanbanContent />
@@ -45,17 +40,25 @@ function ProjectKanbanContent() {
 
   return (
     <Kanban.Root>
-      <div className="flex h-screen flex-col overflow-hidden">
-        <AppHeader
-          className="shrink-0"
-          leading={
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <AppShellHeader
+          title="Board"
+          eyebrow={
+            <span className="flex items-center gap-2">
+              <Link href="/dashboard" className="hover:text-foreground">
                 Projects
               </Link>
-              <span className="text-muted-foreground">/</span>
-              <span className="font-medium">Kanban</span>
-            </div>
+              <span>/</span>
+              <span>Kanban</span>
+            </span>
+          }
+          actions={
+            <Link
+              href={`/projects/${projectId}/members`}
+              className="text-muted-foreground text-sm hover:text-foreground"
+            >
+              Members
+            </Link>
           }
         />
 
