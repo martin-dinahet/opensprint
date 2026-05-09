@@ -21,7 +21,7 @@ describe("task assignment dialogs", () => {
       }),
     ];
 
-    renderWithClient(<CreateTaskDialog boardId="board-1" members={members} onOpenChange={vi.fn()} open />);
+    renderWithClient(<CreateTaskDialog columnId="column-1" members={members} onOpenChange={vi.fn()} open />);
 
     await user.click(screen.getByLabelText("Assignee"));
 

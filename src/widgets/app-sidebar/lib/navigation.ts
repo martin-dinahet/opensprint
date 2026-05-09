@@ -1,10 +1,10 @@
-import { KanbanSquareIcon, UsersIcon } from "lucide-react";
+import { LayoutDashboardIcon, type LucideIcon, UsersIcon } from "lucide-react";
 
 type RouteParams = Readonly<Record<string, string | string[] | undefined>>;
 
 export type ProjectNavigationItem = {
   href: string;
-  icon: typeof KanbanSquareIcon;
+  icon: LucideIcon;
   label: string;
 };
 
@@ -17,7 +17,7 @@ export function getProjectId(pathname: string, params: RouteParams) {
 
 export function getProjectNavigationItems(projectId: string): ProjectNavigationItem[] {
   return [
-    { href: projectId ? `/projects/${projectId}` : "/dashboard", label: "Board", icon: KanbanSquareIcon },
+    { href: projectId ? `/projects/${projectId}` : "/dashboard", label: "Overview", icon: LayoutDashboardIcon },
     { href: projectId ? `/projects/${projectId}/members` : "/dashboard", label: "Members", icon: UsersIcon },
   ];
 }

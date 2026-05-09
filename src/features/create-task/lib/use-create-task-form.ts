@@ -52,7 +52,7 @@ export const useCreateTaskForm = ({ columnId, onOpenChange }: Options) => {
         return;
       }
       if (!columnId) {
-        setGlobalError("Choose a board before creating a task.");
+        setGlobalError("Choose a column before creating a task.");
         return;
       }
 

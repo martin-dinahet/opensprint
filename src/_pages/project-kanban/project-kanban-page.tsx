@@ -2,7 +2,7 @@
 
 import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
 import Link from "next/link";
-import { useBoards } from "@/entities/board";
+import { useBoard, useBoards } from "@/entities/board";
 import { useProject } from "@/entities/project";
 import { CreateColumnDialog } from "@/features/create-column";
 import { CreateTaskDialog } from "@/features/create-task";
@@ -51,20 +51,25 @@ const ProjectKanbanContent = () => {
     setViewTask,
     viewTask,
   } = useProjectKanban();
+  const { data: board } = useBoard(projectId, boardId);
   const { data: project } = useProject(projectId);
 
   return (
     <Kanban.Root>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppShellHeader
-          title={project?.name ?? "Board"}
+          title={board?.name ?? "Board"}
           eyebrow={
             <span className="flex items-center gap-2">
               <Link href="/dashboard" className="hover:text-foreground">
                 Projects
               </Link>
               <span>/</span>
-              <span>Board</span>
+              <Link href={`/projects/${projectId}`} className="hover:text-foreground">
+                {project?.name ?? "Project"}
+              </Link>
+              <span>/</span>
+              <span>{board?.name ?? "Board"}</span>
             </span>
           }
           actions={

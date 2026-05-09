@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProjectKanbanPage } from "@/pages/project-kanban";
+import { ProjectOverviewPage } from "@/pages/project-overview";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -10,5 +10,5 @@ type Props = {
 export default function ProjectPage({ params }: Props) {
   const { id: projectId } = use(params);
 
-  return <ProjectKanbanPage projectId={projectId} />;
+  return <ProjectOverviewPage projectId={projectId} />;
 }

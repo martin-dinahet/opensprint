@@ -47,7 +47,13 @@ export function ProjectNavigation() {
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton
                       tooltip={item.label}
-                      isActive={projectId ? pathname === item.href : false}
+                      isActive={
+                        projectId
+                          ? pathname === item.href ||
+                            (item.href === `/projects/${projectId}` &&
+                              pathname.startsWith(`/projects/${projectId}/boards/`))
+                          : false
+                      }
                       className={sidebarNavButtonClass}
                       render={<Link href={item.href} />}
                     >
