@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { TaskCard } from "@/entities/task";
-import { makeBoard, makeProjectMember, makeTask } from "@/test/factories";
+import { makeColumn, makeProjectMember, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 import { KanbanBoard } from "@/widgets/kanban-board";
 
@@ -38,7 +38,7 @@ describe("KanbanBoard", () => {
   it("renders board heading, task count, and tasks", () => {
     renderWithClient(
       <KanbanBoard
-        board={makeBoard({ name: "Doing" })}
+        column={makeColumn({ name: "Doing" })}
         tasks={[
           makeTask({ title: "First task", priority: "urgent", assigneeId: "member-1" }),
           makeTask({ id: "task-2", title: "Second task" }),
@@ -47,7 +47,7 @@ describe("KanbanBoard", () => {
           makeProjectMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } }),
         ]}
         onAddTask={vi.fn()}
-        onDeleteBoard={vi.fn()}
+        onDeleteColumn={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
         onViewTask={vi.fn()}
@@ -63,13 +63,13 @@ describe("KanbanBoard", () => {
     expect(screen.getByText("Second task")).toBeInTheDocument();
   });
 
-  it("renders an empty-state drop target for boards without tasks", () => {
+  it("renders an empty-state drop target for columns without tasks", () => {
     renderWithClient(
       <KanbanBoard
-        board={makeBoard()}
+        column={makeColumn()}
         tasks={[]}
         onAddTask={vi.fn()}
-        onDeleteBoard={vi.fn()}
+        onDeleteColumn={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
         onViewTask={vi.fn()}
@@ -85,10 +85,10 @@ describe("KanbanBoard", () => {
 
     renderWithClient(
       <KanbanBoard
-        board={makeBoard()}
+        column={makeColumn()}
         tasks={[]}
         onAddTask={onAddTask}
-        onDeleteBoard={vi.fn()}
+        onDeleteColumn={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
         onViewTask={vi.fn()}
@@ -107,10 +107,10 @@ describe("KanbanBoard", () => {
 
     renderWithClient(
       <KanbanBoard
-        board={makeBoard()}
+        column={makeColumn()}
         tasks={[task]}
         onAddTask={vi.fn()}
-        onDeleteBoard={vi.fn()}
+        onDeleteColumn={vi.fn()}
         onEditTask={vi.fn()}
         onDeleteTask={onDeleteTask}
         onViewTask={vi.fn()}
@@ -129,16 +129,16 @@ describe("KanbanBoard", () => {
     expect(onDeleteTask).toHaveBeenCalledWith(task.id);
   });
 
-  it("confirms before deleting a board", () => {
-    const onDeleteBoard = vi.fn();
-    const board = makeBoard({ id: "board-1", name: "Archive" });
+  it("confirms before deleting a column", () => {
+    const onDeleteColumn = vi.fn();
+    const column = makeColumn({ id: "column-1", name: "Archive" });
 
     renderWithClient(
       <KanbanBoard
-        board={board}
+        column={column}
         tasks={[makeTask()]}
         onAddTask={vi.fn()}
-        onDeleteBoard={onDeleteBoard}
+        onDeleteColumn={onDeleteColumn}
         onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
         onViewTask={vi.fn()}
@@ -146,15 +146,15 @@ describe("KanbanBoard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Board actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Delete board" }));
+    fireEvent.click(screen.getByRole("button", { name: "Column actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete column" }));
 
-    expect(onDeleteBoard).not.toHaveBeenCalled();
-    expect(screen.getByRole("heading", { name: "Delete board?" })).toBeInTheDocument();
+    expect(onDeleteColumn).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Delete column?" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete board" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete column" }));
 
-    expect(onDeleteBoard).toHaveBeenCalledWith(board.id);
+    expect(onDeleteColumn).toHaveBeenCalledWith(column.id);
   });
 });
 

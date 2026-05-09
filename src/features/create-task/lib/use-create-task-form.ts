@@ -22,11 +22,11 @@ const createTaskSchema = z.object({
 });
 
 type Options = {
-  boardId: string;
+  columnId: string;
   onOpenChange: (open: boolean) => void;
 };
 
-export const useCreateTaskForm = ({ boardId, onOpenChange }: Options) => {
+export const useCreateTaskForm = ({ columnId, onOpenChange }: Options) => {
   const createTask = useCreateTask();
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -51,12 +51,15 @@ export const useCreateTaskForm = ({ boardId, onOpenChange }: Options) => {
         setFieldErrors(fieldErrors);
         return;
       }
-      if (!boardId) {
+      if (!columnId) {
         setGlobalError("Choose a board before creating a task.");
         return;
       }
 
-      const result = await handleClientResult(() => createTask.mutateAsync({ boardId, data }), "Unable to create task");
+      const result = await handleClientResult(
+        () => createTask.mutateAsync({ columnId, data }),
+        "Unable to create task",
+      );
       result.match({
         ok: () => {
           reset();

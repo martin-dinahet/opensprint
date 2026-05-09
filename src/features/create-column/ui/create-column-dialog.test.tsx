@@ -1,47 +1,47 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CreateBoardDialog } from "@/features/create-board";
+import { CreateColumnDialog } from "@/features/create-column";
 import { renderWithClient } from "@/test/render";
 
 const mocks = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
 }));
 
-vi.mock("@/entities/board", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/entities/board")>();
+vi.mock("@/entities/column", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/entities/column")>();
 
   return {
     ...actual,
-    useCreateBoard: () => ({
+    useCreateColumn: () => ({
       isPending: false,
       mutateAsync: mocks.mutateAsync,
     }),
   };
 });
 
-describe("CreateBoardDialog", () => {
+describe("CreateColumnDialog", () => {
   beforeEach(() => {
     mocks.mutateAsync.mockReset();
   });
 
-  it("validates and submits board creation through the form action", async () => {
+  it("validates and submits column creation through the form action", async () => {
     mocks.mutateAsync.mockResolvedValueOnce({});
 
-    renderWithClient(<CreateBoardDialog open onOpenChange={vi.fn()} projectId="project-1" />);
+    renderWithClient(<CreateColumnDialog open onOpenChange={vi.fn()} boardId="board-1" />);
 
     fireEvent.change(screen.getByLabelText("Column name"), { target: { value: "Review" } });
     fireEvent.click(screen.getByRole("button", { name: "Add column" }));
 
     await waitFor(() => {
       expect(mocks.mutateAsync).toHaveBeenCalledWith({
+        boardId: "board-1",
         data: { name: "Review" },
-        projectId: "project-1",
       });
     });
   });
 
   it("shows client-side validation errors", async () => {
-    renderWithClient(<CreateBoardDialog open onOpenChange={vi.fn()} projectId="project-1" />);
+    renderWithClient(<CreateColumnDialog open onOpenChange={vi.fn()} boardId="board-1" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Add column" }));
 

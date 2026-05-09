@@ -2,21 +2,21 @@
 
 import { useState, useTransition } from "react";
 import z from "zod";
-import { useCreateBoard } from "@/entities/board";
+import { useCreateColumn } from "@/entities/column";
 import { handleClientResult } from "@/shared/api/result";
 import { parseFormData } from "@/shared/lib/forms";
 
-const createBoardSchema = z.object({
+const createColumnSchema = z.object({
   name: z.string().trim().min(1).max(130),
 });
 
 type Options = {
+  boardId: string;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
 };
 
-export function useCreateBoardForm({ onOpenChange, projectId }: Options) {
-  const createBoard = useCreateBoard();
+export function useCreateColumnForm({ boardId, onOpenChange }: Options) {
+  const createColumn = useCreateColumn();
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -30,14 +30,14 @@ export function useCreateBoardForm({ onOpenChange, projectId }: Options) {
     startTransition(async () => {
       reset();
 
-      const { data, fieldErrors } = parseFormData(createBoardSchema, formData);
+      const { data, fieldErrors } = parseFormData(createColumnSchema, formData);
       if (fieldErrors) {
         setFieldErrors(fieldErrors);
         return;
       }
 
       const result = await handleClientResult(
-        () => createBoard.mutateAsync({ data, projectId }),
+        () => createColumn.mutateAsync({ boardId, data }),
         "Unable to create column",
       );
       result.match({
@@ -51,7 +51,7 @@ export function useCreateBoardForm({ onOpenChange, projectId }: Options) {
     action,
     fieldErrors,
     globalError,
-    pending: pending || createBoard.isPending,
+    pending: pending || createColumn.isPending,
     reset,
   };
 }

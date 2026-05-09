@@ -1,28 +1,29 @@
 "use client";
 
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { useBoards, useDeleteBoard } from "@/entities/board";
+import { useColumns, useDeleteColumn } from "@/entities/column";
 import { type MemberWithUserOutput, useProjectMembers } from "@/entities/member";
 import { type TaskOutput, useDeleteTask, useMoveTask, useReorderTask } from "@/entities/task";
 import { useKanbanDrag } from "./use-kanban-drag";
 
 type ProjectKanbanContextValue = {
-  activeBoardId: string;
-  boards: ReturnType<typeof useBoards>["data"];
-  createBoardOpen: boolean;
+  activeColumnId: string;
+  boardId: string;
+  columns: ReturnType<typeof useColumns>["data"];
+  createColumnOpen: boolean;
   createTaskOpen: boolean;
   editTask: TaskOutput | null;
   isLoading: boolean;
   kanbanDrag: ReturnType<typeof useKanbanDrag>;
   members: MemberWithUserOutput[];
-  openCreateBoard: () => void;
-  openCreateTask: (boardId: string) => void;
+  openCreateColumn: () => void;
+  openCreateTask: (columnId: string) => void;
   openEditTask: (task: TaskOutput) => void;
   openViewTask: (task: TaskOutput) => void;
   projectId: string;
-  removeBoard: (boardId: string) => void;
-  removeTask: (boardId: string, taskId: string) => void;
-  setCreateBoardOpen: (open: boolean) => void;
+  removeColumn: (columnId: string) => void;
+  removeTask: (columnId: string, taskId: string) => void;
+  setCreateColumnOpen: (open: boolean) => void;
   setCreateTaskOpen: (open: boolean) => void;
   setEditTask: (task: TaskOutput | null) => void;
   setViewTask: (task: TaskOutput | null) => void;
@@ -32,63 +33,66 @@ type ProjectKanbanContextValue = {
 const ProjectKanbanContext = createContext<ProjectKanbanContextValue | null>(null);
 
 type Props = {
+  boardId: string;
   children: ReactNode;
   projectId: string;
 };
 
-export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
-  const { data: boards, isLoading } = useBoards(projectId);
+export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) => {
+  const { data: columns, isLoading } = useColumns(boardId);
   const { data: members = [] } = useProjectMembers(projectId);
-  const deleteBoard = useDeleteBoard();
+  const deleteColumn = useDeleteColumn();
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
   const reorderTask = useReorderTask();
   const kanbanDrag = useKanbanDrag(moveTask, reorderTask);
-  const [createBoardOpen, setCreateBoardOpen] = useState(false);
+  const [createColumnOpen, setCreateColumnOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpenState] = useState(false);
-  const [activeBoardId, setActiveBoardId] = useState("");
+  const [activeColumnId, setActiveColumnId] = useState("");
   const [editTask, setEditTask] = useState<TaskOutput | null>(null);
   const [viewTask, setViewTask] = useState<TaskOutput | null>(null);
 
   const setCreateTaskOpen = useCallback((open: boolean) => {
     setCreateTaskOpenState(open);
     if (!open) {
-      setActiveBoardId("");
+      setActiveColumnId("");
     }
   }, []);
 
   const value = useMemo<ProjectKanbanContextValue>(
     () => ({
-      activeBoardId,
-      boards,
-      createBoardOpen,
+      activeColumnId,
+      boardId,
+      columns,
+      createColumnOpen,
       createTaskOpen,
       editTask,
       isLoading,
       kanbanDrag,
       members,
-      openCreateBoard: () => setCreateBoardOpen(true),
-      openCreateTask: (boardId) => {
-        setActiveBoardId(boardId);
+      openCreateColumn: () => setCreateColumnOpen(true),
+      openCreateTask: (columnId) => {
+        setActiveColumnId(columnId);
         setCreateTaskOpenState(true);
       },
       openEditTask: setEditTask,
       openViewTask: setViewTask,
       projectId,
-      removeBoard: (boardId) => deleteBoard.mutate({ projectId, boardId }),
-      removeTask: (boardId, taskId) => deleteTask.mutate({ boardId, taskId }),
-      setCreateBoardOpen,
+      removeColumn: (columnId) => deleteColumn.mutate({ boardId, columnId }),
+      removeTask: (columnId, taskId) => deleteTask.mutate({ columnId, taskId }),
+      setCreateColumnOpen,
       setCreateTaskOpen,
       setEditTask,
       setViewTask,
       viewTask,
     }),
     [
-      activeBoardId,
-      boards,
-      createBoardOpen,
+      activeColumnId,
+      boardId,
+      columns,
+      createColumnOpen,
       createTaskOpen,
-      deleteBoard,
+      deleteColumn,
       deleteTask,
       editTask,
       isLoading,

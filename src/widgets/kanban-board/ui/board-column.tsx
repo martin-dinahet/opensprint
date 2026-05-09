@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import type { BoardOutput } from "@/entities/board";
+import type { ColumnOutput } from "@/entities/column";
 import { useTasks } from "@/entities/task";
 import { useProjectKanban } from "../lib/project-kanban-context";
 import { Kanban } from "./kanban";
 
 type Props = {
-  board: BoardOutput;
+  column: ColumnOutput;
 };
 
-export function BoardColumn({ board }: Props) {
+export function BoardColumn({ column }: Props) {
   const { kanbanDrag } = useProjectKanban();
-  const { data: serverTasks = [] } = useTasks(board.id);
-  const tasks = kanbanDrag.dragInFlight ? kanbanDrag.getBoardTasks(board.id) : serverTasks;
+  const { data: serverTasks = [] } = useTasks(column.id);
+  const tasks = kanbanDrag.dragInFlight ? kanbanDrag.getColumnTasks(column.id) : serverTasks;
 
   useEffect(() => {
-    kanbanDrag.registerBoardTasks(board.id, serverTasks);
-  }, [board.id, kanbanDrag, serverTasks]);
+    kanbanDrag.registerColumnTasks(column.id, serverTasks);
+  }, [column.id, kanbanDrag, serverTasks]);
 
-  return <Kanban.Column board={board} isHovered={kanbanDrag.overBoardId === board.id} tasks={tasks} />;
+  return <Kanban.Column column={column} isHovered={kanbanDrag.overColumnId === column.id} tasks={tasks} />;
 }

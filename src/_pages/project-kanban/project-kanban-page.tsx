@@ -2,8 +2,9 @@
 
 import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
 import Link from "next/link";
+import { useBoards } from "@/entities/board";
 import { useProject } from "@/entities/project";
-import { CreateBoardDialog } from "@/features/create-board";
+import { CreateColumnDialog } from "@/features/create-column";
 import { CreateTaskDialog } from "@/features/create-task";
 import { EditTaskDialog } from "@/features/edit-task";
 import { TaskDetailDialog } from "@/features/view-task";
@@ -13,12 +14,20 @@ import { AppShellHeader } from "@/widgets/app-sidebar";
 import { BoardColumn, Kanban, ProjectKanbanProvider, useProjectKanban } from "@/widgets/kanban-board";
 
 type Props = {
+  boardId?: string;
   projectId: string;
 };
 
-export const ProjectKanbanPage = ({ projectId }: Props) => {
+export const ProjectKanbanPage = ({ boardId, projectId }: Props) => {
+  const { data: boards = [], isLoading } = useBoards(projectId);
+  const activeBoardId = boardId ?? boards[0]?.id ?? "";
+
+  if (isLoading && !activeBoardId) {
+    return <LoadingScreen label="Loading board..." variant="shell" />;
+  }
+
   return (
-    <ProjectKanbanProvider projectId={projectId}>
+    <ProjectKanbanProvider boardId={activeBoardId} projectId={projectId}>
       <ProjectKanbanContent />
     </ProjectKanbanProvider>
   );
@@ -26,16 +35,17 @@ export const ProjectKanbanPage = ({ projectId }: Props) => {
 
 const ProjectKanbanContent = () => {
   const {
-    activeBoardId,
-    boards,
-    createBoardOpen,
+    activeColumnId,
+    boardId,
+    columns,
+    createColumnOpen,
     createTaskOpen,
     editTask,
     isLoading,
     members,
-    openCreateBoard,
+    openCreateColumn,
     projectId,
-    setCreateBoardOpen,
+    setCreateColumnOpen,
     setCreateTaskOpen,
     setEditTask,
     setViewTask,
@@ -73,13 +83,13 @@ const ProjectKanbanContent = () => {
             <LoadingScreen label="Loading board..." variant="shell" />
           ) : (
             <Kanban.Columns>
-              {boards?.map((board) => (
-                <BoardColumn board={board} key={board.id} />
+              {columns?.map((column) => (
+                <BoardColumn column={column} key={column.id} />
               ))}
 
               <Button
                 className="h-12 w-72 shrink-0 border-2 border-dashed border-border hover:border-solid"
-                onClick={openCreateBoard}
+                onClick={openCreateColumn}
                 variant="ghost"
               >
                 <IconPlus className="mr-2 h-4 w-4" />
@@ -90,10 +100,10 @@ const ProjectKanbanContent = () => {
         </main>
       </div>
 
-      <CreateBoardDialog onOpenChange={setCreateBoardOpen} open={createBoardOpen} projectId={projectId} />
+      <CreateColumnDialog boardId={boardId} onOpenChange={setCreateColumnOpen} open={createColumnOpen} />
 
       <CreateTaskDialog
-        boardId={activeBoardId}
+        columnId={activeColumnId}
         members={members}
         onOpenChange={setCreateTaskOpen}
         open={createTaskOpen}

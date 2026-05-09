@@ -32,7 +32,7 @@ describe("useCreateTaskForm", () => {
   it("creates a task and resets local form state", async () => {
     createTaskMock.mutateAsync.mockResolvedValue({ id: "task-new" });
     const onOpenChange = vi.fn();
-    const { result } = renderHook(() => useCreateTaskForm({ boardId: "board-1", onOpenChange }));
+    const { result } = renderHook(() => useCreateTaskForm({ columnId: "board-1", onOpenChange }));
 
     act(() => {
       result.current.setPriority("urgent");
@@ -53,7 +53,7 @@ describe("useCreateTaskForm", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 
     expect(createTaskMock.mutateAsync).toHaveBeenCalledWith({
-      boardId: "board-1",
+      columnId: "board-1",
       data: {
         assigneeId: "member-1",
         description: "Useful task notes",
@@ -67,7 +67,7 @@ describe("useCreateTaskForm", () => {
   });
 
   it("stores validation errors without submitting", async () => {
-    const { result } = renderHook(() => useCreateTaskForm({ boardId: "board-1", onOpenChange: vi.fn() }));
+    const { result } = renderHook(() => useCreateTaskForm({ columnId: "board-1", onOpenChange: vi.fn() }));
 
     act(() => {
       result.current.action(makeFormData({ title: "", description: "no", priority: "medium", assigneeId: "" }));
@@ -80,7 +80,7 @@ describe("useCreateTaskForm", () => {
   });
 
   it("shows a global error when no board is selected", async () => {
-    const { result } = renderHook(() => useCreateTaskForm({ boardId: "", onOpenChange: vi.fn() }));
+    const { result } = renderHook(() => useCreateTaskForm({ columnId: "", onOpenChange: vi.fn() }));
 
     act(() => {
       result.current.action(makeFormData({ title: "Ship coverage", priority: "medium" }));
@@ -93,7 +93,7 @@ describe("useCreateTaskForm", () => {
   it("shows mutation failures and exposes pending state", async () => {
     createTaskMock.isPending = true;
     createTaskMock.mutateAsync.mockRejectedValue(new Error("Create failed"));
-    const { result } = renderHook(() => useCreateTaskForm({ boardId: "board-1", onOpenChange: vi.fn() }));
+    const { result } = renderHook(() => useCreateTaskForm({ columnId: "board-1", onOpenChange: vi.fn() }));
 
     expect(result.current.pending).toBe(true);
 

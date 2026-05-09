@@ -4,16 +4,16 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { useCreateBoardForm } from "../lib/use-create-board-form";
+import { useCreateColumnForm } from "../lib/use-create-column-form";
 
 type Props = {
+  boardId: string;
   onOpenChange: (open: boolean) => void;
   open: boolean;
-  projectId: string;
 };
 
-export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
-  const { action, fieldErrors, globalError, pending, reset } = useCreateBoardForm({ onOpenChange, projectId });
+export function CreateColumnDialog({ boardId, onOpenChange, open }: Props) {
+  const { action, fieldErrors, globalError, pending, reset } = useCreateColumnForm({ boardId, onOpenChange });
   const nameError = fieldErrors?.name?.[0];
 
   return (

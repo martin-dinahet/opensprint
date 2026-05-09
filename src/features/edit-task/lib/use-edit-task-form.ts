@@ -63,7 +63,7 @@ export const useEditTaskForm = ({ onOpenChange, task }: Options) => {
 
       const result = await handleClientResult(async () => {
         await updateTask.mutateAsync({
-          boardId: task.boardId,
+          columnId: task.columnId,
           data: {
             description: data.description,
             priority: data.priority,

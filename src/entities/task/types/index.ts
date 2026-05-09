@@ -10,7 +10,7 @@ export type TaskPriority = "low" | "medium" | "high" | "urgent";
 
 export type TaskOutput = {
   id: string;
-  boardId: string;
+  columnId: string;
   assigneeId: string | null;
   title: string;
   description: string | null;

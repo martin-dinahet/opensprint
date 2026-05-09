@@ -1,7 +1,7 @@
 import { type CollisionDetection, closestCorners, pointerWithin } from "@dnd-kit/core";
 
 export type KanbanDroppableData = {
-  type?: "board" | "task";
+  type?: "column" | "task";
 };
 
 export const kanbanCollisionDetection: CollisionDetection = (args) => {

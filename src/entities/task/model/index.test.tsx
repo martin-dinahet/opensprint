@@ -13,7 +13,7 @@ vi.mock("@/entities/task/api", () => ({
   taskKeys: {
     all: ["tasks"],
     lists: () => ["tasks", "list"],
-    list: (boardId: string) => ["tasks", "list", boardId],
+    list: (columnId: string) => ["tasks", "list", columnId],
     details: () => ["tasks", "detail"],
     detail: (id: string) => ["tasks", "detail", id],
   },
@@ -68,15 +68,15 @@ describe("task hooks", () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
     const createHook = renderHook(() => useCreateTask(), { wrapper: wrapper(queryClient) });
-    createHook.result.current.mutate({ boardId: "board-1", data: { title: "New task" } });
+    createHook.result.current.mutate({ columnId: "board-1", data: { title: "New task" } });
     await waitFor(() => expect(createHook.result.current.isSuccess).toBe(true));
 
     const updateHook = renderHook(() => useUpdateTask(), { wrapper: wrapper(queryClient) });
-    updateHook.result.current.mutate({ boardId: "board-1", taskId: "task-1", data: { title: "Updated" } });
+    updateHook.result.current.mutate({ columnId: "board-1", taskId: "task-1", data: { title: "Updated" } });
     await waitFor(() => expect(updateHook.result.current.isSuccess).toBe(true));
 
     const deleteHook = renderHook(() => useDeleteTask(), { wrapper: wrapper(queryClient) });
-    deleteHook.result.current.mutate({ boardId: "board-1", taskId: "task-1" });
+    deleteHook.result.current.mutate({ columnId: "board-1", taskId: "task-1" });
     await waitFor(() => expect(deleteHook.result.current.isSuccess).toBe(true));
 
     expect(taskApi.create).toHaveBeenCalledWith("board-1", { title: "New task" });
@@ -106,12 +106,12 @@ describe("task hooks", () => {
   });
 
   it("optimistically moves a task between cached board lists", async () => {
-    const movedTask = makeTask({ id: "task-1", boardId: "board-1", position: 0 });
-    const targetTask = makeTask({ id: "task-2", boardId: "board-2", position: 0 });
+    const movedTask = makeTask({ id: "task-1", columnId: "board-1", position: 0 });
+    const targetTask = makeTask({ id: "task-2", columnId: "board-2", position: 0 });
     vi.mocked(taskApi.move).mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve(ok({ id: "task-1", boardId: "board-2", position: 0 })), 0);
+          setTimeout(() => resolve(ok({ id: "task-1", columnId: "board-2", position: 0 })), 0);
         }),
     );
     const queryClient = createTestQueryClient();
@@ -120,12 +120,12 @@ describe("task hooks", () => {
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "task-1", data: { boardId: "board-2", position: 0 } });
+    result.current.mutate({ taskId: "task-1", data: { columnId: "board-2", position: 0 } });
 
     await waitFor(() => {
       expect(queryClient.getQueryData(taskKeys.list("board-1"))).toEqual([]);
       expect(queryClient.getQueryData(taskKeys.list("board-2"))).toEqual([
-        { ...movedTask, boardId: "board-2", position: 0 },
+        { ...movedTask, columnId: "board-2", position: 0 },
         targetTask,
       ]);
     });
@@ -133,8 +133,8 @@ describe("task hooks", () => {
   });
 
   it("restores previous task lists when an optimistic move fails", async () => {
-    const movedTask = makeTask({ id: "task-1", boardId: "board-1", position: 0 });
-    const targetTask = makeTask({ id: "task-2", boardId: "board-2", position: 0 });
+    const movedTask = makeTask({ id: "task-1", columnId: "board-1", position: 0 });
+    const targetTask = makeTask({ id: "task-2", columnId: "board-2", position: 0 });
     vi.mocked(taskApi.move).mockResolvedValue(err(new ClientApiError("Move failed", 500)));
     const queryClient = createTestQueryClient();
     queryClient.setQueryData(taskKeys.list("board-1"), [movedTask]);
@@ -142,7 +142,7 @@ describe("task hooks", () => {
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "task-1", data: { boardId: "board-2", position: 0 } });
+    result.current.mutate({ taskId: "task-1", data: { columnId: "board-2", position: 0 } });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
@@ -151,13 +151,13 @@ describe("task hooks", () => {
   });
 
   it("skips optimistic cache edits when the moved task is unknown", async () => {
-    vi.mocked(taskApi.move).mockResolvedValue(ok({ id: "missing-task", boardId: "board-2", position: 0 }));
+    vi.mocked(taskApi.move).mockResolvedValue(ok({ id: "missing-task", columnId: "board-2", position: 0 }));
     const queryClient = createTestQueryClient();
     queryClient.setQueryData(taskKeys.list("board-1"), [makeTask({ id: "task-1" })]);
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "missing-task", data: { boardId: "board-2" } });
+    result.current.mutate({ taskId: "missing-task", data: { columnId: "board-2" } });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

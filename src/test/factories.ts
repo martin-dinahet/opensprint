@@ -1,4 +1,5 @@
 import type { BoardOutput } from "@/entities/board";
+import type { ColumnOutput } from "@/entities/column";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { ProjectListOutput } from "@/entities/project";
 import type { TaskOutput } from "@/entities/task";
@@ -56,6 +57,18 @@ export function makeBoard(overrides: Partial<BoardOutput> = {}): BoardOutput {
     projectId: "project-1",
     name: "Todo",
     description: null,
+    position: 0,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    ...overrides,
+  };
+}
+
+export function makeColumn(overrides: Partial<ColumnOutput> = {}): ColumnOutput {
+  return {
+    id: "column-1",
+    boardId: "board-1",
+    name: "Todo",
     position: 0,
     createdAt: timestamp,
     updatedAt: timestamp,

@@ -4,8 +4,8 @@ import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-k
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState, type ReactNode } from "react";
-import type { BoardOutput } from "@/entities/board";
-import { kanbanCollisionDetection } from "@/entities/board/lib/kanban-dnd";
+import type { ColumnOutput } from "@/entities/column";
+import { kanbanCollisionDetection } from "@/entities/column/lib/kanban-dnd";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard, TaskCardContent } from "@/entities/task";
 import {
@@ -32,20 +32,20 @@ type ColumnsProps = {
 };
 
 type ColumnProps = {
-  board: BoardOutput;
+  column: ColumnOutput;
   isHovered: boolean;
   tasks: TaskOutput[];
 };
 
 type TaskCardProps = {
-  boardId: string;
+  columnId: string;
   task: TaskOutput;
 };
 
 type KanbanBoardProps = ColumnProps & {
   members?: Parameters<typeof EntityTaskCard>[0]["members"];
   onAddTask: () => void;
-  onDeleteBoard: (id: string) => void;
+  onDeleteColumn: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (task: TaskOutput) => void;
   onViewTask: (task: TaskOutput) => void;
@@ -74,31 +74,31 @@ const Columns = ({ children }: ColumnsProps) => {
   return <div className="flex h-full gap-3 p-4">{children}</div>;
 };
 
-const Column = ({ board, isHovered, tasks }: ColumnProps) => {
-  const { openCreateTask, removeBoard } = useProjectKanban();
+const Column = ({ column, isHovered, tasks }: ColumnProps) => {
+  const { openCreateTask, removeColumn } = useProjectKanban();
 
   return (
     <ColumnView
-      board={board}
+      column={column}
       isHovered={isHovered}
-      onAddTask={() => openCreateTask(board.id)}
-      onDeleteBoard={() => removeBoard(board.id)}
+      onAddTask={() => openCreateTask(column.id)}
+      onDeleteColumn={() => removeColumn(column.id)}
       tasks={tasks}
     />
   );
 };
 
 const ColumnView = ({
-  board,
   children,
+  column,
   isHovered,
   onAddTask,
-  onDeleteBoard,
+  onDeleteColumn,
   tasks,
-}: ColumnProps & { children?: ReactNode; onAddTask: () => void; onDeleteBoard: () => void }) => {
+}: ColumnProps & { children?: ReactNode; onAddTask: () => void; onDeleteColumn: () => void }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: board.id,
-    data: { type: "board", board },
+    id: column.id,
+    data: { type: "column", column },
   });
 
   const isHighlighted = isOver || isHovered;
@@ -111,7 +111,7 @@ const ColumnView = ({
       }`}
     >
       <div className="flex shrink-0 items-center justify-between border-b px-3 py-2">
-        <h3 className="truncate font-semibold text-sm">{board.name}</h3>
+        <h3 className="truncate font-semibold text-sm">{column.name}</h3>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <span className="tabular-nums">{tasks.length}</span>
           <Button variant="ghost" size="icon" className="ml-1 h-6 w-6" onClick={onAddTask}>
@@ -121,12 +121,12 @@ const ColumnView = ({
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-6 w-6" />}>
               <IconDotsVertical className="h-3 w-3" />
-              <span className="sr-only">Board actions</span>
+              <span className="sr-only">Column actions</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                 <IconTrash />
-                Delete board
+                Delete column
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -136,7 +136,7 @@ const ColumnView = ({
       <div ref={setNodeRef} className="min-h-[120px] flex-1 overflow-y-auto p-2">
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
-            {children ?? tasks.map((task) => <TaskCard key={task.id} boardId={board.id} task={task} />)}
+            {children ?? tasks.map((task) => <TaskCard key={task.id} columnId={column.id} task={task} />)}
 
             {tasks.length === 0 && (
               <div
@@ -160,9 +160,9 @@ const ColumnView = ({
             <AlertDialogMedia>
               <IconTrash />
             </AlertDialogMedia>
-            <AlertDialogTitle>Delete board?</AlertDialogTitle>
+            <AlertDialogTitle>Delete column?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove "{board.name}" and {tasks.length} contained task
+              This will permanently remove "{column.name}" and {tasks.length} contained task
               {tasks.length === 1 ? "" : "s"}.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -171,11 +171,11 @@ const ColumnView = ({
             <AlertDialogAction
               variant="destructive"
               onClick={() => {
-                onDeleteBoard();
+                onDeleteColumn();
                 setDeleteOpen(false);
               }}
             >
-              Delete board
+              Delete column
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -184,13 +184,13 @@ const ColumnView = ({
   );
 };
 
-const TaskCard = ({ boardId, task }: TaskCardProps) => {
+const TaskCard = ({ columnId, task }: TaskCardProps) => {
   const { members, openEditTask, openViewTask, removeTask } = useProjectKanban();
 
   return (
     <ConfirmableTaskCard
       members={members}
-      onDelete={() => removeTask(boardId, task.id)}
+      onDelete={() => removeTask(columnId, task.id)}
       onEdit={openEditTask}
       onView={openViewTask}
       task={task}
@@ -250,11 +250,11 @@ const ConfirmableTaskCard = ({
 };
 
 export const KanbanBoard = ({
-  board,
+  column,
   isHovered,
   members = [],
   onAddTask,
-  onDeleteBoard,
+  onDeleteColumn,
   onDeleteTask,
   onEditTask,
   onViewTask,
@@ -262,10 +262,10 @@ export const KanbanBoard = ({
 }: KanbanBoardProps) => {
   return (
     <ColumnView
-      board={board}
+      column={column}
       isHovered={isHovered}
       onAddTask={onAddTask}
-      onDeleteBoard={() => onDeleteBoard(board.id)}
+      onDeleteColumn={() => onDeleteColumn(column.id)}
       tasks={tasks}
     >
       {tasks.map((task) => (

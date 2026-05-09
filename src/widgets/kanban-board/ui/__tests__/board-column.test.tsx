@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useTasks } from "@/entities/task";
-import { makeBoard, makeTask } from "@/test/factories";
+import { makeColumn, makeTask } from "@/test/factories";
 import { useProjectKanban } from "../../lib/project-kanban-context";
 import { BoardColumn } from "../board-column";
 
@@ -31,45 +31,45 @@ describe("BoardColumn", () => {
   });
 
   it("registers server tasks and renders the kanban column", () => {
-    const board = makeBoard();
+    const column = makeColumn();
     const tasks = [makeTask()];
-    const registerBoardTasks = vi.fn();
+    const registerColumnTasks = vi.fn();
     vi.mocked(useTasks).mockReturnValue({ data: tasks } as never);
     vi.mocked(useProjectKanban).mockReturnValue({
       kanbanDrag: {
         dragInFlight: false,
-        getBoardTasks: vi.fn(),
-        overBoardId: board.id,
-        registerBoardTasks,
+        getColumnTasks: vi.fn(),
+        overColumnId: column.id,
+        registerColumnTasks,
       },
     } as never);
 
-    render(<BoardColumn board={board} />);
+    render(<BoardColumn column={column} />);
 
-    expect(registerBoardTasks).toHaveBeenCalledWith(board.id, tasks);
+    expect(registerColumnTasks).toHaveBeenCalledWith(column.id, tasks);
     expect(kanbanColumnMock).toHaveBeenCalledWith(
-      expect.objectContaining({ board, isHovered: true, tasks }),
+      expect.objectContaining({ column, isHovered: true, tasks }),
       undefined,
     );
   });
 
   it("renders optimistic drag tasks while a drag is in flight", () => {
-    const board = makeBoard();
+    const column = makeColumn();
     const optimisticTasks = [makeTask({ id: "task-optimistic" })];
     vi.mocked(useTasks).mockReturnValue({ data: [makeTask()] } as never);
     vi.mocked(useProjectKanban).mockReturnValue({
       kanbanDrag: {
         dragInFlight: true,
-        getBoardTasks: vi.fn(() => optimisticTasks),
-        overBoardId: null,
-        registerBoardTasks: vi.fn(),
+        getColumnTasks: vi.fn(() => optimisticTasks),
+        overColumnId: null,
+        registerColumnTasks: vi.fn(),
       },
     } as never);
 
-    render(<BoardColumn board={board} />);
+    render(<BoardColumn column={column} />);
 
     expect(kanbanColumnMock).toHaveBeenCalledWith(
-      expect.objectContaining({ board, isHovered: false, tasks: optimisticTasks }),
+      expect.objectContaining({ column, isHovered: false, tasks: optimisticTasks }),
       undefined,
     );
   });

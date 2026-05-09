@@ -23,7 +23,7 @@ export function useCreateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ projectId, data }: { projectId: string; data: CreateBoardInput }) =>
+    mutationFn: async ({ projectId, data }: { data: CreateBoardInput; projectId: string }) =>
       unwrapClientResult(await boardApi.create(projectId, data)),
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });
@@ -35,7 +35,7 @@ export function useUpdateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ projectId, boardId, data }: { projectId: string; boardId: string; data: UpdateBoardInput }) =>
+    mutationFn: ({ projectId, boardId, data }: { boardId: string; data: UpdateBoardInput; projectId: string }) =>
       boardApi.update(projectId, boardId, data).then(unwrapClientResult),
     onSuccess: (_, { projectId, boardId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });
@@ -48,7 +48,7 @@ export function useDeleteBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ projectId, boardId }: { projectId: string; boardId: string }) =>
+    mutationFn: async ({ projectId, boardId }: { boardId: string; projectId: string }) =>
       unwrapClientResult(await boardApi.delete(projectId, boardId)),
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });
@@ -60,7 +60,7 @@ export function useReorderBoards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ projectId, boardIds }: { projectId: string; boardIds: string[] }) =>
+    mutationFn: ({ projectId, boardIds }: { boardIds: string[]; projectId: string }) =>
       boardApi.reorder(projectId, { boardIds }).then(unwrapClientResult),
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: boardKeys.list(projectId) });

@@ -3,11 +3,11 @@ import type { CreateTaskInput, MoveTaskInput, TaskOutput, UpdateTaskInput } from
 import { taskApi, taskKeys } from "@/entities/task/api";
 import { unwrapClientResult } from "@/shared/api/result";
 
-export function useTasks(boardId: string) {
+export function useTasks(columnId: string) {
   return useQuery({
-    queryKey: taskKeys.list(boardId),
-    queryFn: async () => unwrapClientResult(await taskApi.list(boardId)).tasks,
-    enabled: !!boardId,
+    queryKey: taskKeys.list(columnId),
+    queryFn: async () => unwrapClientResult(await taskApi.list(columnId)).tasks,
+    enabled: !!columnId,
   });
 }
 
@@ -15,10 +15,10 @@ export function useCreateTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ boardId, data }: { boardId: string; data: CreateTaskInput }) =>
-      unwrapClientResult(await taskApi.create(boardId, data)),
-    onSuccess: (_, { boardId }) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.list(boardId) });
+    mutationFn: async ({ columnId, data }: { columnId: string; data: CreateTaskInput }) =>
+      unwrapClientResult(await taskApi.create(columnId, data)),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
     },
   });
 }
@@ -27,10 +27,10 @@ export function useUpdateTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ boardId, taskId, data }: { boardId: string; taskId: string; data: UpdateTaskInput }) =>
-      taskApi.update(boardId, taskId, data).then(unwrapClientResult),
-    onSuccess: (_, { boardId }) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.list(boardId) });
+    mutationFn: ({ columnId, taskId, data }: { columnId: string; taskId: string; data: UpdateTaskInput }) =>
+      taskApi.update(columnId, taskId, data).then(unwrapClientResult),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
     },
   });
 }
@@ -39,10 +39,10 @@ export function useDeleteTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ boardId, taskId }: { boardId: string; taskId: string }) =>
-      unwrapClientResult(await taskApi.delete(boardId, taskId)),
-    onSuccess: (_, { boardId }) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.list(boardId) });
+    mutationFn: async ({ columnId, taskId }: { columnId: string; taskId: string }) =>
+      unwrapClientResult(await taskApi.delete(columnId, taskId)),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
     },
   });
 }
@@ -85,11 +85,11 @@ export function useMoveTask() {
         );
       }
 
-      queryClient.setQueryData<TaskOutput[]>(taskKeys.list(data.boardId), (tasks = []) => {
+      queryClient.setQueryData<TaskOutput[]>(taskKeys.list(data.columnId), (tasks = []) => {
         const nextTasks = tasks.filter((candidate) => candidate.id !== taskId);
         const nextTask = {
           ...movedTask,
-          boardId: data.boardId,
+          columnId: data.columnId,
           position: data.position ?? movedTask.position,
         };
         const insertAt = data.position ?? nextTasks.length;
