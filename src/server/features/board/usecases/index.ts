@@ -2,6 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { memberRepository } from "@/server/features/member/repositories";
 import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
+import { taskRepository } from "@/server/features/task/repositories";
 import type { CreateBoardInput, UpdateBoardInput } from "../dto";
 import { boardRepository } from "../repositories";
 
@@ -167,6 +168,18 @@ export const deleteBoard = async (userId: string, projectId: string, boardId: st
   const board = boardResult.unwrap();
   if (!board || board.length === 0) {
     return err(new NotFoundError("Board"));
+  }
+
+  const deleteTasksResult = await taskRepository.deleteByBoard(boardId);
+
+  if (deleteTasksResult.isErr()) {
+    return err(
+      new AppError(
+        "board-tasks-delete-failed",
+        `Unable to delete board tasks: ${deleteTasksResult.error.message}`,
+        500,
+      ),
+    );
   }
 
   const deleteResult = await boardRepository.delete(boardId);

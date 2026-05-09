@@ -2,7 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/server/features/shared/errors";
 
-const { boardRepositoryMock, memberRepositoryMock, nanoidMock } = vi.hoisted(() => ({
+const { boardRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
   boardRepositoryMock: {
     create: vi.fn(),
     delete: vi.fn(),
@@ -15,6 +15,9 @@ const { boardRepositoryMock, memberRepositoryMock, nanoidMock } = vi.hoisted(() 
     findByUserAndProject: vi.fn(),
   },
   nanoidMock: vi.fn(),
+  taskRepositoryMock: {
+    deleteByBoard: vi.fn(),
+  },
 }));
 
 vi.mock("nanoid", () => ({
@@ -27,6 +30,10 @@ vi.mock("@/server/features/board/repositories", () => ({
 
 vi.mock("@/server/features/member/repositories", () => ({
   memberRepository: memberRepositoryMock,
+}));
+
+vi.mock("@/server/features/task/repositories", () => ({
+  taskRepository: taskRepositoryMock,
 }));
 
 const { createBoard, deleteBoard, getBoard, listBoards, reorderBoards, updateBoard } = await import(
@@ -49,6 +56,7 @@ describe("board use cases", () => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("board-new");
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([membership]));
+    taskRepositoryMock.deleteByBoard.mockResolvedValue(ok(undefined));
   });
 
   it("lists boards for project members", async () => {
@@ -217,7 +225,22 @@ describe("board use cases", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
+    expect(taskRepositoryMock.deleteByBoard).toHaveBeenCalledWith("board-1");
     expect(boardRepositoryMock.delete).toHaveBeenCalledWith("board-1");
+  });
+
+  it("wraps task deletion failures before deleting boards", async () => {
+    boardRepositoryMock.findById.mockResolvedValue(ok([board]));
+    taskRepositoryMock.deleteByBoard.mockResolvedValue(err(new Error("task delete failed")));
+
+    const result = await deleteBoard("user-1", "project-1", "board-1");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("task delete failed");
+    }
+    expect(boardRepositoryMock.delete).not.toHaveBeenCalled();
   });
 
   it("returns not found before deleting missing boards", async () => {

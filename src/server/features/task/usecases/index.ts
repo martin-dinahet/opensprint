@@ -6,6 +6,28 @@ import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/se
 import type { AssignTaskInput, CreateTaskInput, MoveTaskInput, ReorderTaskInput, UpdateTaskInput } from "../dto";
 import { taskRepository } from "../repositories";
 
+const normalizeTaskPositions = async (tasks: { id: string }[]) => {
+  for (let index = 0; index < tasks.length; index++) {
+    const updateResult = await taskRepository.updatePosition(tasks[index].id, index);
+    if (updateResult.isErr()) {
+      return err(updateResult.error);
+    }
+  }
+
+  return ok(undefined);
+};
+
+const insertTaskAtPosition = <T extends { id: string }>(tasks: T[], taskId: string, position: number) => {
+  const nextTasks = tasks.filter((candidate) => candidate.id !== taskId);
+  const task = tasks.find((candidate) => candidate.id === taskId);
+
+  if (!task) return nextTasks;
+
+  nextTasks.splice(Math.max(0, Math.min(position, nextTasks.length)), 0, task);
+
+  return nextTasks;
+};
+
 export const listTasks = async (userId: string, boardId: string) => {
   const boardResult = await boardRepository.findById(boardId);
   if (boardResult.isErr()) return err(boardResult.error);
@@ -287,12 +309,45 @@ export const moveTask = async (userId: string, taskId: string, input: MoveTaskIn
   const existingTasksResult = await taskRepository.findByBoard(input.boardId);
   if (existingTasksResult.isErr()) return err(existingTasksResult.error);
 
-  const newPosition = input.position ?? (existingTasksResult.unwrap()?.length || 0);
+  const targetTasks = existingTasksResult.unwrap() ?? [];
+  const newPosition = Math.max(0, Math.min(input.position ?? targetTasks.length, targetTasks.length));
 
   const updateResult = await taskRepository.updateBoardAndPosition(taskId, input.boardId, newPosition);
 
   if (updateResult.isErr()) {
     return err(new AppError("task-move-failed", `Unable to move task: ${updateResult.error.message}`, 500));
+  }
+
+  const normalizedTargetTasks = [
+    ...targetTasks.filter((candidate) => candidate.id !== taskId).slice(0, newPosition),
+    { ...task[0], boardId: input.boardId },
+    ...targetTasks.filter((candidate) => candidate.id !== taskId).slice(newPosition),
+  ];
+  const targetNormalizeResult = await normalizeTaskPositions(normalizedTargetTasks);
+
+  if (targetNormalizeResult.isErr()) {
+    return err(
+      new AppError("task-move-failed", `Unable to normalize target board: ${targetNormalizeResult.error.message}`, 500),
+    );
+  }
+
+  if (task[0].boardId !== input.boardId) {
+    const sourceTasksResult = await taskRepository.findByBoard(task[0].boardId);
+    if (sourceTasksResult.isErr()) return err(sourceTasksResult.error);
+
+    const sourceNormalizeResult = await normalizeTaskPositions(
+      (sourceTasksResult.unwrap() ?? []).filter((candidate) => candidate.id !== taskId),
+    );
+
+    if (sourceNormalizeResult.isErr()) {
+      return err(
+        new AppError(
+          "task-move-failed",
+          `Unable to normalize source board: ${sourceNormalizeResult.error.message}`,
+          500,
+        ),
+      );
+    }
   }
 
   return ok({
@@ -327,7 +382,11 @@ export const reorderTask = async (userId: string, taskId: string, input: Reorder
     return err(new UnauthorizedError("Not a member of this project"));
   }
 
-  const updateResult = await taskRepository.updatePosition(taskId, input.position);
+  const tasksResult = await taskRepository.findByBoard(task[0].boardId);
+  if (tasksResult.isErr()) return err(tasksResult.error);
+
+  const reorderedTasks = insertTaskAtPosition(tasksResult.unwrap() ?? [], taskId, input.position);
+  const updateResult = await normalizeTaskPositions(reorderedTasks);
 
   if (updateResult.isErr()) {
     return err(new AppError("task-reorder-failed", `Unable to reorder task: ${updateResult.error.message}`, 500));
@@ -335,6 +394,6 @@ export const reorderTask = async (userId: string, taskId: string, input: Reorder
 
   return ok({
     id: task[0].id,
-    position: input.position,
+    position: Math.max(0, Math.min(input.position, reorderedTasks.length - 1)),
   });
 };

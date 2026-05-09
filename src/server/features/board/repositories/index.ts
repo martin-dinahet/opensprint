@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { board } from "@/server/db/schema";
@@ -10,7 +10,7 @@ export class BoardRepository {
   }
 
   async findByProject(projectId: string) {
-    return handle(() => db.select().from(board).where(eq(board.projectId, projectId)));
+    return handle(() => db.select().from(board).where(eq(board.projectId, projectId)).orderBy(asc(board.position)));
   }
 
   async create(data: CreateBoardInput & { id: string; projectId: string; position: number }) {

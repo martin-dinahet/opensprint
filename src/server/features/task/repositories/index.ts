@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { task } from "@/server/db/schema";
@@ -10,7 +10,7 @@ export class TaskRepository {
   }
 
   async findByBoard(boardId: string) {
-    return handle(() => db.select().from(task).where(eq(task.boardId, boardId)));
+    return handle(() => db.select().from(task).where(eq(task.boardId, boardId)).orderBy(asc(task.position)));
   }
 
   async create(data: CreateTaskInput & { id: string; boardId: string; position: number }) {
@@ -44,6 +44,10 @@ export class TaskRepository {
     return handle(() => db.update(task).set({ assigneeId }).where(eq(task.id, id)));
   }
 
+  async clearAssignee(assigneeId: string) {
+    return handle(() => db.update(task).set({ assigneeId: null }).where(eq(task.assigneeId, assigneeId)));
+  }
+
   async updateBoardAndPosition(id: string, boardId: string, position: number) {
     return handle(() => db.update(task).set({ boardId, position }).where(eq(task.id, id)));
   }
@@ -54,6 +58,10 @@ export class TaskRepository {
 
   async delete(id: string) {
     return handle(() => db.delete(task).where(eq(task.id, id)));
+  }
+
+  async deleteByBoard(boardId: string) {
+    return handle(() => db.delete(task).where(eq(task.boardId, boardId)));
   }
 }
 

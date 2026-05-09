@@ -72,6 +72,7 @@ describe("task use cases", () => {
     nanoidMock.mockReturnValue("task-new");
     boardRepositoryMock.findById.mockResolvedValue(ok([board]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    taskRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
   });
 
   it("lists tasks for project members", async () => {
@@ -420,17 +421,22 @@ describe("task use cases", () => {
 
   it("reorders a task for project members", async () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
-    taskRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
+    taskRepositoryMock.findByBoard.mockResolvedValue(
+      ok([task, { ...task, id: "task-2", position: 1 }, { ...task, id: "task-3", position: 2 }]),
+    );
 
-    const result = await reorderTask("user-1", "task-1", { position: 3 });
+    const result = await reorderTask("user-1", "task-1", { position: 2 });
 
     expect(result.isOk()).toBe(true);
-    expect(taskRepositoryMock.updatePosition).toHaveBeenCalledWith("task-1", 3);
-    expect(result.unwrap()).toEqual({ id: "task-1", position: 3 });
+    expect(taskRepositoryMock.updatePosition).toHaveBeenNthCalledWith(1, "task-2", 0);
+    expect(taskRepositoryMock.updatePosition).toHaveBeenNthCalledWith(2, "task-3", 1);
+    expect(taskRepositoryMock.updatePosition).toHaveBeenNthCalledWith(3, "task-1", 2);
+    expect(result.unwrap()).toEqual({ id: "task-1", position: 2 });
   });
 
   it("wraps reorder failures", async () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    taskRepositoryMock.findByBoard.mockResolvedValue(ok([task]));
     taskRepositoryMock.updatePosition.mockResolvedValue(err(new Error("database unavailable")));
 
     const result = await reorderTask("user-1", "task-1", { position: 3 });

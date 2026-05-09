@@ -1,7 +1,7 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { memberRepositoryMock, nanoidMock } = vi.hoisted(() => ({
+const { memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
   memberRepositoryMock: {
     create: vi.fn(),
     delete: vi.fn(),
@@ -13,6 +13,9 @@ const { memberRepositoryMock, nanoidMock } = vi.hoisted(() => ({
     update: vi.fn(),
   },
   nanoidMock: vi.fn(),
+  taskRepositoryMock: {
+    clearAssignee: vi.fn(),
+  },
 }));
 
 vi.mock("nanoid", () => ({
@@ -21,6 +24,10 @@ vi.mock("nanoid", () => ({
 
 vi.mock("@/server/features/member/repositories", () => ({
   memberRepository: memberRepositoryMock,
+}));
+
+vi.mock("@/server/features/task/repositories", () => ({
+  taskRepository: taskRepositoryMock,
 }));
 
 const { addMember, listMembers, removeMember, updateMember } = await import("@/server/features/member/usecases");
@@ -41,6 +48,7 @@ describe("member use cases", () => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("member-new");
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    taskRepositoryMock.clearAssignee.mockResolvedValue(ok(undefined));
   });
 
   it("lists project members with user details", async () => {
@@ -232,7 +240,22 @@ describe("member use cases", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
+    expect(taskRepositoryMock.clearAssignee).toHaveBeenCalledWith("regular-member");
     expect(memberRepositoryMock.delete).toHaveBeenCalledWith("regular-member");
+  });
+
+  it("wraps assigned task cleanup failures before removing a member", async () => {
+    memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
+    taskRepositoryMock.clearAssignee.mockResolvedValue(err(new Error("task update failed")));
+
+    const result = await removeMember("owner-user", "project-1", "regular-member");
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(500);
+      expect(result.error.message).toContain("task update failed");
+    }
+    expect(memberRepositoryMock.delete).not.toHaveBeenCalled();
   });
 
   it("returns not found when removing a missing member", async () => {

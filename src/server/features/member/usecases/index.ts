@@ -7,6 +7,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/server/features/shared/errors";
+import { taskRepository } from "@/server/features/task/repositories";
 import type { AddMemberInput, UpdateMemberInput } from "../dto";
 import { memberRepository } from "../repositories";
 
@@ -161,6 +162,18 @@ export const removeMember = async (userId: string, projectId: string, memberId: 
 
   if (targetMember[0].role === "owner") {
     return err(new ForbiddenError("Cannot remove owner"));
+  }
+
+  const clearAssigneeResult = await taskRepository.clearAssignee(memberId);
+
+  if (clearAssigneeResult.isErr()) {
+    return err(
+      new AppError(
+        "member-task-unassign-failed",
+        `Unable to unassign member tasks: ${clearAssigneeResult.error.message}`,
+        500,
+      ),
+    );
   }
 
   const deleteResult = await memberRepository.delete(memberId);
