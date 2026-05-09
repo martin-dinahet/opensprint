@@ -6,50 +6,50 @@ import { AppError } from "./features/shared/errors";
 
 const { authMock, boardUseCasesMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } =
   vi.hoisted(() => ({
-  authMock: {
-    api: {
-      getSession: vi.fn(),
+    authMock: {
+      api: {
+        getSession: vi.fn(),
+      },
+      handler: vi.fn(),
     },
-    handler: vi.fn(),
-  },
-  projectUseCasesMock: {
-    createProject: vi.fn(),
-    deleteProject: vi.fn(),
-    getProject: vi.fn(),
-    listProjects: vi.fn(),
-    updateProject: vi.fn(),
-  },
-  boardUseCasesMock: {
-    createBoard: vi.fn(),
-    deleteBoard: vi.fn(),
-    getBoard: vi.fn(),
-    listBoards: vi.fn(),
-    reorderBoards: vi.fn(),
-    updateBoard: vi.fn(),
-  },
-  columnUseCasesMock: {
-    createColumn: vi.fn(),
-    deleteColumn: vi.fn(),
-    getColumn: vi.fn(),
-    listColumns: vi.fn(),
-    reorderColumns: vi.fn(),
-    updateColumn: vi.fn(),
-  },
-  memberUseCasesMock: {
-    addMember: vi.fn(),
-    listMembers: vi.fn(),
-    removeMember: vi.fn(),
-    updateMember: vi.fn(),
-  },
-  taskUseCasesMock: {
-    assignTask: vi.fn(),
-    createTask: vi.fn(),
-    deleteTask: vi.fn(),
-    listTasks: vi.fn(),
-    moveTask: vi.fn(),
-    reorderTask: vi.fn(),
-    updateTask: vi.fn(),
-  },
+    projectUseCasesMock: {
+      createProject: vi.fn(),
+      deleteProject: vi.fn(),
+      getProject: vi.fn(),
+      listProjects: vi.fn(),
+      updateProject: vi.fn(),
+    },
+    boardUseCasesMock: {
+      createBoard: vi.fn(),
+      deleteBoard: vi.fn(),
+      getBoard: vi.fn(),
+      listBoards: vi.fn(),
+      reorderBoards: vi.fn(),
+      updateBoard: vi.fn(),
+    },
+    columnUseCasesMock: {
+      createColumn: vi.fn(),
+      deleteColumn: vi.fn(),
+      getColumn: vi.fn(),
+      listColumns: vi.fn(),
+      reorderColumns: vi.fn(),
+      updateColumn: vi.fn(),
+    },
+    memberUseCasesMock: {
+      addMember: vi.fn(),
+      listMembers: vi.fn(),
+      removeMember: vi.fn(),
+      updateMember: vi.fn(),
+    },
+    taskUseCasesMock: {
+      assignTask: vi.fn(),
+      createTask: vi.fn(),
+      deleteTask: vi.fn(),
+      listTasks: vi.fn(),
+      moveTask: vi.fn(),
+      reorderTask: vi.fn(),
+      updateTask: vi.fn(),
+    },
   }));
 
 vi.mock("@/server/lib/auth", () => ({

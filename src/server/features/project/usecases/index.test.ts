@@ -1,17 +1,23 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, projectRepositoryMock, taskRepositoryMock } =
-  vi.hoisted(() => ({
-    boardRepositoryMock: {
-      create: vi.fn(),
-      delete: vi.fn(),
-      findByProject: vi.fn(),
-    },
-    columnRepositoryMock: {
-      deleteByBoard: vi.fn(),
-      findByBoard: vi.fn(),
-    },
+const {
+  boardRepositoryMock,
+  columnRepositoryMock,
+  memberRepositoryMock,
+  nanoidMock,
+  projectRepositoryMock,
+  taskRepositoryMock,
+} = vi.hoisted(() => ({
+  boardRepositoryMock: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    findByProject: vi.fn(),
+  },
+  columnRepositoryMock: {
+    deleteByBoard: vi.fn(),
+    findByBoard: vi.fn(),
+  },
   memberRepositoryMock: {
     create: vi.fn(),
     deleteByProject: vi.fn(),
@@ -26,10 +32,10 @@ const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidM
     findByIds: vi.fn(),
     update: vi.fn(),
   },
-    taskRepositoryMock: {
-      deleteByColumn: vi.fn(),
-    },
-  }));
+  taskRepositoryMock: {
+    deleteByColumn: vi.fn(),
+  },
+}));
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,

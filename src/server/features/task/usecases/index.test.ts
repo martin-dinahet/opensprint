@@ -1,29 +1,31 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
-  boardRepositoryMock: {
-    findById: vi.fn(),
-  },
-  columnRepositoryMock: {
-    findById: vi.fn(),
-  },
-  memberRepositoryMock: {
-    findById: vi.fn(),
-    findByUserAndProject: vi.fn(),
-  },
-  nanoidMock: vi.fn(),
-  taskRepositoryMock: {
-    create: vi.fn(),
-    delete: vi.fn(),
-    findByColumn: vi.fn(),
-    findById: vi.fn(),
-    update: vi.fn(),
-    updateAssignee: vi.fn(),
-    updateColumnAndPosition: vi.fn(),
-    updatePosition: vi.fn(),
-  },
-}));
+const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(
+  () => ({
+    boardRepositoryMock: {
+      findById: vi.fn(),
+    },
+    columnRepositoryMock: {
+      findById: vi.fn(),
+    },
+    memberRepositoryMock: {
+      findById: vi.fn(),
+      findByUserAndProject: vi.fn(),
+    },
+    nanoidMock: vi.fn(),
+    taskRepositoryMock: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findByColumn: vi.fn(),
+      findById: vi.fn(),
+      update: vi.fn(),
+      updateAssignee: vi.fn(),
+      updateColumnAndPosition: vi.fn(),
+      updatePosition: vi.fn(),
+    },
+  }),
+);
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,

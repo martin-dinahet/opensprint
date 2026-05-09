@@ -75,7 +75,9 @@ export const createProject = async (userId: string, input: CreateProjectInput) =
   });
 
   if (boardResult.isErr()) {
-    return err(new AppError("board-create-failed", `Unable to create default board: ${boardResult.error.message}`, 500));
+    return err(
+      new AppError("board-create-failed", `Unable to create default board: ${boardResult.error.message}`, 500),
+    );
   }
 
   return ok({

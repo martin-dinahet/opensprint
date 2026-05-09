@@ -2,27 +2,29 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/server/features/shared/errors";
 
-const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
-  boardRepositoryMock: {
-    create: vi.fn(),
-    delete: vi.fn(),
-    findById: vi.fn(),
-    findByProject: vi.fn(),
-    update: vi.fn(),
-    updatePosition: vi.fn(),
-  },
-  columnRepositoryMock: {
-    deleteByBoard: vi.fn(),
-    findByBoard: vi.fn(),
-  },
-  memberRepositoryMock: {
-    findByUserAndProject: vi.fn(),
-  },
-  nanoidMock: vi.fn(),
-  taskRepositoryMock: {
-    deleteByColumn: vi.fn(),
-  },
-}));
+const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(
+  () => ({
+    boardRepositoryMock: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findById: vi.fn(),
+      findByProject: vi.fn(),
+      update: vi.fn(),
+      updatePosition: vi.fn(),
+    },
+    columnRepositoryMock: {
+      deleteByBoard: vi.fn(),
+      findByBoard: vi.fn(),
+    },
+    memberRepositoryMock: {
+      findByUserAndProject: vi.fn(),
+    },
+    nanoidMock: vi.fn(),
+    taskRepositoryMock: {
+      deleteByColumn: vi.fn(),
+    },
+  }),
+);
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
