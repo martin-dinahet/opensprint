@@ -84,6 +84,9 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
             </div>
           </div>
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={pending}>
               {pending ? (
                 <>
@@ -93,7 +96,7 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
               ) : (
                 <>
                   <IconPlus className="mr-2 h-4 w-4" />
-                  Create
+                  Create project
                 </>
               )}
             </Button>

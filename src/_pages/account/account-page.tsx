@@ -146,10 +146,7 @@ export function AccountPage() {
                 <NativeSelect
                   id="theme"
                   value={theme}
-                  onChange={(event) => {
-                    setTheme(event.target.value);
-                    toast.success(`Theme set to ${event.target.value}`);
-                  }}
+                  onChange={(event) => setTheme(event.target.value)}
                   className="w-48"
                 >
                   <NativeSelectOption value="light">Light</NativeSelectOption>

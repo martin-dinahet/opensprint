@@ -27,7 +27,7 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
       <DialogContent>
         <form action={action}>
           <DialogHeader>
-            <DialogTitle>Add Column</DialogTitle>
+            <DialogTitle>Add column</DialogTitle>
             <DialogDescription>Create a new column in this board.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -38,7 +38,7 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
               </Alert>
             )}
             <div className="grid gap-2">
-              <Label htmlFor="boardName">Column Name</Label>
+              <Label htmlFor="boardName">Column name</Label>
               <div className="relative">
                 <IconLayoutColumns className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -59,6 +59,9 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
             </div>
           </div>
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={pending}>
               {pending ? (
                 <>
@@ -68,7 +71,7 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
               ) : (
                 <>
                   <IconPlus className="mr-2 h-4 w-4" />
-                  Create
+                  Add column
                 </>
               )}
             </Button>

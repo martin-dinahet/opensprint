@@ -67,7 +67,7 @@ export function EditTaskDialog({ members, onOpenChange, open, task }: Props) {
       <DialogContent>
         <form action={action}>
           <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
+            <DialogTitle>Edit task</DialogTitle>
             <DialogDescription>Update the task details.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -165,9 +165,16 @@ export function EditTaskDialog({ members, onOpenChange, open, task }: Props) {
             </div>
           </div>
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={pending || !task}>
-              <IconDeviceFloppy className="mr-2 h-4 w-4" />
-              Save
+              {pending ? (
+                <IconDeviceFloppy className="mr-2 h-4 w-4 animate-pulse" />
+              ) : (
+                <IconDeviceFloppy className="mr-2 h-4 w-4" />
+              )}
+              Save task
             </Button>
           </DialogFooter>
         </form>

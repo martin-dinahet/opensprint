@@ -29,8 +29,8 @@ describe("CreateBoardDialog", () => {
 
     renderWithClient(<CreateBoardDialog open onOpenChange={vi.fn()} projectId="project-1" />);
 
-    fireEvent.change(screen.getByLabelText("Column Name"), { target: { value: "Review" } });
-    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+    fireEvent.change(screen.getByLabelText("Column name"), { target: { value: "Review" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add column" }));
 
     await waitFor(() => {
       expect(mocks.mutateAsync).toHaveBeenCalledWith({
@@ -43,7 +43,7 @@ describe("CreateBoardDialog", () => {
   it("shows client-side validation errors", async () => {
     renderWithClient(<CreateBoardDialog open onOpenChange={vi.fn()} projectId="project-1" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add column" }));
 
     expect(await screen.findByText("Too small: expected string to have >=1 characters")).toBeInTheDocument();
     expect(mocks.mutateAsync).not.toHaveBeenCalled();

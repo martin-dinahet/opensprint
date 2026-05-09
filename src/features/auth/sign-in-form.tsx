@@ -6,8 +6,8 @@ import type { FC } from "react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Field, FieldError, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { useSignInForm } from "./hooks/use-sign-in-form";
 
 export const SignInForm: FC = () => {
@@ -30,8 +30,8 @@ export const SignInForm: FC = () => {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <Field data-invalid={!!fieldErrors?.email}>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <div className="relative">
                 <IconMail className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -46,16 +46,11 @@ export const SignInForm: FC = () => {
                   className={`pl-9 ${fieldErrors?.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 />
               </div>
-              {fieldErrors?.email && (
-                <p className="flex items-center gap-1.5 text-destructive text-sm">
-                  <IconAlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {fieldErrors.email}
-                </p>
-              )}
-            </div>
+              <FieldError>{fieldErrors?.email?.[0]}</FieldError>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <Field data-invalid={!!fieldErrors?.password}>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
               <div className="relative">
                 <IconLock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -70,13 +65,8 @@ export const SignInForm: FC = () => {
                   className={`pl-9 ${fieldErrors?.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 />
               </div>
-              {fieldErrors?.password && (
-                <p className="flex items-center gap-1.5 text-destructive text-sm">
-                  <IconAlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {fieldErrors.password}
-                </p>
-              )}
-            </div>
+              <FieldError>{fieldErrors?.password?.[0]}</FieldError>
+            </Field>
           </CardContent>
 
           <CardFooter className="mt-8 flex flex-col gap-3">

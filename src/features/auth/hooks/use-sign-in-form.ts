@@ -19,6 +19,9 @@ export const useSignInForm = () => {
 
   const action = (formData: FormData) => {
     startTransition(async () => {
+      setFieldErrors(null);
+      setGlobalError(null);
+
       const { data, fieldErrors } = parseFormData(schema, formData);
       if (fieldErrors) {
         setFieldErrors(fieldErrors);

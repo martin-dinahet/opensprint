@@ -54,7 +54,7 @@ export function CreateTaskDialog({ boardId, members, onOpenChange, open }: Props
       <DialogContent>
         <form action={action}>
           <DialogHeader>
-            <DialogTitle>Add Task</DialogTitle>
+            <DialogTitle>Add task</DialogTitle>
             <DialogDescription>Create a new task in this column.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -150,6 +150,9 @@ export function CreateTaskDialog({ boardId, members, onOpenChange, open }: Props
             </div>
           </div>
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={pending}>
               {pending ? (
                 <>
@@ -159,7 +162,7 @@ export function CreateTaskDialog({ boardId, members, onOpenChange, open }: Props
               ) : (
                 <>
                   <IconPlus className="mr-2 h-4 w-4" />
-                  Create
+                  Add task
                 </>
               )}
             </Button>

@@ -2,7 +2,6 @@
 
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
 import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -31,7 +30,6 @@ export function ThemeMenuItems() {
           value={theme}
           onValueChange={(value) => {
             setTheme(value);
-            toast.success(`Theme set to ${value}`);
           }}
         >
           {themes.map((item) => {
