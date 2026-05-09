@@ -6,6 +6,7 @@ import { useProject } from "@/entities/project";
 import { CreateBoardDialog } from "@/features/create-board";
 import { CreateTaskDialog } from "@/features/create-task";
 import { EditTaskDialog } from "@/features/edit-task";
+import { TaskDetailDialog } from "@/features/view-task";
 import { Button } from "@/shared/ui/button";
 import { LoadingScreen } from "@/shared/ui/loading-screen";
 import { AppShellHeader } from "@/widgets/app-sidebar";
@@ -15,15 +16,15 @@ type Props = {
   projectId: string;
 };
 
-export function ProjectKanbanPage({ projectId }: Props) {
+export const ProjectKanbanPage = ({ projectId }: Props) => {
   return (
     <ProjectKanbanProvider projectId={projectId}>
       <ProjectKanbanContent />
     </ProjectKanbanProvider>
   );
-}
+};
 
-function ProjectKanbanContent() {
+const ProjectKanbanContent = () => {
   const {
     activeBoardId,
     boards,
@@ -37,6 +38,8 @@ function ProjectKanbanContent() {
     setCreateBoardOpen,
     setCreateTaskOpen,
     setEditTask,
+    setViewTask,
+    viewTask,
   } = useProjectKanban();
   const { data: project } = useProject(projectId);
 
@@ -102,6 +105,13 @@ function ProjectKanbanContent() {
         open={!!editTask}
         task={editTask}
       />
+
+      <TaskDetailDialog
+        members={members}
+        onOpenChange={(open) => !open && setViewTask(null)}
+        open={!!viewTask}
+        task={viewTask}
+      />
     </Kanban.Root>
   );
-}
+};
