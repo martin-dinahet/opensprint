@@ -10,7 +10,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useProjects } from "@/entities/project";
 import { CreateProjectDialog } from "@/features/create-project";
@@ -19,9 +19,7 @@ import { authClient } from "@/shared/lib/auth-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
@@ -56,6 +54,7 @@ function getProjectId(pathname: string, params: ReturnType<typeof useParams>) {
 export function AppSidebar() {
   const pathname = usePathname();
   const params = useParams();
+  const router = useRouter();
   const session = authClient.useSession();
   const signOut = useSignOut();
   const { data: projects = [], isLoading } = useProjects();
@@ -191,19 +190,17 @@ export function AppSidebar() {
                   </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-56">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="flex items-center gap-2">
-                      <UserAvatar user={session.data?.user} />
-                      <span className="min-w-0">
-                        <span className="block truncate text-foreground">{session.data?.user.name || "Account"}</span>
-                        <span className="block truncate font-normal text-muted-foreground">
-                          {session.data?.user.email}
-                        </span>
+                  <div className="flex items-center gap-2 px-1.5 py-1.5">
+                    <UserAvatar user={session.data?.user} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-foreground">{session.data?.user.name || "Account"}</span>
+                      <span className="block truncate font-normal text-muted-foreground">
+                        {session.data?.user.email}
                       </span>
-                    </DropdownMenuLabel>
-                  </DropdownMenuGroup>
+                    </span>
+                  </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => location.assign("/account")}>
+                  <DropdownMenuItem onClick={() => router.push("/account")}>
                     <SettingsIcon />
                     Account
                   </DropdownMenuItem>
