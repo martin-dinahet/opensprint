@@ -44,7 +44,6 @@ export const useSignOut = () => {
       result.match({
         ok: () => {
           router.replace("/sign-in");
-          router.refresh();
         },
         err: (signOutError) => setError(signOutError.message),
       });
