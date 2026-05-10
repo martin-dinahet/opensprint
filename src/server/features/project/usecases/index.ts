@@ -37,7 +37,6 @@ export const listProjects = async (userId: string) => {
 export const createProject = async (userId: string, input: CreateProjectInput) => {
   const projectId = nanoid();
   const memberId = nanoid();
-  const boardId = nanoid();
 
   const projectResult = await projectRepository.create({
     id: projectId,
@@ -66,25 +65,10 @@ export const createProject = async (userId: string, input: CreateProjectInput) =
     );
   }
 
-  const boardResult = await boardRepository.create({
-    id: boardId,
-    projectId,
-    name: input.name,
-    description: input.description,
-    position: 0,
-  });
-
-  if (boardResult.isErr()) {
-    return err(
-      new AppError("board-create-failed", `Unable to create default board: ${boardResult.error.message}`, 500),
-    );
-  }
-
   return ok({
     id: projectId,
     name: input.name,
     description: input.description || null,
-    defaultBoardId: boardId,
   });
 };
 

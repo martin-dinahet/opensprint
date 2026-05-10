@@ -104,11 +104,10 @@ describe("project use cases", () => {
     expect(projectRepositoryMock.findByIds).not.toHaveBeenCalled();
   });
 
-  it("creates a project and owner membership", async () => {
-    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new").mockReturnValueOnce("board-new");
+  it("creates a project and owner membership without a default board", async () => {
+    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
-    boardRepositoryMock.create.mockResolvedValue(ok(undefined));
 
     const result = await createProject("user-1", { name: "New Project", description: "Useful description" });
 
@@ -124,18 +123,11 @@ describe("project use cases", () => {
       userId: "user-1",
       role: "owner",
     });
-    expect(boardRepositoryMock.create).toHaveBeenCalledWith({
-      id: "board-new",
-      projectId: "project-new",
-      name: "New Project",
-      description: "Useful description",
-      position: 0,
-    });
+    expect(boardRepositoryMock.create).not.toHaveBeenCalled();
     expect(result.unwrap()).toEqual({
       id: "project-new",
       name: "New Project",
       description: "Useful description",
-      defaultBoardId: "board-new",
     });
   });
 
