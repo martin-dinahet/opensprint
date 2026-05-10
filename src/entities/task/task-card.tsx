@@ -9,6 +9,7 @@ import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
 
@@ -73,24 +74,33 @@ export const TaskCardContent = ({
           <div className="min-w-0 flex-1 px-1.5 py-0.5 text-left">
             <span className="block min-w-0 break-words font-medium text-sm leading-snug">{task.title}</span>
 
-            <span className="mt-2 flex items-center gap-2">
-              <span
-                className={`h-2 w-2 shrink-0 rounded-full ${
-                  priorityColors[task.priority as TaskPriority] ?? "bg-gray-400"
-                }`}
-              />
-              <span className="text-muted-foreground text-xs capitalize">{task.priority}</span>
-            </span>
+            <span className="mt-3 flex min-w-0 items-center justify-between gap-2">
+              <Badge variant="outline" className="gap-1.5 px-1.5 py-0 font-normal text-xs capitalize">
+                <span
+                  className={`size-1.5 shrink-0 rounded-full ${
+                    priorityColors[task.priority as TaskPriority] ?? "bg-gray-400"
+                  }`}
+                />
+                {task.priority}
+              </Badge>
 
-            {assignee && assigneeLabel ? (
-              <span className="mt-3 flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
-                <Avatar size="sm">
-                  {assignee.user.image ? <AvatarImage alt="" src={assignee.user.image} /> : null}
-                  <AvatarFallback>{assigneeInitial}</AvatarFallback>
-                </Avatar>
-                <span className="truncate">{assigneeLabel}</span>
+              <span className="flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
+                {assignee && assigneeLabel ? (
+                  <>
+                    <Avatar size="sm">
+                      {assignee.user.image ? <AvatarImage alt="" src={assignee.user.image} /> : null}
+                      <AvatarFallback>{assigneeInitial}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">{assigneeLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="size-6 shrink-0 rounded-full border border-dashed border-muted-foreground/45" />
+                    <span className="truncate">Unassigned</span>
+                  </>
+                )}
               </span>
-            ) : null}
+            </span>
           </div>
         </div>
       </button>
@@ -146,7 +156,7 @@ export const TaskCard = ({ task, onDelete, onEdit, onView, members = [] }: Props
       <div
         ref={setNodeRef}
         style={style}
-        className="h-[72px] rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30"
+        className="h-[88px] rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30"
       />
     );
   }

@@ -106,15 +106,17 @@ const ColumnView = ({
 
   return (
     <div
-      className={`flex h-full w-72 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors duration-150 ${
+      className={`group/column flex h-full w-72 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors duration-150 ${
         isHighlighted ? "border-primary/40 bg-primary/5 ring-1 ring-primary/30" : ""
       }`}
     >
       <div className="flex shrink-0 items-center justify-between border-b px-3 py-2">
-        <h3 className="truncate font-semibold text-sm">{board.name}</h3>
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span className="tabular-nums">{tasks.length}</span>
-          <Button variant="ghost" size="icon" className="ml-1 h-6 w-6" onClick={onAddTask}>
+        <h3 className="flex min-w-0 items-center gap-1.5 text-sm" aria-label={board.name}>
+          <span className="truncate font-semibold">{board.name}</span>
+          <span className="shrink-0 text-muted-foreground text-xs tabular-nums">· {tasks.length}</span>
+        </h3>
+        <span className="flex items-center gap-1 text-xs text-muted-foreground opacity-0 transition-opacity group-focus-within/column:opacity-100 group-hover/column:opacity-100">
+          <Button variant="default" size="icon" className="h-6 w-6" onClick={onAddTask}>
             <IconPlus className="h-3 w-3" />
             <span className="sr-only">Add task</span>
           </Button>
@@ -140,11 +142,10 @@ const ColumnView = ({
 
             {tasks.length === 0 && (
               <div
-                className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
+                className={`flex min-h-28 items-center justify-center rounded-md border-2 border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
                   isHighlighted ? "border-primary/40 bg-primary/5 text-primary/60" : "border-border/50"
                 }`}
               >
-                <span>Drop tasks here</span>
                 <Button variant="ghost" size="sm" onClick={onAddTask}>
                   <IconPlus className="h-3.5 w-3.5" />
                   Add first task

@@ -1,12 +1,16 @@
 "use client";
 
+import { useQueries } from "@tanstack/react-query";
 import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
 import Link from "next/link";
+import type { BoardOutput } from "@/entities/board";
 import { useProject } from "@/entities/project";
+import { taskApi, taskKeys } from "@/entities/task/api";
 import { CreateBoardDialog } from "@/features/create-board";
 import { CreateTaskDialog } from "@/features/create-task";
 import { EditTaskDialog } from "@/features/edit-task";
 import { TaskDetailDialog } from "@/features/view-task";
+import { unwrapClientResult } from "@/shared/api/result";
 import { Button } from "@/shared/ui/button";
 import { LoadingScreen } from "@/shared/ui/loading-screen";
 import { AppShellHeader } from "@/widgets/app-sidebar";
@@ -42,19 +46,29 @@ const ProjectKanbanContent = () => {
     viewTask,
   } = useProjectKanban();
   const { data: project } = useProject(projectId);
+  const totalTaskCount = useTotalTaskCount(boards ?? []);
 
   return (
     <Kanban.Root>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppShellHeader
-          title={project?.name ?? "Board"}
+          title="Sprint Board"
+          description={
+            project ? (
+              <span>
+                {project.name} · Created{" "}
+                {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(project.createdAt))} ·{" "}
+                {totalTaskCount} {totalTaskCount === 1 ? "task" : "tasks"}
+              </span>
+            ) : null
+          }
           eyebrow={
             <span className="flex items-center gap-2">
               <Link href="/dashboard" className="hover:text-foreground">
                 Projects
               </Link>
               <span>/</span>
-              <span>Board</span>
+              <span>{project?.name ?? "Project"}</span>
             </span>
           }
           actions={
@@ -78,7 +92,7 @@ const ProjectKanbanContent = () => {
               ))}
 
               <Button
-                className="h-12 w-72 shrink-0 border-2 border-dashed border-border hover:border-solid"
+                className="h-12 w-72 shrink-0 border-2 border-dashed border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
                 onClick={openCreateBoard}
                 variant="ghost"
               >
@@ -115,3 +129,15 @@ const ProjectKanbanContent = () => {
     </Kanban.Root>
   );
 };
+
+function useTotalTaskCount(boards: BoardOutput[]) {
+  const taskQueries = useQueries({
+    queries: boards.map((board) => ({
+      queryKey: taskKeys.list(board.id),
+      queryFn: async () => unwrapClientResult(await taskApi.list(board.id)).tasks,
+      enabled: !!board.id,
+    })),
+  });
+
+  return taskQueries.reduce((total, query) => total + (query.data?.length ?? 0), 0);
+}

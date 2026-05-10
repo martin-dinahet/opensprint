@@ -56,14 +56,14 @@ describe("KanbanBoard", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Doing" })).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("· 2")).toBeInTheDocument();
     expect(screen.getByText("First task")).toBeInTheDocument();
     expect(screen.getByText("urgent")).toBeInTheDocument();
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.getByText("Second task")).toBeInTheDocument();
   });
 
-  it("renders an empty-state drop target for boards without tasks", () => {
+  it("renders one actionable empty state for boards without tasks", () => {
     renderWithClient(
       <KanbanBoard
         board={makeBoard()}
@@ -77,7 +77,8 @@ describe("KanbanBoard", () => {
       />,
     );
 
-    expect(screen.getByText("Drop tasks here")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add first task" })).toBeInTheDocument();
+    expect(screen.queryByText("Drop tasks here")).not.toBeInTheDocument();
   });
 
   it("calls the add-task callback", () => {
