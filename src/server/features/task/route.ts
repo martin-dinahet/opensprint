@@ -26,11 +26,11 @@ const MoveTaskSchema = MoveTaskInput;
 const ReorderTaskSchema = ReorderTaskInput;
 
 export const taskRoute = new Hono<ServerVariables>() //
-  .get("/:boardId/tasks", guard(), async (c) => {
-    const boardId = c.req.param("boardId");
+  .get("/:columnId/tasks", guard(), async (c) => {
+    const columnId = c.req.param("columnId");
     const currentUser = c.get("user");
 
-    const result = await listTasks(currentUser.id, boardId);
+    const result = await listTasks(currentUser.id, columnId);
 
     return result.match({
       ok: (tasks) => c.json({ tasks }),
@@ -38,12 +38,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     });
   })
 
-  .post("/:boardId/tasks", guard(), validate("json", CreateTaskSchema), async (c) => {
-    const boardId = c.req.param("boardId");
+  .post("/:columnId/tasks", guard(), validate("json", CreateTaskSchema), async (c) => {
+    const columnId = c.req.param("columnId");
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await createTask(currentUser.id, boardId, body);
+    const result = await createTask(currentUser.id, columnId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -51,13 +51,13 @@ export const taskRoute = new Hono<ServerVariables>() //
     });
   })
 
-  .patch("/:boardId/tasks/:taskId", guard(), validate("json", UpdateTaskSchema), async (c) => {
-    const boardId = c.req.param("boardId");
+  .patch("/:columnId/tasks/:taskId", guard(), validate("json", UpdateTaskSchema), async (c) => {
+    const columnId = c.req.param("columnId");
     const taskId = c.req.param("taskId");
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await updateTask(currentUser.id, boardId, taskId, body);
+    const result = await updateTask(currentUser.id, columnId, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -65,12 +65,12 @@ export const taskRoute = new Hono<ServerVariables>() //
     });
   })
 
-  .delete("/:boardId/tasks/:taskId", guard(), async (c) => {
-    const boardId = c.req.param("boardId");
+  .delete("/:columnId/tasks/:taskId", guard(), async (c) => {
+    const columnId = c.req.param("columnId");
     const taskId = c.req.param("taskId");
     const currentUser = c.get("user");
 
-    const result = await deleteTask(currentUser.id, boardId, taskId);
+    const result = await deleteTask(currentUser.id, columnId, taskId);
 
     return result.match({
       ok: (response) => c.json(response),

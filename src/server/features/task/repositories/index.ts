@@ -9,15 +9,15 @@ export class TaskRepository {
     return handle(() => db.select().from(task).where(eq(task.id, id)));
   }
 
-  async findByBoard(boardId: string) {
-    return handle(() => db.select().from(task).where(eq(task.boardId, boardId)).orderBy(asc(task.position)));
+  async findByColumn(columnId: string) {
+    return handle(() => db.select().from(task).where(eq(task.columnId, columnId)).orderBy(asc(task.position)));
   }
 
-  async create(data: CreateTaskInput & { id: string; boardId: string; position: number }) {
+  async create(data: CreateTaskInput & { id: string; columnId: string; position: number }) {
     return handle(() =>
       db.insert(task).values({
         id: data.id,
-        boardId: data.boardId,
+        columnId: data.columnId,
         assigneeId: data.assigneeId || null,
         title: data.title,
         description: data.description || null,
@@ -48,8 +48,8 @@ export class TaskRepository {
     return handle(() => db.update(task).set({ assigneeId: null }).where(eq(task.assigneeId, assigneeId)));
   }
 
-  async updateBoardAndPosition(id: string, boardId: string, position: number) {
-    return handle(() => db.update(task).set({ boardId, position }).where(eq(task.id, id)));
+  async updateColumnAndPosition(id: string, columnId: string, position: number) {
+    return handle(() => db.update(task).set({ columnId, position }).where(eq(task.id, id)));
   }
 
   async updatePosition(id: string, position: number) {
@@ -60,8 +60,8 @@ export class TaskRepository {
     return handle(() => db.delete(task).where(eq(task.id, id)));
   }
 
-  async deleteByBoard(boardId: string) {
-    return handle(() => db.delete(task).where(eq(task.boardId, boardId)));
+  async deleteByColumn(columnId: string) {
+    return handle(() => db.delete(task).where(eq(task.columnId, columnId)));
   }
 }
 

@@ -20,7 +20,7 @@ export const AssignTaskInput = z.object({
 });
 
 export const MoveTaskInput = z.object({
-  boardId: z.string(),
+  columnId: z.string(),
   position: z.number().int().min(0).optional(),
 });
 
@@ -30,7 +30,7 @@ export const ReorderTaskInput = z.object({
 
 export const TaskOutput = z.object({
   id: z.string(),
-  boardId: z.string(),
+  columnId: z.string(),
   assigneeId: z.string().nullable(),
   title: z.string(),
   description: z.string().nullable(),

@@ -1,5 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
+import { columnRepository } from "@/server/features/column/repositories";
 import { memberRepository } from "@/server/features/member/repositories";
 import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/features/shared/errors";
 import { taskRepository } from "@/server/features/task/repositories";
@@ -170,16 +171,31 @@ export const deleteBoard = async (userId: string, projectId: string, boardId: st
     return err(new NotFoundError("Board"));
   }
 
-  const deleteTasksResult = await taskRepository.deleteByBoard(boardId);
+  const columnsResult = await columnRepository.findByBoard(boardId);
+  if (columnsResult.isErr()) return err(columnsResult.error);
 
-  if (deleteTasksResult.isErr()) {
-    return err(
-      new AppError(
-        "board-tasks-delete-failed",
-        `Unable to delete board tasks: ${deleteTasksResult.error.message}`,
-        500,
-      ),
-    );
+  for (const column of columnsResult.unwrap() ?? []) {
+    const deleteTasksResult = await taskRepository.deleteByColumn(column.id);
+    if (deleteTasksResult.isErr()) {
+      return err(
+        new AppError(
+          "board-tasks-delete-failed",
+          `Unable to delete board tasks: ${deleteTasksResult.error.message}`,
+          500,
+        ),
+      );
+    }
+
+    const deleteColumnResult = await columnRepository.delete(column.id);
+    if (deleteColumnResult.isErr()) {
+      return err(
+        new AppError(
+          "board-columns-delete-failed",
+          `Unable to delete board columns: ${deleteColumnResult.error.message}`,
+          500,
+        ),
+      );
+    }
   }
 
   const deleteResult = await boardRepository.delete(boardId);

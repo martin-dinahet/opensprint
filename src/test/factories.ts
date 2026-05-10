@@ -1,4 +1,5 @@
 import type { BoardOutput } from "@/entities/board";
+import type { ColumnOutput } from "@/entities/column";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { ProjectListOutput } from "@/entities/project";
 import type { TaskOutput } from "@/entities/task";
@@ -62,10 +63,22 @@ export function makeBoard(overrides: Partial<BoardOutput> = {}): BoardOutput {
   };
 }
 
+export function makeColumn(overrides: Partial<ColumnOutput> = {}): ColumnOutput {
+  return {
+    id: "column-1",
+    boardId: "board-1",
+    name: "Todo",
+    position: 0,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    ...overrides,
+  };
+}
+
 export function makeTask(overrides: Partial<TaskOutput> = {}): TaskOutput {
   return {
     id: "task-1",
-    boardId: "board-1",
+    columnId: "column-1",
     assigneeId: null,
     title: "Write tests",
     description: "Add useful coverage",
