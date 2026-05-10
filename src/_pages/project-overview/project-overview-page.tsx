@@ -24,15 +24,7 @@ export function ProjectOverviewPage({ projectId }: Props) {
     <>
       <AppShellHeader
         title={project?.name ?? "Project"}
-        eyebrow={
-          <span className="flex items-center gap-2">
-            <Link href="/dashboard" className="hover:text-foreground">
-              Projects
-            </Link>
-            <span>/</span>
-            <span>Overview</span>
-          </span>
-        }
+        breadcrumbs={[{ href: "/dashboard", label: "Projects" }, { label: project?.name ?? "Project" }]}
         actions={
           <div className="flex items-center gap-2">
             <Link

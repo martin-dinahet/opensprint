@@ -59,19 +59,11 @@ const ProjectKanbanContent = () => {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppShellHeader
           title={board?.name ?? "Board"}
-          eyebrow={
-            <span className="flex items-center gap-2">
-              <Link href="/dashboard" className="hover:text-foreground">
-                Projects
-              </Link>
-              <span>/</span>
-              <Link href={`/projects/${projectId}`} className="hover:text-foreground">
-                {project?.name ?? "Project"}
-              </Link>
-              <span>/</span>
-              <span>{board?.name ?? "Board"}</span>
-            </span>
-          }
+          breadcrumbs={[
+            { href: "/dashboard", label: "Projects" },
+            { href: `/projects/${projectId}`, label: project?.name ?? "Project" },
+            { label: board?.name ?? "Board" },
+          ]}
           actions={
             <Link
               href={`/projects/${projectId}/members`}
