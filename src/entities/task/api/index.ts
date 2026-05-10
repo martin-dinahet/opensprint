@@ -15,15 +15,15 @@ const BASE_KEY = "tasks";
 export const taskKeys = {
   all: [BASE_KEY] as const,
   lists: () => [...taskKeys.all, "list"] as const,
-  list: (boardId: string) => [...taskKeys.lists(), boardId] as const,
+  list: (columnId: string) => [...taskKeys.lists(), columnId] as const,
   details: () => [...taskKeys.all, "detail"] as const,
   detail: (id: string) => [...taskKeys.details(), id] as const,
 } as const;
 
 export const taskApi = {
-  list: async (boardId: string) => {
+  list: async (columnId: string) => {
     return requestApiResult<{ tasks: TaskOutput[] }>(
-      () => api.boards[":boardId"].tasks.$get({ param: { boardId } }),
+      () => api.columns[":columnId"].tasks.$get({ param: { columnId } }),
       "Failed to fetch tasks",
       (body) => ({
         tasks: (body as { tasks?: TaskOutput[] } | null)?.tasks ?? [],
@@ -31,23 +31,23 @@ export const taskApi = {
     );
   },
 
-  create: async (boardId: string, data: CreateTaskInput) => {
+  create: async (columnId: string, data: CreateTaskInput) => {
     return requestApiResult<TaskOutput>(
-      () => api.boards[":boardId"].tasks.$post({ param: { boardId }, json: data }),
+      () => api.columns[":columnId"].tasks.$post({ param: { columnId }, json: data }),
       "Failed to create task",
     );
   },
 
-  update: async (boardId: string, taskId: string, data: UpdateTaskInput) => {
+  update: async (columnId: string, taskId: string, data: UpdateTaskInput) => {
     return requestApiResult<UpdateTaskOutput>(
-      () => api.boards[":boardId"].tasks[":taskId"].$patch({ param: { boardId, taskId }, json: data }),
+      () => api.columns[":columnId"].tasks[":taskId"].$patch({ param: { columnId, taskId }, json: data }),
       "Failed to update task",
     );
   },
 
-  delete: async (boardId: string, taskId: string) => {
+  delete: async (columnId: string, taskId: string) => {
     return requestApiResult<{ success: boolean }>(
-      () => api.boards[":boardId"].tasks[":taskId"].$delete({ param: { boardId, taskId } }),
+      () => api.columns[":columnId"].tasks[":taskId"].$delete({ param: { columnId, taskId } }),
       "Failed to delete task",
     );
   },
@@ -60,7 +60,7 @@ export const taskApi = {
   },
 
   move: async (taskId: string, data: MoveTaskInput) => {
-    return requestApiResult<{ id: string; boardId: string; position: number }>(
+    return requestApiResult<{ id: string; columnId: string; position: number }>(
       () => api.tasks[":taskId"].move.$patch({ param: { taskId }, json: data }),
       "Failed to move task",
     );
