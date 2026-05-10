@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { account } from "./schemas/auth/account-schema";
 import { session } from "./schemas/auth/session-schema";
 import { user } from "./schemas/auth/user-schema";
+import { boardColumn } from "./schemas/business/board-column-schema";
 import { board } from "./schemas/business/board-schema";
 import { projectMember } from "./schemas/business/project-member-schema";
 import { project } from "./schemas/business/project-schema";
@@ -49,13 +50,21 @@ export const boardRelations = relations(board, ({ one, many }) => ({
     fields: [board.projectId],
     references: [project.id],
   }),
+  columns: many(boardColumn),
+}));
+
+export const boardColumnRelations = relations(boardColumn, ({ one, many }) => ({
+  board: one(board, {
+    fields: [boardColumn.boardId],
+    references: [board.id],
+  }),
   tasks: many(task),
 }));
 
 export const taskRelations = relations(task, ({ one }) => ({
-  board: one(board, {
-    fields: [task.boardId],
-    references: [board.id],
+  column: one(boardColumn, {
+    fields: [task.columnId],
+    references: [boardColumn.id],
   }),
   assignee: one(projectMember, {
     fields: [task.assigneeId],
