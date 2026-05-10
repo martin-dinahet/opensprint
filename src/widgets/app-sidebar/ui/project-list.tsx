@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon, ListPlusIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, FolderIcon, ListPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
@@ -24,6 +24,7 @@ export function ProjectList() {
   const { isProjectsLoading, openCreateProject, projectId, projects } = useAppSidebar();
   const [open, setOpen] = useState(true);
   const SectionIcon = open ? ChevronDownIcon : ChevronRightIcon;
+  const visibleProjects = projectId ? projects.filter((project) => project.id !== projectId) : projects;
 
   return (
     <SidebarGroup className={`${sidebarSectionClass} min-h-0 flex-1`}>
@@ -31,7 +32,7 @@ export function ProjectList() {
         <CollapsibleTrigger
           className={`group/section flex w-full items-center justify-between ${sidebarSectionTriggerClass}`}
         >
-          Projects
+          {projectId ? "Other projects" : "Projects"}
           <SectionIcon aria-hidden="true" />
         </CollapsibleTrigger>
         <CollapsibleContent className="min-h-0 flex-1">
@@ -39,8 +40,8 @@ export function ProjectList() {
             <SidebarMenu className="gap-1">
               {isProjectsLoading
                 ? projectSkeletonKeys.map((key) => <SidebarMenuSkeleton key={key} showIcon />)
-                : projects.length
-                  ? projects.slice(0, projectListLimit).map((project) => (
+                : visibleProjects.length
+                  ? visibleProjects.slice(0, projectListLimit).map((project) => (
                       <SidebarMenuItem key={project.id}>
                         <SidebarMenuButton
                           tooltip={project.name}
@@ -48,7 +49,7 @@ export function ProjectList() {
                           className={sidebarNavButtonClass}
                           render={<Link href={`/projects/${project.id}`} />}
                         >
-                          <FolderKanbanIcon />
+                          <FolderIcon />
                           <span className={collapsedTextClass}>{project.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -61,7 +62,7 @@ export function ProjectList() {
                   onClick={openCreateProject}
                 >
                   <ListPlusIcon />
-                  <span className={collapsedTextClass}>Create project</span>
+                  <span className={collapsedTextClass}>New project</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

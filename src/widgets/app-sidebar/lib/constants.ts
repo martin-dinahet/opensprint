@@ -3,10 +3,10 @@ import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 export const collapsedTextClass = "group-data-[collapsible=icon]:hidden";
 
 export const sidebarNavButtonClass =
-  "h-9 rounded-md px-2.5 font-normal text-sidebar-foreground/78 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground";
+  "h-9 rounded-md px-2.5 font-normal text-sidebar-foreground/72 hover:bg-transparent hover:text-sidebar-foreground focus-visible:ring-2 active:bg-transparent active:text-sidebar-foreground data-active:bg-transparent data-active:font-semibold data-active:text-sidebar-foreground disabled:text-sidebar-foreground/36";
 
 export const sidebarSubNavButtonClass =
-  "h-7 rounded-md px-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground";
+  "h-7 rounded-md px-2 font-normal text-sidebar-foreground/64 hover:bg-transparent hover:text-sidebar-foreground focus-visible:ring-2 active:bg-transparent active:text-sidebar-foreground data-active:bg-transparent data-active:font-semibold data-active:text-sidebar-foreground disabled:text-sidebar-foreground/36";
 
 export const sidebarSectionClass = "px-2 py-1 group-data-[collapsible=icon]:px-2";
 

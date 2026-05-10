@@ -19,7 +19,6 @@ export function SidebarBrand() {
             </span>
             <span className={`min-w-0 flex-1 ${collapsedTextClass}`}>
               <span className="block truncate font-medium text-sm">OpenSprint</span>
-              <span className="block truncate text-sidebar-foreground/55 text-xs leading-tight">Workspace</span>
             </span>
           </SidebarMenuButton>
         </SidebarMenuItem>

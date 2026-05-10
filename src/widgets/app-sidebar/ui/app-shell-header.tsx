@@ -39,9 +39,12 @@ export function AppShellHeader({ actions, breadcrumbs, eyebrow, title }: Props) 
               <BreadcrumbList className="flex-nowrap gap-1 text-xs">
                 {breadcrumbs.map((item, index) => {
                   const isCurrent = index === breadcrumbs.length - 1 || !item.href;
+                  const breadcrumbKey =
+                    item.href ??
+                    (typeof item.label === "string" || typeof item.label === "number" ? item.label : title);
 
                   return (
-                    <Fragment key={`${index}-${String(item.label)}`}>
+                    <Fragment key={breadcrumbKey}>
                       {index > 0 && <BreadcrumbSeparator className="hidden sm:flex" />}
                       <BreadcrumbItem className="min-w-0">
                         {isCurrent ? (

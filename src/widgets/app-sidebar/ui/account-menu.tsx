@@ -2,10 +2,11 @@
 
 import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/ui/sidebar";
 import { collapsedTextClass, sidebarNavButtonClass } from "../lib/constants";
 import { useAppSidebar } from "../lib/app-sidebar-context";
+import { ThemeToggleGroup } from "./theme-toggle-group";
 import { UserAvatar } from "./user-avatar";
 
 export function AccountMenu() {
@@ -14,18 +15,41 @@ export function AccountMenu() {
 
   return (
     <SidebarFooter className="gap-1 px-3 pt-2 pb-3">
-      <Collapsible
-        open={open}
-        onOpenChange={setOpen}
-        className="flex flex-col rounded-md bg-sidebar-accent/35 p-1 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
-      >
-        <CollapsibleContent className={collapsedTextClass}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <PopoverTrigger
+              render={
+                <SidebarMenuButton
+                  size="lg"
+                  tooltip="Account"
+                  className="h-11 rounded-md px-2 hover:bg-transparent hover:text-sidebar-foreground data-panel-open:bg-transparent"
+                />
+              }
+            >
+              <UserAvatar className="size-8" user={user} />
+              <span className={`min-w-0 flex-1 ${collapsedTextClass}`}>
+                <span className="block truncate font-medium text-sm">{user?.name || "Account"}</span>
+                <span className="block truncate text-sidebar-foreground/55 text-xs">{user?.email}</span>
+              </span>
+              <ChevronsUpDownIcon className={collapsedTextClass} aria-hidden="true" />
+            </PopoverTrigger>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <PopoverContent side="right" align="end" sideOffset={10} className="w-64 gap-2 p-2">
+          <div className="px-1 pb-2">
+            <ThemeToggleGroup />
+          </div>
           <SidebarMenu className="gap-1">
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip="Account settings"
                 className={sidebarNavButtonClass}
-                onClick={onNavigateAccount}
+                onClick={() => {
+                  setOpen(false);
+                  onNavigateAccount();
+                }}
               >
                 <SettingsIcon />
                 <span>Account settings</span>
@@ -43,29 +67,8 @@ export function AccountMenu() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </CollapsibleContent>
-
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <CollapsibleTrigger
-              render={
-                <SidebarMenuButton
-                  size="lg"
-                  tooltip="Account"
-                  className="h-11 rounded-md px-2 hover:bg-sidebar-accent/60 data-panel-open:bg-transparent"
-                />
-              }
-            >
-              <UserAvatar className="size-8" user={user} />
-              <span className={`min-w-0 flex-1 ${collapsedTextClass}`}>
-                <span className="block truncate font-medium text-sm">{user?.name || "Account"}</span>
-                <span className="block truncate text-sidebar-foreground/55 text-xs">{user?.email}</span>
-              </span>
-              <ChevronsUpDownIcon className={collapsedTextClass} aria-hidden="true" />
-            </CollapsibleTrigger>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </Collapsible>
+        </PopoverContent>
+      </Popover>
     </SidebarFooter>
   );
 }
