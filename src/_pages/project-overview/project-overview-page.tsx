@@ -1,14 +1,23 @@
 "use client";
 
 import { IconArrowRight, IconLayoutKanban, IconPlus, IconUsersGroup } from "@tabler/icons-react";
+import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { BoardOutput } from "@/entities/board";
 import { useBoards } from "@/entities/board";
+import { useProjectMembers } from "@/entities/member";
 import { useProject } from "@/entities/project";
 import { CreateBoardDialog } from "@/features/create-board";
+import { DeleteBoardDialog } from "@/features/delete-board";
+import { DeleteProjectDialog } from "@/features/delete-project";
+import { EditBoardDialog } from "@/features/edit-board";
+import { EditProjectDialog } from "@/features/edit-project";
+import { authClient } from "@/shared/lib/auth-client";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
 import { LoadingScreen } from "@/shared/ui/loading-screen";
 import { AppShellHeader } from "@/widgets/app-sidebar";
 
@@ -17,9 +26,19 @@ type Props = {
 };
 
 export function ProjectOverviewPage({ projectId }: Props) {
+  const session = authClient.useSession();
   const { data: project } = useProject(projectId);
   const { data: boards = [], isLoading } = useBoards(projectId);
+  const { data: members = [] } = useProjectMembers(projectId);
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
+  const [editProjectOpen, setEditProjectOpen] = useState(false);
+  const [deleteProjectOpen, setDeleteProjectOpen] = useState(false);
+  const [editBoard, setEditBoard] = useState<BoardOutput | null>(null);
+  const [deleteBoard, setDeleteBoard] = useState<BoardOutput | null>(null);
+  const currentRole = members.find((member) => member.userId === session.data?.user.id)?.role;
+  const canManageProject = currentRole === "owner" || currentRole === "admin";
+  const canDeleteProject = currentRole === "owner";
+  const canManageBoards = canManageProject;
 
   return (
     <>
@@ -39,42 +58,41 @@ export function ProjectOverviewPage({ projectId }: Props) {
               <IconPlus className="mr-2 h-4 w-4" />
               New Board
             </Button>
+            {(canManageProject || canDeleteProject) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+                  <MoreHorizontalIcon />
+                  <span className="sr-only">Project actions</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canManageProject && (
+                    <DropdownMenuItem onClick={() => setEditProjectOpen(true)}>
+                      <PencilIcon />
+                      Edit project
+                    </DropdownMenuItem>
+                  )}
+                  {canDeleteProject && (
+                    <DropdownMenuItem variant="destructive" onClick={() => setDeleteProjectOpen(true)}>
+                      <Trash2Icon />
+                      Delete project
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         }
       />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="border-b bg-muted/20 px-6 py-6">
-          <div className="mx-auto flex max-w-5xl flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="min-w-0">
-              <p className="font-medium text-muted-foreground text-xs uppercase">Project hub</p>
-              <h2 className="mt-2 truncate font-semibold text-2xl">{project?.name ?? "Project"}</h2>
-              <p className="mt-2 max-w-2xl text-muted-foreground text-sm">
-                {project?.description ?? "Boards, members, and project-level work live here."}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/projects/${projectId}/members`}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 font-medium text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <IconUsersGroup className="h-4 w-4" />
-                Members
-              </Link>
-              <Button onClick={() => setCreateBoardOpen(true)}>
-                <IconPlus className="mr-2 h-4 w-4" />
-                New Board
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto grid max-w-5xl gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="mx-auto max-w-5xl px-6 py-6">
           <section className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-lg">Boards</h3>
-                <p className="text-muted-foreground text-sm">Kanban spaces inside this project.</p>
+                <p className="text-muted-foreground text-sm">
+                  {project?.description ?? "Kanban spaces inside this project."}
+                </p>
               </div>
               <Badge variant="outline">{boards.length} total</Badge>
             </div>
@@ -92,13 +110,15 @@ export function ProjectOverviewPage({ projectId }: Props) {
             ) : (
               <div className="space-y-3">
                 {boards.map((board) => (
-                  <Link
+                  <Card
                     key={board.id}
-                    href={`/projects/${projectId}/boards/${board.id}`}
-                    className="block rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="group relative rounded-lg transition-colors hover:border-primary/30 hover:bg-muted/35"
                   >
-                    <Card className="group rounded-lg transition-colors hover:border-primary/30 hover:bg-muted/35">
-                      <CardHeader className="pb-3">
+                    <Link
+                      href={`/projects/${projectId}/boards/${board.id}`}
+                      className="block rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <CardHeader className="pb-3 pr-12">
                         <div className="flex items-start gap-3">
                           <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background text-primary">
                             <IconLayoutKanban className="h-4 w-4" />
@@ -120,46 +140,52 @@ export function ProjectOverviewPage({ projectId }: Props) {
                           </div>
                         </div>
                       </CardHeader>
-                    </Card>
-                  </Link>
+                    </Link>
+                    {canManageBoards && (
+                      <div className="absolute top-3 right-3">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+                            <MoreHorizontalIcon />
+                            <span className="sr-only">Board actions</span>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditBoard(board)}>
+                              <PencilIcon />
+                              Edit board
+                            </DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteBoard(board)}>
+                              <Trash2Icon />
+                              Delete board
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
+                  </Card>
                 ))}
               </div>
             )}
           </section>
-
-          <aside className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-lg">Project areas</h3>
-              <p className="text-muted-foreground text-sm">Shared project spaces.</p>
-            </div>
-            <div className="space-y-2">
-              <Link
-                href={`/projects/${projectId}`}
-                className="flex items-center justify-between rounded-lg border bg-muted/35 px-3 py-3 font-medium text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                aria-current="page"
-              >
-                <span className="flex items-center gap-2">
-                  <IconLayoutKanban className="h-4 w-4 text-primary" />
-                  Boards
-                </span>
-                <Badge variant="secondary">{boards.length}</Badge>
-              </Link>
-              <Link
-                href={`/projects/${projectId}/members`}
-                className="flex items-center justify-between rounded-lg border px-3 py-3 font-medium text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <span className="flex items-center gap-2">
-                  <IconUsersGroup className="h-4 w-4 text-primary" />
-                  Members
-                </span>
-                <IconArrowRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            </div>
-          </aside>
         </div>
       </main>
 
       <CreateBoardDialog open={createBoardOpen} onOpenChange={setCreateBoardOpen} projectId={projectId} />
+      {project && (
+        <>
+          <EditProjectDialog open={editProjectOpen} onOpenChange={setEditProjectOpen} project={project} />
+          <DeleteProjectDialog open={deleteProjectOpen} onOpenChange={setDeleteProjectOpen} project={project} />
+        </>
+      )}
+      {editBoard && (
+        <EditBoardDialog open={!!editBoard} onOpenChange={(open) => !open && setEditBoard(null)} board={editBoard} />
+      )}
+      {deleteBoard && (
+        <DeleteBoardDialog
+          open={!!deleteBoard}
+          onOpenChange={(open) => !open && setDeleteBoard(null)}
+          board={deleteBoard}
+        />
+      )}
     </>
   );
 }

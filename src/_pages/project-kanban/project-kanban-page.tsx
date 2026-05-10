@@ -1,14 +1,21 @@
 "use client";
 
 import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
+import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useBoard, useBoards } from "@/entities/board";
+import { useProjectMembers } from "@/entities/member";
 import { useProject } from "@/entities/project";
 import { CreateColumnDialog } from "@/features/create-column";
 import { CreateTaskDialog } from "@/features/create-task";
+import { DeleteBoardDialog } from "@/features/delete-board";
+import { EditBoardDialog } from "@/features/edit-board";
 import { EditTaskDialog } from "@/features/edit-task";
 import { TaskDetailDialog } from "@/features/view-task";
+import { authClient } from "@/shared/lib/auth-client";
 import { Button } from "@/shared/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
 import { LoadingScreen } from "@/shared/ui/loading-screen";
 import { AppShellHeader } from "@/widgets/app-sidebar";
 import { BoardColumn, Kanban, ProjectKanbanProvider, useProjectKanban } from "@/widgets/kanban-board";
@@ -51,8 +58,14 @@ const ProjectKanbanContent = () => {
     setViewTask,
     viewTask,
   } = useProjectKanban();
+  const session = authClient.useSession();
   const { data: board } = useBoard(projectId, boardId);
   const { data: project } = useProject(projectId);
+  const { data: projectMembers = [] } = useProjectMembers(projectId);
+  const [editBoardOpen, setEditBoardOpen] = useState(false);
+  const [deleteBoardOpen, setDeleteBoardOpen] = useState(false);
+  const currentRole = projectMembers.find((member) => member.userId === session.data?.user.id)?.role;
+  const canManageBoard = currentRole === "owner" || currentRole === "admin";
 
   return (
     <Kanban.Root>
@@ -65,13 +78,33 @@ const ProjectKanbanContent = () => {
             { label: board?.name ?? "Board" },
           ]}
           actions={
-            <Link
-              href={`/projects/${projectId}/members`}
-              className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-muted-foreground text-sm outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <IconUsersGroup className="h-3.5 w-3.5" />
-              Members
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/projects/${projectId}/members`}
+                className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-muted-foreground text-sm outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <IconUsersGroup className="h-3.5 w-3.5" />
+                Members
+              </Link>
+              {board && canManageBoard && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+                    <MoreHorizontalIcon />
+                    <span className="sr-only">Board actions</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setEditBoardOpen(true)}>
+                      <PencilIcon />
+                      Edit board
+                    </DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" onClick={() => setDeleteBoardOpen(true)}>
+                      <Trash2Icon />
+                      Delete board
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           }
         />
 
@@ -119,6 +152,13 @@ const ProjectKanbanContent = () => {
         open={!!viewTask}
         task={viewTask}
       />
+
+      {board && (
+        <>
+          <EditBoardDialog open={editBoardOpen} onOpenChange={setEditBoardOpen} board={board} />
+          <DeleteBoardDialog open={deleteBoardOpen} onOpenChange={setDeleteBoardOpen} board={board} redirectToProject />
+        </>
+      )}
     </Kanban.Root>
   );
 };
