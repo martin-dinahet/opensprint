@@ -15,7 +15,7 @@ export function ProjectCard({ project }: Props) {
       href={`/projects/${project.id}`}
       className="block rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
-      <Card className="group rounded-lg transition-colors hover:bg-muted/50">
+      <Card className="group min-h-44 rounded-lg transition-colors hover:bg-muted/50">
         <CardHeader className="gap-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -24,7 +24,7 @@ export function ProjectCard({ project }: Props) {
             </div>
             <IconArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
           </div>
-          {project.description && <CardDescription className="line-clamp-2">{project.description}</CardDescription>}
+          <CardDescription className="line-clamp-2 min-h-10">{project.description || "\u00a0"}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="flex items-center gap-1.5 text-muted-foreground text-xs">

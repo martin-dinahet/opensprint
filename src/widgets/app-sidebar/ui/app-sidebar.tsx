@@ -17,9 +17,9 @@ function AppSidebarLayout() {
       <Sidebar collapsible="icon" variant="inset">
         <SidebarBrand />
         <SidebarContent className="gap-1 px-1 pb-2">
-          <ProjectNavigation />
           <WorkspaceNavigation />
           <ProjectList />
+          <ProjectNavigation />
         </SidebarContent>
         <AccountMenu />
         <SidebarRail />

@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/shared/ui/sidebar";
+import { Icon } from "@/shared/ui/icon";
 import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass } from "../lib/constants";
 import { useAppSidebar } from "../lib/app-sidebar-context";
 
@@ -24,7 +25,7 @@ export function WorkspaceNavigation() {
               className={sidebarNavButtonClass}
               render={<Link href="/dashboard" />}
             >
-              <LayoutDashboardIcon />
+              <Icon icon={LayoutDashboardIcon} />
               <span className={collapsedTextClass}>All projects</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

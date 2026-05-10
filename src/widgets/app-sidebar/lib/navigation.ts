@@ -17,7 +17,7 @@ export function getProjectId(pathname: string, params: RouteParams) {
 
 export function getProjectNavigationItems(projectId: string): ProjectNavigationItem[] {
   return [
-    { href: projectId ? `/projects/${projectId}` : "/dashboard", label: "Board", icon: KanbanSquareIcon },
+    { href: projectId ? `/projects/${projectId}` : "/dashboard", label: "Boards", icon: KanbanSquareIcon },
     { href: projectId ? `/projects/${projectId}/members` : "/dashboard", label: "Members", icon: UsersIcon },
   ];
 }

@@ -2,6 +2,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
+import { Icon } from "@/shared/ui/icon";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,6 +14,7 @@ import {
   collapsedTextClass,
   sidebarNavButtonClass,
   sidebarSectionClass,
+  sidebarSectionLabelClass,
   sidebarSectionTriggerClass,
 } from "../lib/constants";
 import { useAppSidebar } from "../lib/app-sidebar-context";
@@ -29,19 +31,20 @@ export function ProjectNavigation() {
   }
 
   return (
-    <SidebarGroup className={sidebarSectionClass}>
+    <SidebarGroup className={`${sidebarSectionClass} mt-2 border-sidebar-border/90 border-t pt-3`}>
+      <div className={sidebarSectionLabelClass}>Project</div>
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger
           className={`group/section flex w-full items-center justify-between ${sidebarSectionTriggerClass}`}
         >
           <span className="truncate">{activeProject?.name ?? "Project"}</span>
-          <SectionIcon aria-hidden="true" />
+          <Icon icon={SectionIcon} className="size-3.5" />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {projectItems.map((item) => {
-                const Icon = item.icon;
+                const ItemIcon = item.icon;
 
                 return (
                   <SidebarMenuItem key={item.label}>
@@ -51,7 +54,7 @@ export function ProjectNavigation() {
                       className={sidebarNavButtonClass}
                       render={<Link href={item.href} />}
                     >
-                      <Icon />
+                      <Icon icon={ItemIcon} />
                       <span className={collapsedTextClass}>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
