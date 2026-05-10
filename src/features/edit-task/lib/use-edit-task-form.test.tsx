@@ -73,7 +73,7 @@ describe("useEditTaskForm", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 
     expect(updateTaskMock.mutateAsync).toHaveBeenCalledWith({
-      boardId: "board-1",
+      columnId: "column-1",
       data: {
         description: "Updated notes",
         priority: "urgent",
@@ -104,7 +104,7 @@ describe("useEditTaskForm", () => {
 
     expect(assignTaskMock.mutateAsync).not.toHaveBeenCalled();
     expect(updateTaskMock.mutateAsync).toHaveBeenCalledWith({
-      boardId: "board-1",
+      columnId: "column-1",
       data: {
         description: undefined,
         priority: "medium",

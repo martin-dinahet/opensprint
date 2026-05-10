@@ -1,4 +1,4 @@
-import { IconAlertCircle, IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
+import { IconAlertCircle, IconLayoutKanban, IconLoader2, IconPlus } from "@tabler/icons-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
@@ -27,8 +27,8 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
       <DialogContent>
         <form action={action}>
           <DialogHeader>
-            <DialogTitle>Add column</DialogTitle>
-            <DialogDescription>Create a new column in this board.</DialogDescription>
+            <DialogTitle>Add board</DialogTitle>
+            <DialogDescription>Create a new board inside this project.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {globalError && (
@@ -38,13 +38,13 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
               </Alert>
             )}
             <div className="grid gap-2">
-              <Label htmlFor="boardName">Column name</Label>
+              <Label htmlFor="boardName">Board name</Label>
               <div className="relative">
-                <IconLayoutColumns className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <IconLayoutKanban className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="boardName"
                   name="name"
-                  placeholder="In progress"
+                  placeholder="Sprint Board"
                   disabled={pending}
                   aria-invalid={!!nameError}
                   className={`pl-9 ${nameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
@@ -71,7 +71,7 @@ export function CreateBoardDialog({ onOpenChange, open, projectId }: Props) {
               ) : (
                 <>
                   <IconPlus className="mr-2 h-4 w-4" />
-                  Add column
+                  Add board
                 </>
               )}
             </Button>

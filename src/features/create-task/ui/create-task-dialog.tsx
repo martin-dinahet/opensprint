@@ -7,15 +7,15 @@ import { TaskFormFields } from "@/features/task-form";
 import { useCreateTaskForm } from "../lib/use-create-task-form";
 
 type Props = {
-  boardId: string;
+  columnId: string;
   members: MemberWithUserOutput[];
   onOpenChange: (open: boolean) => void;
   open: boolean;
 };
 
-export const CreateTaskDialog = ({ boardId, members, onOpenChange, open }: Props) => {
+export const CreateTaskDialog = ({ columnId, members, onOpenChange, open }: Props) => {
   const { action, assigneeId, fieldErrors, globalError, pending, priority, reset, setAssigneeId, setPriority } =
-    useCreateTaskForm({ boardId, onOpenChange });
+    useCreateTaskForm({ columnId, onOpenChange });
 
   return (
     <Dialog

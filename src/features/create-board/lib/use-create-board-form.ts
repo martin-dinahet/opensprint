@@ -38,7 +38,7 @@ export function useCreateBoardForm({ onOpenChange, projectId }: Options) {
 
       const result = await handleClientResult(
         () => createBoard.mutateAsync({ data, projectId }),
-        "Unable to create column",
+        "Unable to create board",
       );
       result.match({
         ok: () => onOpenChange(false),
