@@ -1,0 +1,156 @@
+"use client";
+
+import { IconAlertCircle, IconFileText, IconLayoutKanban, IconLoader2, IconPencil } from "@tabler/icons-react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import z from "zod";
+import type { BoardOutput } from "@/entities/board";
+import { useUpdateBoard } from "@/entities/board";
+import { handleClientResult } from "@/shared/api/result";
+import { parseFormData } from "@/shared/lib/forms";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { Button } from "@/shared/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+
+const editBoardSchema = z.object({
+  description: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().trim().min(3).max(800).optional(),
+  ),
+  name: z.string().trim().min(1).max(130),
+});
+
+type Props = {
+  board: Pick<BoardOutput, "description" | "id" | "name" | "projectId">;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+};
+
+export function EditBoardDialog({ board, onOpenChange, open }: Props) {
+  const updateBoard = useUpdateBoard();
+  const [pending, startTransition] = useTransition();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const isPending = pending || updateBoard.isPending;
+  const nameError = fieldErrors?.name?.[0];
+  const descriptionError = fieldErrors?.description?.[0];
+
+  const reset = () => {
+    setFieldErrors(null);
+    setGlobalError(null);
+  };
+
+  const action = (formData: FormData) => {
+    startTransition(async () => {
+      reset();
+
+      const { data, fieldErrors } = parseFormData(editBoardSchema, formData);
+      if (fieldErrors) {
+        setFieldErrors(fieldErrors);
+        return;
+      }
+
+      const result = await handleClientResult(
+        () => updateBoard.mutateAsync({ projectId: board.projectId, boardId: board.id, data }),
+        "Unable to update board",
+      );
+      result.match({
+        ok: () => {
+          toast.success("Board updated");
+          onOpenChange(false);
+        },
+        err: (error) => setGlobalError(error.message),
+      });
+    });
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) reset();
+        onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent>
+        <form action={action}>
+          <DialogHeader>
+            <DialogTitle>Edit board</DialogTitle>
+            <DialogDescription>Update the board name and description shown in this project.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {globalError && (
+              <Alert variant="destructive">
+                <IconAlertCircle className="h-4 w-4" />
+                <AlertDescription>{globalError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="editBoardName">Name</Label>
+              <div className="relative">
+                <IconLayoutKanban className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="editBoardName"
+                  name="name"
+                  defaultValue={board.name}
+                  disabled={isPending}
+                  aria-invalid={!!nameError}
+                  className={`pl-9 ${nameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                />
+              </div>
+              {nameError && (
+                <p className="flex items-center gap-1.5 text-destructive text-sm">
+                  <IconAlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {nameError}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editBoardDescription">Description</Label>
+              <div className="relative">
+                <IconFileText className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                <Textarea
+                  id="editBoardDescription"
+                  name="description"
+                  defaultValue={board.description ?? ""}
+                  disabled={isPending}
+                  aria-invalid={!!descriptionError}
+                  className={`min-h-24 pl-9 ${
+                    descriptionError ? "border-destructive focus-visible:ring-destructive" : ""
+                  }`}
+                />
+              </div>
+              {descriptionError && (
+                <p className="flex items-center gap-1.5 text-destructive text-sm">
+                  <IconAlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {descriptionError}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <IconPencil className="mr-2 h-4 w-4" />
+                  Save board
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
