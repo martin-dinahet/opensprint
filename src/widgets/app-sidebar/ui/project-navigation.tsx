@@ -10,15 +10,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/shared/shadcn/sidebar";
-import { useAppSidebar } from "../lib/app-sidebar-context";
 import {
   collapsedTextClass,
+  getProjectNavigationItems,
   sidebarNavButtonClass,
   sidebarSectionClass,
   sidebarSectionLabelClass,
   sidebarSectionTriggerClass,
-} from "../lib/constants";
-import { getProjectNavigationItems } from "../lib/navigation";
+  useAppSidebar,
+} from "../lib";
 
 export function ProjectNavigation() {
   const { activeProject, pathname, projectId } = useAppSidebar();

@@ -8,8 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/shared/shadcn/sidebar";
-import { useAppSidebar } from "../lib/app-sidebar-context";
-import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass } from "../lib/constants";
+import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass, useAppSidebar } from "../lib";
 
 export function WorkspaceNavigation() {
   const { pathname } = useAppSidebar();

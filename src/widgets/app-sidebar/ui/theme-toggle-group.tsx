@@ -3,7 +3,7 @@
 import { PaletteIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/shadcn/toggle-group";
-import { themeItems } from "../lib/constants";
+import { themeItems } from "../lib";
 
 export function ThemeToggleGroup() {
   const { setTheme, theme = "system" } = useTheme();

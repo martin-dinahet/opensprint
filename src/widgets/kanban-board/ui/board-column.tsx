@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import type { ColumnOutput } from "@/entities/column";
 import { useTasks } from "@/entities/task";
-import { useProjectKanban } from "../lib/project-kanban-context";
+import { useProjectKanban } from "../lib";
 import { Kanban } from "./kanban";
 
 type Props = {

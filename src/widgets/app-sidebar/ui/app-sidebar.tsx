@@ -2,7 +2,7 @@
 
 import { CreateProjectDialog } from "@/features/create-project";
 import { Sidebar, SidebarContent, SidebarRail } from "@/shared/shadcn/sidebar";
-import { AppSidebarProvider, useAppSidebar } from "../lib/app-sidebar-context";
+import { AppSidebarProvider, useAppSidebar } from "../lib";
 import { AccountMenu } from "./account-menu";
 import { ProjectList } from "./project-list";
 import { ProjectNavigation } from "./project-navigation";

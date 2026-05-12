@@ -4,7 +4,6 @@ import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-k
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { type ReactNode, useState } from "react";
-import { kanbanCollisionDetection } from "@/entities/board/lib/kanban-dnd";
 import type { ColumnOutput } from "@/entities/column";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard, TaskCardContent } from "@/entities/task";
@@ -26,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/shadcn/dropdown-menu";
-import { useProjectKanban } from "../lib/project-kanban-context";
+import { kanbanCollisionDetection, useProjectKanban } from "../lib";
 
 type RootProps = {
   children: ReactNode;

@@ -4,8 +4,7 @@ import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/shadcn/collapsible";
 import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/shadcn/sidebar";
-import { useAppSidebar } from "../lib/app-sidebar-context";
-import { collapsedTextClass, sidebarNavButtonClass } from "../lib/constants";
+import { collapsedTextClass, sidebarNavButtonClass, useAppSidebar } from "../lib";
 import { UserAvatar } from "./user-avatar";
 
 export function AccountMenu() {

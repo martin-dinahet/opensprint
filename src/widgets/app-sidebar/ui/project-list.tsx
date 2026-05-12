@@ -11,7 +11,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/shared/shadcn/sidebar";
-import { useAppSidebar } from "../lib/app-sidebar-context";
 import {
   collapsedTextClass,
   projectListLimit,
@@ -19,7 +18,8 @@ import {
   sidebarNavButtonClass,
   sidebarSectionClass,
   sidebarSectionTriggerClass,
-} from "../lib/constants";
+  useAppSidebar,
+} from "../lib";
 
 export function ProjectList() {
   const { isProjectsLoading, projectId, projects } = useAppSidebar();
