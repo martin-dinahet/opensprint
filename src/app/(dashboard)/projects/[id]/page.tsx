@@ -6,7 +6,7 @@ import Link from "next/link";
 import { use } from "react";
 import type { ColumnOutput } from "@/entities/column";
 import { useProject } from "@/entities/project";
-import { taskApi, taskKeys } from "@/entities/task/api";
+import { taskApi, taskKeys } from "@/entities/task";
 import { CreateBoardDialog } from "@/features/create-board";
 import { CreateColumnDialog } from "@/features/create-column";
 import { CreateTaskDialog } from "@/features/create-task";
