@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
-import { AppProviders } from "@/shared/providers/app-providers";
+import { ClientProviders } from "./providers";
 import "@/app/globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: Props) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <body className="antialiased">
-        <AppProviders>{children}</AppProviders>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

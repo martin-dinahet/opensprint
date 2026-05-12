@@ -1,11 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { LoadingScreen } from "@/shared/ui/loading-screen";
-import { SidebarInset, SidebarProvider } from "@/shared/ui/sidebar";
-import { AppSidebar } from "@/widgets/app-sidebar";
+import type { ReactNode } from "react";
 import { authClient } from "@/shared/lib/auth-client";
+import { LoadingScreen } from "@/shared/shadcn/loading-screen";
+import { SidebarInset, SidebarProvider } from "@/shared/shadcn/sidebar";
+import { AppSidebar } from "@/widgets/app-sidebar";
 
 type Props = {
   children: ReactNode;
