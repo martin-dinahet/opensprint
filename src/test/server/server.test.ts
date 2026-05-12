@@ -2,7 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHonoTestClient } from "@/test/backend";
 import { makeBoard, makeProject, makeTask, makeUser } from "@/test/factories";
-import { AppError } from "./features/shared/errors";
+import { AppError } from "@/server/lib/errors";
 
 const { authMock, boardUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
   authMock: {
@@ -47,10 +47,10 @@ vi.mock("@/server/lib/auth", () => ({
   auth: authMock,
 }));
 
-vi.mock("@/server/features/project/usecases", () => projectUseCasesMock);
-vi.mock("@/server/features/board/usecases", () => boardUseCasesMock);
-vi.mock("@/server/features/member/usecases", () => memberUseCasesMock);
-vi.mock("@/server/features/task/usecases", () => taskUseCasesMock);
+vi.mock("@/server/use-cases/project", () => projectUseCasesMock);
+vi.mock("@/server/use-cases/board", () => boardUseCasesMock);
+vi.mock("@/server/use-cases/member", () => memberUseCasesMock);
+vi.mock("@/server/use-cases/task", () => taskUseCasesMock);
 
 const { server } = await import("@/server");
 

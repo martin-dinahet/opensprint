@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 const alias = {
-  "@/pages": fileURLToPath(new URL("./src/_pages", import.meta.url)),
   "@": fileURLToPath(new URL("./src", import.meta.url)),
 };
 
@@ -16,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      exclude: ["src/components/ui/**", "drizzle/**", ".next/**", "coverage/**", "src/test/**"],
+      exclude: ["src/shared/shadcn/**", "drizzle/**", ".next/**", "coverage/**", "src/test/**"],
     },
     projects: [
       {
@@ -27,7 +26,7 @@ export default defineConfig({
         test: {
           name: "backend",
           environment: "node",
-          include: ["src/server/**/*.test.ts"],
+          include: ["src/test/server/**/*.test.ts"],
           setupFiles: ["src/test/setup/backend.ts"],
         },
       },
@@ -40,7 +39,7 @@ export default defineConfig({
           name: "frontend",
           environment: "jsdom",
           include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-          exclude: ["src/server/**"],
+          exclude: ["src/server/**", "src/test/server/**"],
           setupFiles: ["src/test/setup/frontend.ts"],
         },
       },
