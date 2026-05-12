@@ -1,8 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppError } from "@/server/lib/errors";
 import { createHonoTestClient } from "@/test/backend";
 import { makeBoard, makeProject, makeTask, makeUser } from "@/test/factories";
-import { AppError } from "@/server/lib/errors";
 
 const { authMock, boardUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
   authMock: {

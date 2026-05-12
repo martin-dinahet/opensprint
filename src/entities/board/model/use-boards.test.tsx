@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { boardApi, boardKeys } from "@/entities/board/api";
 import { makeBoard } from "@/test/factories";
 import { createTestQueryClient } from "@/test/render";
-import { useBoard, useBoards, useCreateBoard, useDeleteBoard, useReorderBoards, useUpdateBoard } from ".";
+import { useBoard, useBoards, useCreateBoard, useDeleteBoard, useReorderBoards, useUpdateBoard } from "./use-boards";
 
 vi.mock("@/entities/board/api", () => ({
   boardKeys: {
