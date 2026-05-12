@@ -1,5 +1,5 @@
 import type { server } from "../index";
-import type { auth } from "./auth";
+import type { auth } from "../lib/auth";
 
 export type ServerType = typeof server;
 
