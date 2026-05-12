@@ -1,7 +1,7 @@
 export type {
   AddMemberInput,
   UpdateMemberInput,
-} from "@/server/features/member/dto";
+} from "@/server/use-cases/member/dto";
 
 export type ProjectMemberRole = "owner" | "admin" | "member";
 

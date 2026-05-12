@@ -8,10 +8,15 @@ import type { CSSProperties } from "react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import { cn } from "@/shared/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
+import { Badge } from "@/shared/shadcn/badge";
+import { Button } from "@/shared/shadcn/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/shadcn/dropdown-menu";
 
 type TaskPriority = "low" | "medium" | "high" | "urgent";
 

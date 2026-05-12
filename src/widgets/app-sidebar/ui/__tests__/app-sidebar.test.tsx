@@ -1,11 +1,11 @@
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AppSidebar } from "@/widgets/app-sidebar";
-import { SidebarProvider } from "@/shared/ui/sidebar";
-import { TooltipProvider } from "@/shared/ui/tooltip";
+import { SidebarProvider } from "@/shared/shadcn/sidebar";
+import { TooltipProvider } from "@/shared/shadcn/tooltip";
 import { makeProject } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
+import { AppSidebar } from "@/widgets/app-sidebar";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),

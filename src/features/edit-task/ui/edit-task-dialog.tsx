@@ -2,10 +2,17 @@ import { IconAlertCircle, IconDeviceFloppy } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import { TaskFormFields } from "@/features/task-form";
-import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
-import { useEditTaskForm } from "../lib/use-edit-task-form";
+import { Alert, AlertDescription } from "@/shared/shadcn/alert";
+import { Button } from "@/shared/shadcn/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/shadcn/dialog";
+import { useEditTaskForm } from "../model/use-edit-task-form";
 
 type Props = {
   members: MemberWithUserOutput[];

@@ -1,10 +1,17 @@
 import { IconAlertCircle, IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
-import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { useCreateColumnForm } from "../lib/use-create-column-form";
+import { Alert, AlertDescription } from "@/shared/shadcn/alert";
+import { Button } from "@/shared/shadcn/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/shadcn/dialog";
+import { Input } from "@/shared/shadcn/input";
+import { Label } from "@/shared/shadcn/label";
+import { useCreateColumnForm } from "../model/use-create-column-form";
 
 type Props = {
   boardId: string;

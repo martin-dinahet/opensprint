@@ -3,7 +3,7 @@
 import { IconArrowRight, IconCalendar, IconLayoutKanban } from "@tabler/icons-react";
 import Link from "next/link";
 import type { ProjectListOutput } from "@/entities/project";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/shadcn/card";
 
 type Props = {
   project: ProjectListOutput;

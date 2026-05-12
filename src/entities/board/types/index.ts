@@ -2,7 +2,7 @@ export type {
   CreateBoardInput,
   ReorderBoardsInput,
   UpdateBoardInput,
-} from "@/server/features/board/dto";
+} from "@/server/use-cases/board/dto";
 
 export type BoardOutput = {
   id: string;

@@ -2,7 +2,7 @@
 
 import { PaletteIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/shadcn/toggle-group";
 import { themeItems } from "../lib/constants";
 
 export function ThemeToggleGroup() {

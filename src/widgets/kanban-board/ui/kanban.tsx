@@ -3,9 +3,9 @@
 import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useState, type ReactNode } from "react";
-import type { ColumnOutput } from "@/entities/column";
+import { type ReactNode, useState } from "react";
 import { kanbanCollisionDetection } from "@/entities/board/lib/kanban-dnd";
+import type { ColumnOutput } from "@/entities/column";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard, TaskCardContent } from "@/entities/task";
 import {
@@ -18,9 +18,14 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-} from "@/shared/ui/alert-dialog";
-import { Button } from "@/shared/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
+} from "@/shared/shadcn/alert-dialog";
+import { Button } from "@/shared/shadcn/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/shadcn/dropdown-menu";
 import { useProjectKanban } from "../lib/project-kanban-context";
 
 type RootProps = {

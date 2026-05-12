@@ -5,10 +5,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-import { Badge } from "@/shared/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
-import { Separator } from "@/shared/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
+import { Badge } from "@/shared/shadcn/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/shadcn/dialog";
+import { Separator } from "@/shared/shadcn/separator";
 
 type Props = {
   members: MemberWithUserOutput[];

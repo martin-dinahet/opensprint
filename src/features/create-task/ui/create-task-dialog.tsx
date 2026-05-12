@@ -1,10 +1,17 @@
 import { IconAlertCircle, IconLoader2, IconPlus } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
-import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { TaskFormFields } from "@/features/task-form";
-import { useCreateTaskForm } from "../lib/use-create-task-form";
+import { Alert, AlertDescription } from "@/shared/shadcn/alert";
+import { Button } from "@/shared/shadcn/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/shadcn/dialog";
+import { useCreateTaskForm } from "../model/use-create-task-form";
 
 type Props = {
   columnId: string;

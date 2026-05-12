@@ -4,7 +4,7 @@ export type {
   MoveTaskInput,
   ReorderTaskInput,
   UpdateTaskInput,
-} from "@/server/features/task/dto";
+} from "@/server/use-cases/task/dto";
 
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
 

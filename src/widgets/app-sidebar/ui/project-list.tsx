@@ -1,8 +1,8 @@
 import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
-import { Icon } from "@/shared/ui/icon";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/shadcn/collapsible";
+import { Icon } from "@/shared/shadcn/icon";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -10,7 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
-} from "@/shared/ui/sidebar";
+} from "@/shared/shadcn/sidebar";
+import { useAppSidebar } from "../lib/app-sidebar-context";
 import {
   collapsedTextClass,
   projectListLimit,
@@ -19,7 +20,6 @@ import {
   sidebarSectionClass,
   sidebarSectionTriggerClass,
 } from "../lib/constants";
-import { useAppSidebar } from "../lib/app-sidebar-context";
 
 export function ProjectList() {
   const { isProjectsLoading, projectId, projects } = useAppSidebar();

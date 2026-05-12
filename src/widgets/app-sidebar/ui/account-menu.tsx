@@ -2,10 +2,10 @@
 
 import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
-import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/ui/sidebar";
-import { collapsedTextClass, sidebarNavButtonClass } from "../lib/constants";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/shadcn/collapsible";
+import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/shadcn/sidebar";
 import { useAppSidebar } from "../lib/app-sidebar-context";
+import { collapsedTextClass, sidebarNavButtonClass } from "../lib/constants";
 import { UserAvatar } from "./user-avatar";
 
 export function AccountMenu() {

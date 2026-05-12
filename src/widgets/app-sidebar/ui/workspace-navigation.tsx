@@ -1,15 +1,15 @@
 import { LayoutDashboardIcon } from "lucide-react";
 import Link from "next/link";
+import { Icon } from "@/shared/shadcn/icon";
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/shared/ui/sidebar";
-import { Icon } from "@/shared/ui/icon";
-import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass } from "../lib/constants";
+} from "@/shared/shadcn/sidebar";
 import { useAppSidebar } from "../lib/app-sidebar-context";
+import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass } from "../lib/constants";
 
 export function WorkspaceNavigation() {
   const { pathname } = useAppSidebar();

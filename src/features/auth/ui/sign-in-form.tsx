@@ -3,12 +3,12 @@
 import { IconAlertCircle, IconArrowRight, IconLoader2, IconLock, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 import type { FC } from "react";
-import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Button, buttonVariants } from "@/shared/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Field, FieldError, FieldLabel } from "@/shared/ui/field";
-import { Input } from "@/shared/ui/input";
-import { useSignInForm } from "../lib/use-sign-in-form";
+import { Alert, AlertDescription } from "@/shared/shadcn/alert";
+import { Button, buttonVariants } from "@/shared/shadcn/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/shadcn/card";
+import { Field, FieldError, FieldLabel } from "@/shared/shadcn/field";
+import { Input } from "@/shared/shadcn/input";
+import { useSignInForm } from "../model/use-sign-in-form";
 
 export const SignInForm: FC = () => {
   const { action, fieldErrors, globalError, pending } = useSignInForm();

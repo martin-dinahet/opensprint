@@ -2,7 +2,7 @@ export type {
   CreateColumnInput,
   ReorderColumnsInput,
   UpdateColumnInput,
-} from "@/server/features/column/dto";
+} from "@/server/use-cases/column/dto";
 
 export type ColumnOutput = {
   id: string;

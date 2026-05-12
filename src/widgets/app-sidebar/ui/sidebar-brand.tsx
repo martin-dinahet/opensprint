@@ -1,6 +1,6 @@
 import { FolderKanbanIcon } from "lucide-react";
 import Link from "next/link";
-import { SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/ui/sidebar";
+import { SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared/shadcn/sidebar";
 import { collapsedTextClass } from "../lib/constants";
 
 export function SidebarBrand() {

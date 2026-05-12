@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Separator } from "@/shared/ui/separator";
-import { SidebarTrigger } from "@/shared/ui/sidebar";
+import { Separator } from "@/shared/shadcn/separator";
+import { SidebarTrigger } from "@/shared/shadcn/sidebar";
 
 type Props = {
   actions?: ReactNode;
