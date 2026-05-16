@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreateTaskInput, MoveTaskInput, TaskOutput, UpdateTaskInput } from "@/entities/task";
+import type {
+  CreateProjectTaskTagInput,
+  CreateTaskInput,
+  MoveTaskInput,
+  TaskOutput,
+  UpdateProjectTaskTagInput,
+  UpdateTaskInput,
+} from "@/entities/task";
 import { taskApi, taskKeys } from "@/entities/task/api";
 import { unwrapClientResult } from "@/shared/api/result";
 
@@ -120,6 +127,141 @@ export function useReorderTask() {
       unwrapClientResult(await taskApi.reorder(taskId, { position })),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    },
+  });
+}
+
+export function useProjectTaskTags(projectId: string) {
+  return useQuery({
+    queryKey: taskKeys.projectTags(projectId),
+    queryFn: async () => unwrapClientResult(await taskApi.listProjectTags(projectId)).tags,
+    enabled: !!projectId,
+  });
+}
+
+export function useCreateTaskItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, title }: { columnId: string; taskId: string; title: string }) =>
+      unwrapClientResult(await taskApi.createItem(taskId, { title })),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
+    },
+  });
+}
+
+export function useUpdateTaskItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      done,
+      itemId,
+      taskId,
+      title,
+    }: {
+      columnId: string;
+      done?: boolean;
+      itemId: string;
+      taskId: string;
+      title?: string;
+    }) => unwrapClientResult(await taskApi.updateItem(taskId, itemId, { done, title })),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
+    },
+  });
+}
+
+export function useDeleteTaskItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ itemId, taskId }: { columnId: string; itemId: string; taskId: string }) =>
+      unwrapClientResult(await taskApi.deleteItem(taskId, itemId)),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
+    },
+  });
+}
+
+export function useReorderTaskItems() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ itemIds, taskId }: { columnId: string; itemIds: string[]; taskId: string }) =>
+      unwrapClientResult(await taskApi.reorderItems(taskId, { itemIds })),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
+    },
+  });
+}
+
+export function useCreateProjectTaskTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ data, projectId }: { data: CreateProjectTaskTagInput; projectId: string }) =>
+      unwrapClientResult(await taskApi.createProjectTag(projectId, data)),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.projectTags(projectId) });
+    },
+  });
+}
+
+export function useUpdateProjectTaskTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      data,
+      projectId,
+      tagId,
+    }: {
+      data: UpdateProjectTaskTagInput;
+      projectId: string;
+      tagId: string;
+    }) => unwrapClientResult(await taskApi.updateProjectTag(projectId, tagId, data)),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.projectTags(projectId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    },
+  });
+}
+
+export function useDeleteProjectTaskTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, tagId }: { projectId: string; tagId: string }) =>
+      unwrapClientResult(await taskApi.deleteProjectTag(projectId, tagId)),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.projectTags(projectId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    },
+  });
+}
+
+export function useAttachTaskTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tagId, taskId }: { columnId: string; tagId: string; taskId: string }) =>
+      unwrapClientResult(await taskApi.attachTag(taskId, { tagId })),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
+    },
+  });
+}
+
+export function useDetachTaskTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tagId, taskId }: { columnId: string; tagId: string; taskId: string }) =>
+      unwrapClientResult(await taskApi.detachTag(taskId, tagId)),
+    onSuccess: (_, { columnId }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.list(columnId) });
     },
   });
 }

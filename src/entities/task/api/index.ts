@@ -1,10 +1,18 @@
 import type {
   AssignTaskInput,
+  AttachTaskTagInput,
+  CreateProjectTaskTagInput,
   CreateTaskInput,
+  CreateTaskItemInput,
   MoveTaskInput,
+  ProjectTaskTagOutput,
   ReorderTaskInput,
+  ReorderTaskItemsInput,
+  TaskItemOutput,
   TaskOutput,
+  UpdateProjectTaskTagInput,
   UpdateTaskInput,
+  UpdateTaskItemInput,
   UpdateTaskOutput,
 } from "@/entities/task";
 import { api } from "@/shared/api/client";
@@ -18,6 +26,7 @@ export const taskKeys = {
   list: (columnId: string) => [...taskKeys.lists(), columnId] as const,
   details: () => [...taskKeys.all, "detail"] as const,
   detail: (id: string) => [...taskKeys.details(), id] as const,
+  projectTags: (projectId: string) => [...taskKeys.all, "project-tags", projectId] as const,
 } as const;
 
 export const taskApi = {
@@ -70,6 +79,79 @@ export const taskApi = {
     return requestApiResult<{ id: string; position: number }>(
       () => api.tasks[":taskId"].reorder.$patch({ param: { taskId }, json: data }),
       "Failed to reorder task",
+    );
+  },
+
+  createItem: async (taskId: string, data: CreateTaskItemInput) => {
+    return requestApiResult<TaskItemOutput>(
+      () => api.tasks[":taskId"].items.$post({ param: { taskId }, json: data }),
+      "Failed to create task item",
+    );
+  },
+
+  updateItem: async (taskId: string, itemId: string, data: UpdateTaskItemInput) => {
+    return requestApiResult<TaskItemOutput>(
+      () => api.tasks[":taskId"].items[":itemId"].$patch({ param: { taskId, itemId }, json: data }),
+      "Failed to update task item",
+    );
+  },
+
+  deleteItem: async (taskId: string, itemId: string) => {
+    return requestApiResult<{ success: boolean }>(
+      () => api.tasks[":taskId"].items[":itemId"].$delete({ param: { taskId, itemId } }),
+      "Failed to delete task item",
+    );
+  },
+
+  reorderItems: async (taskId: string, data: ReorderTaskItemsInput) => {
+    return requestApiResult<{ items: TaskItemOutput[] }>(
+      () => api.tasks[":taskId"].items.reorder.$patch({ param: { taskId }, json: data }),
+      "Failed to reorder task items",
+    );
+  },
+
+  listProjectTags: async (projectId: string) => {
+    return requestApiResult<{ tags: ProjectTaskTagOutput[] }>(
+      () => api.projects[":id"]["task-tags"].$get({ param: { id: projectId } }),
+      "Failed to fetch task tags",
+      (body) => ({
+        tags: (body as { tags?: ProjectTaskTagOutput[] } | null)?.tags ?? [],
+      }),
+    );
+  },
+
+  createProjectTag: async (projectId: string, data: CreateProjectTaskTagInput) => {
+    return requestApiResult<ProjectTaskTagOutput>(
+      () => api.projects[":id"]["task-tags"].$post({ param: { id: projectId }, json: data }),
+      "Failed to create task tag",
+    );
+  },
+
+  updateProjectTag: async (projectId: string, tagId: string, data: UpdateProjectTaskTagInput) => {
+    return requestApiResult<ProjectTaskTagOutput>(
+      () => api.projects[":id"]["task-tags"][":tagId"].$patch({ param: { id: projectId, tagId }, json: data }),
+      "Failed to update task tag",
+    );
+  },
+
+  deleteProjectTag: async (projectId: string, tagId: string) => {
+    return requestApiResult<{ success: boolean }>(
+      () => api.projects[":id"]["task-tags"][":tagId"].$delete({ param: { id: projectId, tagId } }),
+      "Failed to delete task tag",
+    );
+  },
+
+  attachTag: async (taskId: string, data: AttachTaskTagInput) => {
+    return requestApiResult<ProjectTaskTagOutput>(
+      () => api.tasks[":taskId"].tags.$post({ param: { taskId }, json: data }),
+      "Failed to attach task tag",
+    );
+  },
+
+  detachTag: async (taskId: string, tagId: string) => {
+    return requestApiResult<{ success: boolean }>(
+      () => api.tasks[":taskId"].tags[":tagId"].$delete({ param: { taskId, tagId } }),
+      "Failed to detach task tag",
     );
   },
 };
