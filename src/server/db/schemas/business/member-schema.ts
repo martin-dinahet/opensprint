@@ -19,3 +19,7 @@ export const member = pgTable(
   },
   (table) => [index("member_project_id_idx").on(table.projectId), index("member_user_id_idx").on(table.userId)],
 );
+
+export type Member = typeof member.$inferSelect;
+export type NewMember = typeof member.$inferInsert;
+export type MemberUpdate = Partial<Omit<NewMember, "id" | "joinedAt">>;

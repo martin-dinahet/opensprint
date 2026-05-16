@@ -34,3 +34,7 @@ export const session = pgTable(
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );
+
+export type Session = typeof session.$inferSelect;
+export type NewSession = typeof session.$inferInsert;
+export type SessionUpdate = Partial<Omit<NewSession, "createdAt" | "id" | "updatedAt">>;

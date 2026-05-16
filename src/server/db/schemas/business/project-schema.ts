@@ -23,3 +23,7 @@ export const project = pgTable(
   },
   (table) => [index("project_name_idx").on(table.name)],
 );
+
+export type Project = typeof project.$inferSelect;
+export type NewProject = typeof project.$inferInsert;
+export type ProjectUpdate = Partial<Omit<NewProject, "createdAt" | "id" | "updatedAt">>;
