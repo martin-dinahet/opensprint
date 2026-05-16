@@ -7,6 +7,6 @@
 /.opencode
 /.agents
 
-.env
+.env*
 next-env.d.ts
 tsconfig.tsbuildinfo
