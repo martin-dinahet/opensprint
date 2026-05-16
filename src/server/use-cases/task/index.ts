@@ -5,18 +5,3 @@ export { ListTasksUseCase } from "./list-tasks";
 export { MoveTaskUseCase } from "./move-task";
 export { ReorderTaskUseCase } from "./reorder-task";
 export { UpdateTaskUseCase } from "./update-task";
-import { AssignTaskUseCase } from "./assign-task";
-import { CreateTaskUseCase } from "./create-task";
-import { DeleteTaskUseCase } from "./delete-task";
-import { ListTasksUseCase } from "./list-tasks";
-import { MoveTaskUseCase } from "./move-task";
-import { ReorderTaskUseCase } from "./reorder-task";
-import { UpdateTaskUseCase } from "./update-task";
-
-export const assignTask = AssignTaskUseCase.execute;
-export const createTask = CreateTaskUseCase.execute;
-export const deleteTask = DeleteTaskUseCase.execute;
-export const listTasks = ListTasksUseCase.execute;
-export const moveTask = MoveTaskUseCase.execute;
-export const reorderTask = ReorderTaskUseCase.execute;
-export const updateTask = UpdateTaskUseCase.execute;

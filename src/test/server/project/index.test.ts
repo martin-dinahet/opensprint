@@ -46,9 +46,8 @@ vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 
-const { createProject, deleteProject, getProject, listProjects, updateProject } = await import(
-  "@/server/use-cases/project"
-);
+const { CreateProjectUseCase, DeleteProjectUseCase, GetProjectUseCase, ListProjectsUseCase, UpdateProjectUseCase } =
+  await import("@/server/use-cases/project");
 
 const now = new Date("2026-01-01T00:00:00.000Z");
 const project = {
@@ -70,7 +69,7 @@ describe("project use cases", () => {
     memberRepositoryMock.findByUserId.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.findByIds.mockResolvedValue(ok([project]));
 
-    const result = await listProjects("user-1");
+    const result = await ListProjectsUseCase.execute("user-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual([project]);
@@ -80,7 +79,7 @@ describe("project use cases", () => {
   it("returns an empty project list for users without memberships", async () => {
     memberRepositoryMock.findByUserId.mockResolvedValue(ok([]));
 
-    const result = await listProjects("user-1");
+    const result = await ListProjectsUseCase.execute("user-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual([]);
@@ -92,7 +91,10 @@ describe("project use cases", () => {
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
 
-    const result = await createProject("user-1", { name: "New Project", description: "Useful description" });
+    const result = await CreateProjectUseCase.execute("user-1", {
+      name: "New Project",
+      description: "Useful description",
+    });
 
     expect(result.isOk()).toBe(true);
     expect(projectRepositoryMock.create).toHaveBeenCalledWith({
@@ -117,7 +119,7 @@ describe("project use cases", () => {
     nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
     projectRepositoryMock.create.mockResolvedValue(err(new Error("database unavailable")));
 
-    const result = await createProject("user-1", { name: "New Project" });
+    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -131,7 +133,7 @@ describe("project use cases", () => {
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(err(new Error("member insert failed")));
 
-    const result = await createProject("user-1", { name: "New Project" });
+    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -144,7 +146,7 @@ describe("project use cases", () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
 
-    const result = await getProject("user-1", "project-1");
+    const result = await GetProjectUseCase.execute("user-1", "project-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual(project);
@@ -153,7 +155,7 @@ describe("project use cases", () => {
   it("returns not found when a project does not exist", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await getProject("user-1", "missing-project");
+    const result = await GetProjectUseCase.execute("user-1", "missing-project");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -166,7 +168,7 @@ describe("project use cases", () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
-    const result = await getProject("user-2", "project-1");
+    const result = await GetProjectUseCase.execute("user-2", "project-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -181,7 +183,7 @@ describe("project use cases", () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+    const result = await UpdateProjectUseCase.execute("user-1", "project-1", { name: "Updated" });
 
     expect(result.isOk()).toBe(true);
     expect(projectRepositoryMock.update).toHaveBeenCalledWith("project-1", {
@@ -195,7 +197,7 @@ describe("project use cases", () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "member" }]));
 
-    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+    const result = await UpdateProjectUseCase.execute("user-1", "project-1", { name: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -209,7 +211,7 @@ describe("project use cases", () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.update.mockResolvedValue(err(new Error("update failed")));
 
-    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+    const result = await UpdateProjectUseCase.execute("user-1", "project-1", { name: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -223,7 +225,7 @@ describe("project use cases", () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateProject("user-1", "project-1", { name: "Updated" });
+    const result = await UpdateProjectUseCase.execute("user-1", "project-1", { name: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -240,7 +242,7 @@ describe("project use cases", () => {
     memberRepositoryMock.deleteByProject.mockResolvedValue(ok(undefined));
     projectRepositoryMock.delete.mockResolvedValue(ok(undefined));
 
-    const result = await deleteProject("user-1", "project-1");
+    const result = await DeleteProjectUseCase.execute("user-1", "project-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
@@ -254,7 +256,7 @@ describe("project use cases", () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "admin" }]));
 
-    const result = await deleteProject("user-1", "project-1");
+    const result = await DeleteProjectUseCase.execute("user-1", "project-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {

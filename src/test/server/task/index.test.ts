@@ -38,9 +38,15 @@ vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 
-const { assignTask, createTask, deleteTask, listTasks, moveTask, reorderTask, updateTask } = await import(
-  "@/server/use-cases/task"
-);
+const {
+  AssignTaskUseCase,
+  CreateTaskUseCase,
+  DeleteTaskUseCase,
+  ListTasksUseCase,
+  MoveTaskUseCase,
+  ReorderTaskUseCase,
+  UpdateTaskUseCase,
+} = await import("@/server/use-cases/task");
 
 const now = new Date("2026-01-01T00:00:00.000Z");
 const column = { id: "column-1", projectId: "project-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
@@ -78,7 +84,7 @@ describe("task use cases", () => {
   it("lists tasks for project members", async () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([task]));
 
-    const result = await listTasks("user-1", "column-1");
+    const result = await ListTasksUseCase.execute("user-1", "column-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual([task]);
@@ -88,7 +94,7 @@ describe("task use cases", () => {
   it("rejects task listing for non-members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
-    const result = await listTasks("user-2", "column-1");
+    const result = await ListTasksUseCase.execute("user-2", "column-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -100,7 +106,7 @@ describe("task use cases", () => {
   it("wraps task listing failures", async () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(err(new Error("read failed")));
 
-    const result = await listTasks("user-1", "column-1");
+    const result = await ListTasksUseCase.execute("user-1", "column-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -112,7 +118,7 @@ describe("task use cases", () => {
   it("rejects task listing when the column does not exist", async () => {
     columnRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await listTasks("user-1", "missing-column");
+    const result = await ListTasksUseCase.execute("user-1", "missing-column");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -127,7 +133,7 @@ describe("task use cases", () => {
     taskRepositoryMock.create.mockResolvedValue(ok(undefined));
     taskRepositoryMock.findById.mockResolvedValue(ok([{ ...task, id: "task-new", position: 1 }]));
 
-    const result = await createTask("user-1", "column-1", {
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", {
       title: "Review PR",
       assigneeId: "assignee-member",
       priority: "high",
@@ -150,7 +156,7 @@ describe("task use cases", () => {
   it("rejects task creation for non-members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
-    const result = await createTask("user-2", "column-1", { title: "Review PR" });
+    const result = await CreateTaskUseCase.execute("user-2", "column-1", { title: "Review PR" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -162,7 +168,7 @@ describe("task use cases", () => {
   it("rejects task creation when the assignee is outside the project", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([{ ...assigneeMembership, projectId: "other-project" }]));
 
-    const result = await createTask("user-1", "column-1", {
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", {
       title: "Review PR",
       assigneeId: "assignee-member",
     });
@@ -177,7 +183,7 @@ describe("task use cases", () => {
   it("wraps task fetch failures during create", async () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(err(new Error("read failed")));
 
-    const result = await createTask("user-1", "column-1", { title: "Review PR" });
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", { title: "Review PR" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -190,7 +196,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([]));
     taskRepositoryMock.create.mockResolvedValue(err(new Error("insert failed")));
 
-    const result = await createTask("user-1", "column-1", { title: "Review PR" });
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", { title: "Review PR" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -204,7 +210,7 @@ describe("task use cases", () => {
     taskRepositoryMock.create.mockResolvedValue(ok(undefined));
     taskRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await createTask("user-1", "column-1", { title: "Review PR" });
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", { title: "Review PR" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -219,7 +225,7 @@ describe("task use cases", () => {
       .mockResolvedValueOnce(ok([{ ...task, title: "Updated", updatedAt: now }]));
     taskRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateTask("user-1", "column-1", "task-1", { title: "Updated" });
+    const result = await UpdateTaskUseCase.execute("user-1", "column-1", "task-1", { title: "Updated" });
 
     expect(result.isOk()).toBe(true);
     expect(taskRepositoryMock.update).toHaveBeenCalledWith("task-1", { title: "Updated" });
@@ -229,7 +235,7 @@ describe("task use cases", () => {
   it("returns not found before updating missing tasks", async () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await updateTask("user-1", "column-1", "missing-task", { title: "Updated" });
+    const result = await UpdateTaskUseCase.execute("user-1", "column-1", "missing-task", { title: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -242,7 +248,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     taskRepositoryMock.update.mockResolvedValue(err(new Error("update failed")));
 
-    const result = await updateTask("user-1", "column-1", "task-1", { title: "Updated" });
+    const result = await UpdateTaskUseCase.execute("user-1", "column-1", "task-1", { title: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -255,7 +261,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValueOnce(ok([task])).mockResolvedValueOnce(ok([]));
     taskRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateTask("user-1", "column-1", "task-1", { title: "Updated" });
+    const result = await UpdateTaskUseCase.execute("user-1", "column-1", "task-1", { title: "Updated" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -268,7 +274,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     taskRepositoryMock.delete.mockResolvedValue(ok(undefined));
 
-    const result = await deleteTask("user-1", "column-1", "task-1");
+    const result = await DeleteTaskUseCase.execute("user-1", "column-1", "task-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
@@ -278,7 +284,7 @@ describe("task use cases", () => {
   it("forbids regular members from deleting tasks", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "member" }]));
 
-    const result = await deleteTask("user-1", "column-1", "task-1");
+    const result = await DeleteTaskUseCase.execute("user-1", "column-1", "task-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -290,7 +296,7 @@ describe("task use cases", () => {
   it("returns not found before deleting missing tasks", async () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await deleteTask("user-1", "column-1", "missing-task");
+    const result = await DeleteTaskUseCase.execute("user-1", "column-1", "missing-task");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -303,7 +309,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     taskRepositoryMock.delete.mockResolvedValue(err(new Error("delete failed")));
 
-    const result = await deleteTask("user-1", "column-1", "task-1");
+    const result = await DeleteTaskUseCase.execute("user-1", "column-1", "task-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -317,7 +323,7 @@ describe("task use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([assigneeMembership]));
     taskRepositoryMock.updateAssignee.mockResolvedValue(ok(undefined));
 
-    const result = await assignTask("user-1", "task-1", { assigneeId: "assignee-member" });
+    const result = await AssignTaskUseCase.execute("user-1", "task-1", { assigneeId: "assignee-member" });
 
     expect(result.isOk()).toBe(true);
     expect(taskRepositoryMock.updateAssignee).toHaveBeenCalledWith("task-1", "assignee-member");
@@ -328,7 +334,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "member" }]));
 
-    const result = await assignTask("user-1", "task-1", { assigneeId: "assignee-member" });
+    const result = await AssignTaskUseCase.execute("user-1", "task-1", { assigneeId: "assignee-member" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -340,7 +346,7 @@ describe("task use cases", () => {
   it("returns not found when assigning missing tasks", async () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await assignTask("user-1", "missing-task", { assigneeId: null });
+    const result = await AssignTaskUseCase.execute("user-1", "missing-task", { assigneeId: null });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -352,7 +358,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     taskRepositoryMock.updateAssignee.mockResolvedValue(err(new Error("assign failed")));
 
-    const result = await assignTask("user-1", "task-1", { assigneeId: null });
+    const result = await AssignTaskUseCase.execute("user-1", "task-1", { assigneeId: null });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -372,7 +378,7 @@ describe("task use cases", () => {
     );
     taskRepositoryMock.updateColumnAndPosition.mockResolvedValue(ok(undefined));
 
-    const result = await moveTask("user-1", "task-1", { columnId: "column-2" });
+    const result = await MoveTaskUseCase.execute("user-1", "task-1", { columnId: "column-2" });
 
     expect(result.isOk()).toBe(true);
     expect(taskRepositoryMock.updateColumnAndPosition).toHaveBeenCalledWith("task-1", "column-2", 2);
@@ -385,7 +391,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([]));
     taskRepositoryMock.updateColumnAndPosition.mockResolvedValue(ok(undefined));
 
-    const result = await moveTask("user-1", "task-1", { columnId: "column-2", position: 0 });
+    const result = await MoveTaskUseCase.execute("user-1", "task-1", { columnId: "column-2", position: 0 });
 
     expect(result.isOk()).toBe(true);
     expect(taskRepositoryMock.updateColumnAndPosition).toHaveBeenCalledWith("task-1", "column-2", 0);
@@ -396,7 +402,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findById.mockResolvedValue(ok([task]));
     columnRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await moveTask("user-1", "task-1", { columnId: "missing-column" });
+    const result = await MoveTaskUseCase.execute("user-1", "task-1", { columnId: "missing-column" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -410,7 +416,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([]));
     taskRepositoryMock.updateColumnAndPosition.mockResolvedValue(err(new Error("move failed")));
 
-    const result = await moveTask("user-1", "task-1", { columnId: "column-2" });
+    const result = await MoveTaskUseCase.execute("user-1", "task-1", { columnId: "column-2" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -425,7 +431,7 @@ describe("task use cases", () => {
       ok([task, { ...task, id: "task-2", position: 1 }, { ...task, id: "task-3", position: 2 }]),
     );
 
-    const result = await reorderTask("user-1", "task-1", { position: 2 });
+    const result = await ReorderTaskUseCase.execute("user-1", "task-1", { position: 2 });
 
     expect(result.isOk()).toBe(true);
     expect(taskRepositoryMock.updatePosition).toHaveBeenNthCalledWith(1, "task-2", 0);
@@ -439,7 +445,7 @@ describe("task use cases", () => {
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([task]));
     taskRepositoryMock.updatePosition.mockResolvedValue(err(new Error("database unavailable")));
 
-    const result = await reorderTask("user-1", "task-1", { position: 3 });
+    const result = await ReorderTaskUseCase.execute("user-1", "task-1", { position: 3 });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {

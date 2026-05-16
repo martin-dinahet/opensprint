@@ -30,7 +30,9 @@ vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 
-const { addMember, listMembers, removeMember, updateMember } = await import("@/server/use-cases/member");
+const { AddMemberUseCase, ListMembersUseCase, RemoveMemberUseCase, UpdateMemberUseCase } = await import(
+  "@/server/use-cases/member"
+);
 
 const joinedAt = new Date("2026-01-01T00:00:00.000Z");
 const ownerMembership = { id: "owner-member", projectId: "project-1", userId: "owner-user", role: "owner", joinedAt };
@@ -55,7 +57,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findByProject.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.findUsers.mockResolvedValue(ok([regularUser]));
 
-    const result = await listMembers("owner-user", "project-1");
+    const result = await ListMembersUseCase.execute("owner-user", "project-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual([
@@ -73,7 +75,7 @@ describe("member use cases", () => {
   it("wraps member listing failures", async () => {
     memberRepositoryMock.findByProject.mockResolvedValue(err(new Error("read failed")));
 
-    const result = await listMembers("owner-user", "project-1");
+    const result = await ListMembersUseCase.execute("owner-user", "project-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -85,7 +87,7 @@ describe("member use cases", () => {
   it("rejects member listing for non-members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
-    const result = await listMembers("outsider", "project-1");
+    const result = await ListMembersUseCase.execute("outsider", "project-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -101,7 +103,10 @@ describe("member use cases", () => {
       .mockResolvedValueOnce(ok([]));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
 
-    const result = await addMember("owner-user", "project-1", { email: "regular@example.com", role: "admin" });
+    const result = await AddMemberUseCase.execute("owner-user", "project-1", {
+      email: "regular@example.com",
+      role: "admin",
+    });
 
     expect(result.isOk()).toBe(true);
     expect(memberRepositoryMock.create).toHaveBeenCalledWith({
@@ -121,7 +126,10 @@ describe("member use cases", () => {
   it("rejects member adds from regular members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([regularMembership]));
 
-    const result = await addMember("regular-user", "project-1", { email: "new@example.com", role: "member" });
+    const result = await AddMemberUseCase.execute("regular-user", "project-1", {
+      email: "new@example.com",
+      role: "member",
+    });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -133,7 +141,10 @@ describe("member use cases", () => {
   it("returns not found when adding an unknown user", async () => {
     memberRepositoryMock.findUserByEmail.mockResolvedValue(ok([]));
 
-    const result = await addMember("owner-user", "project-1", { email: "missing@example.com", role: "member" });
+    const result = await AddMemberUseCase.execute("owner-user", "project-1", {
+      email: "missing@example.com",
+      role: "member",
+    });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -148,7 +159,10 @@ describe("member use cases", () => {
       .mockResolvedValueOnce(ok([ownerMembership]))
       .mockResolvedValueOnce(ok([regularMembership]));
 
-    const result = await addMember("owner-user", "project-1", { email: "regular@example.com", role: "member" });
+    const result = await AddMemberUseCase.execute("owner-user", "project-1", {
+      email: "regular@example.com",
+      role: "member",
+    });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -164,7 +178,10 @@ describe("member use cases", () => {
       .mockResolvedValueOnce(ok([]));
     memberRepositoryMock.create.mockResolvedValue(err(new Error("insert failed")));
 
-    const result = await addMember("owner-user", "project-1", { email: "regular@example.com", role: "member" });
+    const result = await AddMemberUseCase.execute("owner-user", "project-1", {
+      email: "regular@example.com",
+      role: "member",
+    });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -177,7 +194,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateMember("owner-user", "project-1", "regular-member", { role: "admin" });
+    const result = await UpdateMemberUseCase.execute("owner-user", "project-1", "regular-member", { role: "admin" });
 
     expect(result.isOk()).toBe(true);
     expect(memberRepositoryMock.update).toHaveBeenCalledWith("regular-member", { role: "admin" });
@@ -187,7 +204,7 @@ describe("member use cases", () => {
   it("rejects member updates from admins and members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...ownerMembership, role: "admin" }]));
 
-    const result = await updateMember("owner-user", "project-1", "regular-member", { role: "admin" });
+    const result = await UpdateMemberUseCase.execute("owner-user", "project-1", "regular-member", { role: "admin" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -199,7 +216,7 @@ describe("member use cases", () => {
   it("returns not found when updating a missing member", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await updateMember("owner-user", "project-1", "missing-member", { role: "admin" });
+    const result = await UpdateMemberUseCase.execute("owner-user", "project-1", "missing-member", { role: "admin" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -210,7 +227,7 @@ describe("member use cases", () => {
   it("does not allow changing the owner role", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([ownerMembership]));
 
-    const result = await updateMember("owner-user", "project-1", "owner-member", { role: "admin" });
+    const result = await UpdateMemberUseCase.execute("owner-user", "project-1", "owner-member", { role: "admin" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -223,7 +240,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.update.mockResolvedValue(err(new Error("update failed")));
 
-    const result = await updateMember("owner-user", "project-1", "regular-member", { role: "admin" });
+    const result = await UpdateMemberUseCase.execute("owner-user", "project-1", "regular-member", { role: "admin" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -236,7 +253,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.delete.mockResolvedValue(ok(undefined));
 
-    const result = await removeMember("owner-user", "project-1", "regular-member");
+    const result = await RemoveMemberUseCase.execute("owner-user", "project-1", "regular-member");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
@@ -248,7 +265,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     taskRepositoryMock.clearAssignee.mockResolvedValue(err(new Error("task update failed")));
 
-    const result = await removeMember("owner-user", "project-1", "regular-member");
+    const result = await RemoveMemberUseCase.execute("owner-user", "project-1", "regular-member");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -261,7 +278,7 @@ describe("member use cases", () => {
   it("returns not found when removing a missing member", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([]));
 
-    const result = await removeMember("owner-user", "project-1", "missing-member");
+    const result = await RemoveMemberUseCase.execute("owner-user", "project-1", "missing-member");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -273,7 +290,7 @@ describe("member use cases", () => {
   it("does not allow removing the owner", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([ownerMembership]));
 
-    const result = await removeMember("owner-user", "project-1", "owner-member");
+    const result = await RemoveMemberUseCase.execute("owner-user", "project-1", "owner-member");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -286,7 +303,7 @@ describe("member use cases", () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([regularMembership]));
     memberRepositoryMock.delete.mockResolvedValue(err(new Error("database unavailable")));
 
-    const result = await removeMember("owner-user", "project-1", "regular-member");
+    const result = await RemoveMemberUseCase.execute("owner-user", "project-1", "regular-member");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {

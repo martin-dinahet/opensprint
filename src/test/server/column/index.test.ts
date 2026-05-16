@@ -44,9 +44,8 @@ vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 
-const { createColumn, deleteColumn, listColumns, reorderColumns, updateColumn } = await import(
-  "@/server/use-cases/column"
-);
+const { CreateColumnUseCase, DeleteColumnUseCase, ListColumnsUseCase, ReorderColumnsUseCase, UpdateColumnUseCase } =
+  await import("@/server/use-cases/column");
 
 const now = new Date("2026-01-01T00:00:00.000Z");
 const project = { id: "project-1", name: "Launch", description: null, createdAt: now, updatedAt: now };
@@ -65,7 +64,7 @@ describe("column use cases", () => {
   it("lists columns for project members", async () => {
     columnRepositoryMock.findByProject.mockResolvedValue(ok([column]));
 
-    const result = await listColumns("user-1", "project-1");
+    const result = await ListColumnsUseCase.execute("user-1", "project-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual([column]);
@@ -75,7 +74,7 @@ describe("column use cases", () => {
   it("rejects column listing for non-members", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([]));
 
-    const result = await listColumns("user-2", "project-1");
+    const result = await ListColumnsUseCase.execute("user-2", "project-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) expect(result.error.statusCode).toBe(403);
@@ -87,7 +86,7 @@ describe("column use cases", () => {
     columnRepositoryMock.create.mockResolvedValue(ok(undefined));
     columnRepositoryMock.findById.mockResolvedValue(ok([{ ...column, id: "column-new", name: "Doing", position: 1 }]));
 
-    const result = await createColumn("user-1", "project-1", { name: "Doing" });
+    const result = await CreateColumnUseCase.execute("user-1", "project-1", { name: "Doing" });
 
     expect(result.isOk()).toBe(true);
     expect(columnRepositoryMock.create).toHaveBeenCalledWith({
@@ -102,7 +101,7 @@ describe("column use cases", () => {
   it("wraps repository failures during create", async () => {
     columnRepositoryMock.findByProject.mockResolvedValue(err(new Error("database unavailable")));
 
-    const result = await createColumn("user-1", "project-1", { name: "Doing" });
+    const result = await CreateColumnUseCase.execute("user-1", "project-1", { name: "Doing" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -117,7 +116,7 @@ describe("column use cases", () => {
       .mockResolvedValueOnce(ok([{ ...column, name: "Updated" }]));
     columnRepositoryMock.update.mockResolvedValue(ok(undefined));
 
-    const result = await updateColumn("user-1", "project-1", "column-1", { name: "Updated" });
+    const result = await UpdateColumnUseCase.execute("user-1", "project-1", "column-1", { name: "Updated" });
 
     expect(result.isOk()).toBe(true);
     expect(columnRepositoryMock.update).toHaveBeenCalledWith("column-1", { name: "Updated" });
@@ -128,7 +127,7 @@ describe("column use cases", () => {
     columnRepositoryMock.findById.mockResolvedValue(ok([column]));
     columnRepositoryMock.delete.mockResolvedValue(ok(undefined));
 
-    const result = await deleteColumn("user-1", "project-1", "column-1");
+    const result = await DeleteColumnUseCase.execute("user-1", "project-1", "column-1");
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
@@ -139,7 +138,7 @@ describe("column use cases", () => {
   it("forbids regular members from deleting columns", async () => {
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([{ ...membership, role: "member" }]));
 
-    const result = await deleteColumn("user-1", "project-1", "column-1");
+    const result = await DeleteColumnUseCase.execute("user-1", "project-1", "column-1");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) expect(result.error.statusCode).toBe(403);
@@ -150,7 +149,7 @@ describe("column use cases", () => {
     columnRepositoryMock.findByProject.mockResolvedValue(ok([column, { ...column, id: "column-2", position: 1 }]));
     columnRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
 
-    const result = await reorderColumns("user-1", "project-1", ["column-2", "column-1"]);
+    const result = await ReorderColumnsUseCase.execute("user-1", "project-1", ["column-2", "column-1"]);
 
     expect(result.isOk()).toBe(true);
     expect(columnRepositoryMock.updatePosition).toHaveBeenNthCalledWith(1, "column-2", 0);
@@ -160,7 +159,7 @@ describe("column use cases", () => {
   it("rejects reorder requests with unknown column ids", async () => {
     columnRepositoryMock.findByProject.mockResolvedValue(ok([column]));
 
-    const result = await reorderColumns("user-1", "project-1", ["column-1", "other-column"]);
+    const result = await ReorderColumnsUseCase.execute("user-1", "project-1", ["column-1", "other-column"]);
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) expect(result.error.statusCode).toBe(404);
