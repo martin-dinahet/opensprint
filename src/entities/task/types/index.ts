@@ -1,24 +1,53 @@
 export type {
   AssignTaskInput,
+  AttachTaskTagInput,
+  CreateProjectTaskTagInput,
   CreateTaskInput,
+  CreateTaskItemInput,
   MoveTaskInput,
   ReorderTaskInput,
+  ReorderTaskItemsInput,
+  UpdateProjectTaskTagInput,
   UpdateTaskInput,
+  UpdateTaskItemInput,
 } from "@/server/use-cases/task/dto";
 
-export type TaskPriority = "low" | "medium" | "high" | "urgent";
+import type { ProjectTaskTag, Task, TaskItem } from "@/shared/types";
 
-export type TaskOutput = {
-  id: string;
-  columnId: string;
-  assigneeId: string | null;
-  title: string;
-  description: string | null;
-  priority: TaskPriority;
-  position: number;
-  dueDate: string | null;
+export type TaskPriority = Task["priority"];
+
+export type TaskItemOutput = {
+  id: TaskItem["id"];
+  taskId: TaskItem["taskId"];
+  title: TaskItem["title"];
+  done: TaskItem["done"];
+  position: TaskItem["position"];
   createdAt: string;
   updatedAt: string;
 };
 
-export type UpdateTaskOutput = Omit<TaskOutput, "createdAt">;
+export type ProjectTaskTagOutput = {
+  id: ProjectTaskTag["id"];
+  projectId: ProjectTaskTag["projectId"];
+  name: ProjectTaskTag["name"];
+  color: ProjectTaskTag["color"];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TaskOutput = {
+  id: Task["id"];
+  columnId: Task["columnId"];
+  assigneeId: Exclude<Task["assigneeId"], undefined>;
+  title: Task["title"];
+  description: Exclude<Task["description"], undefined>;
+  priority: TaskPriority;
+  position: Task["position"];
+  dueDate: string | null;
+  createdAt: string;
+  items: TaskItemOutput[];
+  tags: ProjectTaskTagOutput[];
+  updatedAt: string;
+};
+
+export type UpdateTaskOutput = TaskOutput;

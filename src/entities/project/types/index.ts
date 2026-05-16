@@ -3,19 +3,18 @@ export type {
   UpdateProjectInput,
 } from "@/server/use-cases/project/dto";
 
+import type { Project } from "@/shared/types";
+
 export type ProjectListOutput = {
-  id: string;
-  name: string;
-  description: string | null;
+  id: Project["id"];
+  name: Project["name"];
+  description: Exclude<Project["description"], undefined>;
   createdAt: string;
   updatedAt: string;
 };
 
 export type ProjectOutput = ProjectListOutput;
 
-export type UpdateProjectOutput = {
-  id: string;
-  name: string;
-  description: string | null;
+export type UpdateProjectOutput = Pick<ProjectListOutput, "description" | "id" | "name"> & {
   updatedAt: string;
 };
