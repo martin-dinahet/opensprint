@@ -6,6 +6,7 @@ import { authClient } from "@/shared/lib/auth-client";
 import { LoadingScreen } from "@/shared/shadcn/loading-screen";
 import { SidebarInset, SidebarProvider } from "@/shared/shadcn/sidebar";
 import { AppSidebar } from "@/widgets/app-sidebar";
+import { HeaderWidget } from "@/widgets/header";
 
 type Props = {
   children: ReactNode;
@@ -21,6 +22,7 @@ export default function DashboardLayout({ children }: Props) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="min-h-[calc(100svh-1rem)] overflow-hidden border border-border/70">
+        <HeaderWidget />
         {children}
       </SidebarInset>
     </SidebarProvider>
