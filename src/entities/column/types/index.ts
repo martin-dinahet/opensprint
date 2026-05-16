@@ -4,19 +4,17 @@ export type {
   UpdateColumnInput,
 } from "@/server/use-cases/column/dto";
 
+import type { Column } from "@/shared/types";
+
 export type ColumnOutput = {
-  id: string;
-  projectId: string;
-  name: string;
-  position: number;
+  id: Column["id"];
+  projectId: Column["projectId"];
+  name: Column["name"];
+  position: Column["position"];
   createdAt: string;
   updatedAt: string;
 };
 
-export type UpdateColumnOutput = {
-  id: string;
-  projectId: string;
-  name: string;
-  position: number;
+export type UpdateColumnOutput = Pick<ColumnOutput, "id" | "name" | "position" | "projectId"> & {
   updatedAt: string;
 };

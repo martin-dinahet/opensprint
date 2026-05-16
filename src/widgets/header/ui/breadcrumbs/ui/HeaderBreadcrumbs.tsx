@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type FC, Fragment } from "react";
+import { useProject } from "@/entities/project";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,8 +17,10 @@ import { formatLabel } from "../lib/format-label";
 export const HeaderBreadcrumbs: FC = () => {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
+  const projectId = segments[0] === "projects" ? segments[1] : undefined;
+  const { data: project } = useProject(projectId ?? "");
   const breadcrumbs = segments.map((segment, index) => ({
-    label: formatLabel(segment),
+    label: index === 1 && segments[0] === "projects" ? (project?.name ?? formatLabel(segment)) : formatLabel(segment),
     href: `/${segments.slice(0, index + 1).join("/")}`,
   }));
 

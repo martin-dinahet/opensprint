@@ -3,6 +3,7 @@ import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { task } from "@/server/db/schema";
 import type { CreateTaskInput, UpdateTaskInput } from "@/server/use-cases/task/dto";
+import type { NewTask, TaskUpdate } from "@/shared/types";
 
 export class TaskRepository {
   async findById(id: string) {
@@ -13,7 +14,7 @@ export class TaskRepository {
     return handle(() => db.select().from(task).where(eq(task.columnId, columnId)).orderBy(asc(task.position)));
   }
 
-  async create(data: CreateTaskInput & { id: string; columnId: string; position: number }) {
+  async create(data: CreateTaskInput & Pick<NewTask, "columnId" | "id" | "position">) {
     return handle(() =>
       db.insert(task).values({
         id: data.id,
@@ -29,7 +30,7 @@ export class TaskRepository {
   }
 
   async update(id: string, data: UpdateTaskInput) {
-    const updateData: Record<string, unknown> = {};
+    const updateData: TaskUpdate = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.priority !== undefined) updateData.priority = data.priority;

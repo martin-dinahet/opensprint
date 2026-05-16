@@ -1,8 +1,6 @@
 "use client";
 
 import { IconCalendar, IconFlag, IconUser } from "@tabler/icons-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
@@ -79,34 +77,9 @@ export const TaskDetailDialog = ({ members, onOpenChange, open, task }: Props) =
             <section className="flex flex-col gap-3">
               <h3 className="font-medium text-sm">Description</h3>
               {task.description ? (
-                <div className="max-w-none rounded-md border bg-background p-4 text-sm leading-6">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ node: _node, ...props }) => (
-                        <a
-                          className="font-medium underline underline-offset-4"
-                          rel="noreferrer"
-                          target="_blank"
-                          {...props}
-                        />
-                      ),
-                      code: ({ node: _node, ...props }) => (
-                        <code className="rounded bg-muted px-1 py-0.5 text-xs" {...props} />
-                      ),
-                      h1: ({ node: _node, ...props }) => <h1 className="mb-2 font-semibold text-lg" {...props} />,
-                      h2: ({ node: _node, ...props }) => <h2 className="mb-2 font-semibold text-base" {...props} />,
-                      li: ({ node: _node, ...props }) => <li className="ml-4 list-disc" {...props} />,
-                      p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
-                      pre: ({ node: _node, ...props }) => (
-                        <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs" {...props} />
-                      ),
-                      ul: ({ node: _node, ...props }) => <ul className="mb-3 flex flex-col gap-1" {...props} />,
-                    }}
-                  >
-                    {task.description}
-                  </ReactMarkdown>
-                </div>
+                <p className="whitespace-pre-wrap rounded-md border bg-background p-4 text-sm leading-6">
+                  {task.description}
+                </p>
               ) : (
                 <div className="rounded-md border border-dashed p-6 text-center text-muted-foreground text-sm">
                   No description yet.

@@ -1,9 +1,8 @@
-type User = {
-  email?: string | null;
-  name?: string | null;
-};
+import type { User } from "@/shared/types";
 
-export const getInitials = (user?: User | null) => {
+type InitialsUser = Partial<Pick<User, "email" | "name">>;
+
+export const getInitials = (user?: InitialsUser | null) => {
   const source = user?.name || user?.email || "OpenSprint";
   const [first = "", second = ""] = source.split(/[\s@.]+/);
 

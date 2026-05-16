@@ -44,3 +44,7 @@ export const account = pgTable(
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );
+
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+export type AccountUpdate = Partial<Omit<NewAccount, "createdAt" | "id" | "updatedAt">>;

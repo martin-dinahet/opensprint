@@ -1,18 +1,18 @@
 "use client";
 
 import { Loader2Icon, MoreHorizontalIcon, PlusIcon, Trash2Icon, UserPlusIcon } from "lucide-react";
-import { use, useState, useTransition } from "react";
+import { use, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import {
-  type MemberWithUserOutput,
   type MemberRole,
+  type MemberWithUserOutput,
   useAddMember,
   useMembers,
   useRemoveMember,
   useUpdateMember,
 } from "@/entities/member";
-import { useProject } from "@/entities/project";
+import { ProjectTabs } from "@/features/project-tabs";
 import { handleClientResult } from "@/shared/api/result";
 import { authClient } from "@/shared/lib/auth-client";
 import { parseFormData } from "@/shared/lib/forms";
@@ -47,7 +47,8 @@ import { Input } from "@/shared/shadcn/input";
 import { LoadingScreen } from "@/shared/shadcn/loading-screen";
 import { NativeSelect, NativeSelectOption } from "@/shared/shadcn/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/shadcn/table";
-import { AppShellHeader, UserAvatar } from "@/widgets/app-sidebar";
+import { UserAvatar } from "@/widgets/app-sidebar";
+import { useDashboardHeader } from "@/widgets/header";
 
 const addMemberSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
@@ -61,7 +62,6 @@ type Props = {
 export default function Page({ params }: Props) {
   const { id: projectId } = use(params);
   const session = authClient.useSession();
-  const { data: project } = useProject(projectId);
   const { data: members = [], isLoading } = useMembers(projectId);
   const addMember = useAddMember(projectId);
   const updateMember = useUpdateMember(projectId);
@@ -73,6 +73,14 @@ export default function Page({ params }: Props) {
   const currentMember = members.find((member) => member.userId === session.data?.user.id);
   const canManageMembers = currentMember?.role === "owner" || currentMember?.role === "admin";
   const canChangeRoles = currentMember?.role === "owner";
+  const header = useMemo(
+    () => ({
+      actions: <ProjectTabs activeTab="members" projectId={projectId} />,
+    }),
+    [projectId],
+  );
+
+  useDashboardHeader(header);
 
   const inviteMember = (formData: FormData) => {
     startTransition(async () => {
@@ -119,25 +127,18 @@ export default function Page({ params }: Props) {
 
   return (
     <>
-      <AppShellHeader
-        title="Members"
-        eyebrow={project?.name ?? "Project"}
-        actions={
-          canManageMembers && (
-            <Button size="sm" onClick={() => setAddOpen(true)}>
-              <UserPlusIcon />
-              Add member
-            </Button>
-          )
-        }
-      />
-
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
               Manage the people who can see this project, move tasks, and administer access.
             </p>
+            {canManageMembers ? (
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <UserPlusIcon />
+                Add member
+              </Button>
+            ) : null}
           </div>
 
           {isLoading ? (

@@ -3,6 +3,7 @@ import { AppError, NotFoundError } from "@/server/lib/errors";
 import { taskRepository } from "@/server/repositories/task.repository";
 import { assertColumnAccess } from "./column-access";
 import type { UpdateTaskInput } from "./dto";
+import { buildTaskOutput } from "./task-output";
 
 export class UpdateTaskUseCase {
   static async execute(userId: string, columnId: string, taskId: string, input: UpdateTaskInput) {
@@ -31,16 +32,13 @@ export class UpdateTaskUseCase {
       return err(new AppError("task-fetch-failed", "Unable to fetch updated task", 500));
     }
 
-    return ok({
-      id: updatedTask[0].id,
-      columnId: updatedTask[0].columnId,
-      assigneeId: updatedTask[0].assigneeId,
-      title: updatedTask[0].title,
-      description: updatedTask[0].description,
-      priority: updatedTask[0].priority,
-      position: updatedTask[0].position,
-      dueDate: updatedTask[0].dueDate,
-      updatedAt: updatedTask[0].updatedAt,
-    });
+    const outputResult = await buildTaskOutput(updatedTask[0]);
+    if (outputResult.isErr()) {
+      return err(
+        new AppError("task-fetch-failed", `Unable to fetch updated task details: ${outputResult.error.message}`, 500),
+      );
+    }
+
+    return ok(outputResult.unwrap());
   }
 }

@@ -5,7 +5,7 @@ import { user } from "./schemas/auth/user-schema";
 import { column } from "./schemas/business/column-schema";
 import { member } from "./schemas/business/member-schema";
 import { project } from "./schemas/business/project-schema";
-import { task } from "./schemas/business/task-schema";
+import { projectTaskTag, task, taskItem, taskTag } from "./schemas/business/task-schema";
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
@@ -30,6 +30,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const projectRelations = relations(project, ({ many }) => ({
   members: many(member),
   columns: many(column),
+  taskTags: many(projectTaskTag),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -52,7 +53,7 @@ export const columnRelations = relations(column, ({ one, many }) => ({
   tasks: many(task),
 }));
 
-export const taskRelations = relations(task, ({ one }) => ({
+export const taskRelations = relations(task, ({ one, many }) => ({
   column: one(column, {
     fields: [task.columnId],
     references: [column.id],
@@ -60,5 +61,33 @@ export const taskRelations = relations(task, ({ one }) => ({
   assignee: one(member, {
     fields: [task.assigneeId],
     references: [member.id],
+  }),
+  items: many(taskItem),
+  tagLinks: many(taskTag),
+}));
+
+export const taskItemRelations = relations(taskItem, ({ one }) => ({
+  task: one(task, {
+    fields: [taskItem.taskId],
+    references: [task.id],
+  }),
+}));
+
+export const projectTaskTagRelations = relations(projectTaskTag, ({ one, many }) => ({
+  project: one(project, {
+    fields: [projectTaskTag.projectId],
+    references: [project.id],
+  }),
+  taskLinks: many(taskTag),
+}));
+
+export const taskTagRelations = relations(taskTag, ({ one }) => ({
+  task: one(task, {
+    fields: [taskTag.taskId],
+    references: [task.id],
+  }),
+  tag: one(projectTaskTag, {
+    fields: [taskTag.tagId],
+    references: [projectTaskTag.id],
   }),
 }));

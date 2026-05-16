@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { member, user } from "@/server/db/schema";
-import type { UpdateMemberInput } from "@/server/use-cases/member/dto";
+import type { MemberUpdate, NewMember } from "@/shared/types";
 
 export class MemberRepository {
   async findByUserAndProject(userId: string, projectId: string) {
@@ -26,7 +26,7 @@ export class MemberRepository {
     return handle(() => db.select().from(member).where(eq(member.userId, userId)));
   }
 
-  async create(data: { id: string; projectId: string; userId: string; role: "owner" | "admin" | "member" }) {
+  async create(data: Pick<NewMember, "id" | "projectId" | "role" | "userId">) {
     return handle(() =>
       db.insert(member).values({
         id: data.id,
@@ -37,7 +37,7 @@ export class MemberRepository {
     );
   }
 
-  async update(id: string, data: UpdateMemberInput) {
+  async update(id: string, data: MemberUpdate) {
     return handle(() => db.update(member).set(data).where(eq(member.id, id)));
   }
 

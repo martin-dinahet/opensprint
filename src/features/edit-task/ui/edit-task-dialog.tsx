@@ -50,7 +50,7 @@ export const EditTaskDialog = ({ members, onOpenChange, open, task }: Props) => 
         <form action={action}>
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
-            <DialogDescription>Update the task details. Descriptions support Markdown.</DialogDescription>
+            <DialogDescription>Update the task details.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[calc(100svh-12rem)] overflow-y-auto pr-1">
             {globalError && (

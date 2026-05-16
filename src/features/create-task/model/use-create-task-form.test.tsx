@@ -75,7 +75,7 @@ describe("useCreateTaskForm", () => {
 
     await waitFor(() => expect(result.current.fieldErrors?.title).toBeDefined());
 
-    expect(result.current.fieldErrors?.description).toBeDefined();
+    expect(result.current.fieldErrors?.description).toBeUndefined();
     expect(createTaskMock.mutateAsync).not.toHaveBeenCalled();
   });
 

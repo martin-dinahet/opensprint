@@ -3,18 +3,17 @@ export type {
   UpdateMemberInput,
 } from "@/server/use-cases/member/dto";
 
-export type MemberRole = "owner" | "admin" | "member";
+import type { Member, User } from "@/shared/types";
+
+export type MemberRole = Member["role"];
 
 export type MemberWithUserOutput = {
-  id: string;
-  userId: string;
-  projectId: string;
+  id: Member["id"];
+  userId: Member["userId"];
+  projectId: Member["projectId"];
   role: MemberRole;
   joinedAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
+  user: Pick<User, "email" | "id" | "image"> & {
+    name: User["name"] | null;
   };
 };

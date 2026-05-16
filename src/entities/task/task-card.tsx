@@ -3,34 +3,26 @@
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { defaultAnimateLayoutChanges, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { IconDotsVertical, IconEye, IconGripVertical, IconPencil, IconX } from "@tabler/icons-react";
+import { IconCalendar, IconChecks, IconFlag, IconGripVertical, IconTrash, IconUser } from "@tabler/icons-react";
 import type { CSSProperties } from "react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import { cn } from "@/shared/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
-import { Badge } from "@/shared/shadcn/badge";
 import { Button } from "@/shared/shadcn/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/shadcn/dropdown-menu";
 
 type TaskPriority = "low" | "medium" | "high" | "urgent";
 
 const priorityColors: Record<TaskPriority, string> = {
-  low: "bg-priority-low",
-  medium: "bg-priority-medium",
-  high: "bg-priority-high",
-  urgent: "bg-priority-urgent",
+  low: "text-priority-low",
+  medium: "text-priority-medium",
+  high: "text-priority-high",
+  urgent: "text-priority-urgent",
 };
 
 type Props = {
   task: TaskOutput;
-  onView: (task: TaskOutput) => void;
-  onEdit: (task: TaskOutput) => void;
+  onOpen: (task: TaskOutput) => void;
   onDelete: (taskId: string) => void;
   members?: MemberWithUserOutput[];
 };
@@ -48,8 +40,7 @@ export const TaskCardContent = ({
   isOverlay = false,
   listeners,
   onDelete,
-  onEdit,
-  onView,
+  onOpen,
   setNodeRef,
   style,
   task,
@@ -58,6 +49,11 @@ export const TaskCardContent = ({
   const assignee = members.find((member) => member.id === task.assigneeId);
   const assigneeLabel = assignee?.user.name || assignee?.user.email;
   const assigneeInitial = assigneeLabel?.trim().charAt(0).toUpperCase() ?? "";
+  const doneItems = task.items.filter((item) => item.done).length;
+  const hasChecklist = task.items.length > 0;
+  const dueDate = task.dueDate
+    ? new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(task.dueDate))
+    : null;
 
   return (
     <div
@@ -70,81 +66,84 @@ export const TaskCardContent = ({
         isOverlay && "cursor-grabbing shadow-xl ring-1 ring-primary/30",
       )}
     >
-      <button type="button" className="block w-full p-3 pr-9 text-left" onClick={() => onView(task)}>
-        <div className="flex items-start gap-1.5">
-          <span className="mt-1 flex size-5 shrink-0 items-center justify-center text-muted-foreground/70 transition-colors group-hover:text-muted-foreground">
-            <IconGripVertical className="h-4 w-4" aria-hidden="true" />
+      <button type="button" className="block w-full p-3.5 pr-10 text-left" onClick={() => onOpen(task)}>
+        <div className="flex items-start gap-2.5">
+          <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-muted-foreground/60 transition-colors group-hover:text-muted-foreground">
+            <IconGripVertical className="h-3 w-3" aria-hidden="true" />
             <span className="sr-only">Drag task</span>
           </span>
-          <div className="min-w-0 flex-1 px-1.5 py-0.5 text-left">
+          <div className="min-w-0 flex-1 text-left">
             <span className="block min-w-0 break-words font-medium text-sm leading-snug">{task.title}</span>
 
-            <span className="mt-3 flex min-w-0 items-center justify-between gap-2">
-              <Badge variant="outline" className="gap-1.5 px-1.5 py-0 font-normal text-xs capitalize">
-                <span
-                  className={`size-1.5 shrink-0 rounded-full ${
-                    priorityColors[task.priority as TaskPriority] ?? "bg-gray-400"
-                  }`}
-                />
-                {task.priority}
-              </Badge>
+            <span className="mt-2 flex items-center gap-1.5 text-[0.68rem] text-muted-foreground uppercase tracking-wide">
+              <IconFlag
+                className={`h-3 w-3 ${priorityColors[task.priority as TaskPriority] ?? "text-muted-foreground"}`}
+              />
+              <span>{task.priority}</span>
+              <span>priority</span>
+            </span>
 
-              <span className="flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
-                {assignee && assigneeLabel ? (
-                  <>
-                    <Avatar size="sm">
-                      {assignee.user.image ? <AvatarImage alt="" src={assignee.user.image} /> : null}
-                      <AvatarFallback>{assigneeInitial}</AvatarFallback>
-                    </Avatar>
-                    <span className="truncate">{assigneeLabel}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="size-6 shrink-0 rounded-full border border-dashed border-muted-foreground/45" />
-                    <span className="truncate">Unassigned</span>
-                  </>
-                )}
+            {task.tags.length > 0 ? (
+              <span className="mt-2 flex flex-wrap gap-1.5">
+                {task.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex max-w-32 items-center gap-1 rounded-full border bg-muted/35 px-2 py-0.5 text-muted-foreground text-xs"
+                  >
+                    <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: tag.color }} />
+                    <span className="truncate">{tag.name}</span>
+                  </span>
+                ))}
               </span>
+            ) : null}
+
+            <span className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs">
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                {assignee && assigneeLabel ? (
+                  <Avatar size="sm">
+                    {assignee.user.image ? <AvatarImage alt="" src={assignee.user.image} /> : null}
+                    <AvatarFallback>{assigneeInitial}</AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <IconUser className="h-3 w-3" />
+                )}
+                <span className="max-w-28 truncate">{assigneeLabel ?? "Unassigned"}</span>
+              </span>
+              {hasChecklist ? (
+                <span className="inline-flex items-center gap-1">
+                  <IconChecks className="h-3 w-3" />
+                  {doneItems}/{task.items.length}
+                </span>
+              ) : null}
+              {dueDate ? (
+                <span className="inline-flex items-center gap-1">
+                  <IconCalendar className="h-3 w-3" />
+                  {dueDate}
+                </span>
+              ) : null}
             </span>
           </div>
         </div>
       </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="absolute top-3 right-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 aria-expanded:opacity-100"
-              onClick={(event) => event.stopPropagation()}
-              onPointerDown={(event) => event.stopPropagation()}
-            />
-          }
-        >
-          <IconDotsVertical className="h-3.5 w-3.5" />
-          <span className="sr-only">Task actions</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onView(task)}>
-            <IconEye />
-            View
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(task)}>
-            <IconPencil />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onClick={() => onDelete(task.id)}>
-            <IconX />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="absolute top-3 right-3 text-muted-foreground/60 opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 group-focus-within:opacity-100"
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete(task.id);
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <IconTrash className="h-3 w-3" />
+        <span className="sr-only">Delete task</span>
+      </Button>
     </div>
   );
 };
 
-export const TaskCard = ({ task, onDelete, onEdit, onView, members = [] }: Props) => {
+export const TaskCard = ({ task, onDelete, onOpen, members = [] }: Props) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: "task", task },
@@ -171,8 +170,7 @@ export const TaskCard = ({ task, onDelete, onEdit, onView, members = [] }: Props
       attributes={attributes}
       listeners={listeners}
       onDelete={onDelete}
-      onEdit={onEdit}
-      onView={onView}
+      onOpen={onOpen}
       members={members}
       setNodeRef={setNodeRef}
       style={style}

@@ -31,3 +31,7 @@ export const user = pgTable(
   },
   (table) => [index("user_identifier_idx").on(table.email)],
 );
+
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+export type UserUpdate = Partial<Omit<NewUser, "createdAt" | "emailVerified" | "id" | "updatedAt">>;

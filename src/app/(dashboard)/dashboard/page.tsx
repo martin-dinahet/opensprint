@@ -1,30 +1,33 @@
 "use client";
 
 import { IconPlus, IconStack } from "@tabler/icons-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProjectCard, useProjects } from "@/entities/project";
 import { CreateProjectDialog } from "@/features/create-project";
 import { Button } from "@/shared/shadcn/button";
 import { LoadingScreen } from "@/shared/shadcn/loading-screen";
-import { AppShellHeader } from "@/widgets/app-sidebar";
+import { useDashboardHeader } from "@/widgets/header";
 
 export default function Page() {
   const { data: projects, isLoading } = useProjects();
   const [createOpen, setCreateOpen] = useState(false);
+  const header = useMemo(
+    () => ({
+      title: "Projects",
+      actions: (
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <IconPlus className="mr-2 h-4 w-4" />
+          New Project
+        </Button>
+      ),
+    }),
+    [],
+  );
+
+  useDashboardHeader(header);
 
   return (
     <>
-      <AppShellHeader
-        title="Projects"
-        eyebrow="Workspace"
-        actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <IconPlus className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
-        }
-      />
-
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-5xl">
           <p className="text-sm text-muted-foreground">Pick up active work or start a new project.</p>

@@ -18,3 +18,7 @@ export const column = pgTable(
   },
   (table) => [index("column_project_id_idx").on(table.projectId)],
 );
+
+export type Column = typeof column.$inferSelect;
+export type NewColumn = typeof column.$inferInsert;
+export type ColumnUpdate = Partial<Omit<NewColumn, "createdAt" | "id" | "updatedAt">>;

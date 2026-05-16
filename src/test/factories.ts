@@ -73,6 +73,8 @@ export function makeTask(overrides: Partial<TaskOutput> = {}): TaskOutput {
     position: 0,
     dueDate: null,
     createdAt: timestamp,
+    items: [],
+    tags: [],
     updatedAt: timestamp,
     ...overrides,
   };

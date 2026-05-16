@@ -12,10 +12,14 @@ const createTaskSchema = z.object({
   title: z.string().trim().min(1).max(300),
   description: z.preprocess(
     (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
-    z.string().trim().min(3).max(2000).optional(),
+    z.string().trim().max(2000).optional(),
   ),
   priority: z.enum(["low", "medium", "high", "urgent"]).default(defaultPriority),
   assigneeId: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().optional(),
+  ),
+  dueDate: z.preprocess(
     (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
     z.string().optional(),
   ),

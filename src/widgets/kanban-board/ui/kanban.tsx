@@ -51,31 +51,32 @@ type KanbanColumnViewProps = ColumnProps & {
   onAddTask: () => void;
   onDeleteColumn: (id: string) => void;
   onDeleteTask: (id: string) => void;
-  onEditTask: (task: TaskOutput) => void;
-  onViewTask: (task: TaskOutput) => void;
+  onOpenTask: (task: TaskOutput) => void;
 };
 
 const Root = ({ children }: RootProps) => {
   const { kanbanDrag } = useProjectKanban();
 
   return (
-    <DndContext
-      collisionDetection={kanbanCollisionDetection}
-      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
-      onDragCancel={kanbanDrag.handleDragCancel}
-      onDragEnd={kanbanDrag.handleDragEnd}
-      onDragOver={kanbanDrag.handleDragOver}
-      onDragStart={kanbanDrag.handleDragStart}
-      sensors={kanbanDrag.sensors}
-    >
-      {children}
-      <Overlay />
-    </DndContext>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <DndContext
+        collisionDetection={kanbanCollisionDetection}
+        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+        onDragCancel={kanbanDrag.handleDragCancel}
+        onDragEnd={kanbanDrag.handleDragEnd}
+        onDragOver={kanbanDrag.handleDragOver}
+        onDragStart={kanbanDrag.handleDragStart}
+        sensors={kanbanDrag.sensors}
+      >
+        {children}
+        <Overlay />
+      </DndContext>
+    </div>
   );
 };
 
 const Columns = ({ children }: ColumnsProps) => {
-  return <div className="flex h-full gap-3 p-4">{children}</div>;
+  return <div className="flex flex-1 gap-4 p-4">{children}</div>;
 };
 
 const Column = ({ column, isHovered, tasks }: ColumnProps) => {
@@ -110,7 +111,7 @@ const ColumnView = ({
 
   return (
     <div
-      className={`group/column flex h-full w-72 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors duration-150 ${
+      className={`group/column flex h-full w-96 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors duration-150 ${
         isHighlighted ? "border-primary/40 bg-primary/5 ring-1 ring-primary/30" : ""
       }`}
     >
@@ -190,14 +191,13 @@ const ColumnView = ({
 };
 
 const TaskCard = ({ columnId, task }: TaskCardProps) => {
-  const { members, openEditTask, openViewTask, removeTask } = useProjectKanban();
+  const { members, openTask, removeTask } = useProjectKanban();
 
   return (
     <ConfirmableTaskCard
       members={members}
       onDelete={() => removeTask(columnId, task.id)}
-      onEdit={openEditTask}
-      onView={openViewTask}
+      onOpen={openTask}
       task={task}
     />
   );
@@ -206,27 +206,19 @@ const TaskCard = ({ columnId, task }: TaskCardProps) => {
 const ConfirmableTaskCard = ({
   members,
   onDelete,
-  onEdit,
-  onView,
+  onOpen,
   task,
 }: {
   members: Parameters<typeof EntityTaskCard>[0]["members"];
   onDelete: () => void;
-  onEdit: (task: TaskOutput) => void;
-  onView: (task: TaskOutput) => void;
+  onOpen: (task: TaskOutput) => void;
   task: TaskOutput;
 }) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <>
-      <EntityTaskCard
-        task={task}
-        onEdit={onEdit}
-        onView={onView}
-        onDelete={() => setDeleteOpen(true)}
-        members={members}
-      />
+      <EntityTaskCard task={task} onOpen={onOpen} onDelete={() => setDeleteOpen(true)} members={members} />
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -263,8 +255,7 @@ export const KanbanColumnView = ({
   onAddTask,
   onDeleteColumn,
   onDeleteTask,
-  onEditTask,
-  onViewTask,
+  onOpenTask,
   tasks,
 }: KanbanColumnViewProps) => {
   return (
@@ -280,8 +271,7 @@ export const KanbanColumnView = ({
           key={task.id}
           members={members}
           onDelete={() => onDeleteTask(task.id)}
-          onEdit={onEditTask}
-          onView={onViewTask}
+          onOpen={onOpenTask}
           task={task}
         />
       ))}
@@ -308,8 +298,7 @@ const Overlay = () => {
           isOverlay
           members={members}
           onDelete={() => {}}
-          onEdit={() => {}}
-          onView={() => {}}
+          onOpen={() => {}}
           task={kanbanDrag.activeTask}
         />
       ) : null}

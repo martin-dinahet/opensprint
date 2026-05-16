@@ -36,7 +36,7 @@ export const CreateTaskDialog = ({ columnId, members, onOpenChange, open }: Prop
         <form action={action}>
           <DialogHeader>
             <DialogTitle>Add task</DialogTitle>
-            <DialogDescription>Create a new task in this column. Descriptions support Markdown.</DialogDescription>
+            <DialogDescription>Create a new task in this column.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[calc(100svh-12rem)] overflow-y-auto pr-1">
             {globalError && (

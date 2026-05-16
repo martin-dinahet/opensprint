@@ -3,7 +3,7 @@ import { eq, inArray } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { project } from "@/server/db/schema";
-import type { CreateProjectInput, UpdateProjectInput } from "@/server/use-cases/project/dto";
+import type { NewProject, ProjectUpdate } from "@/shared/types";
 
 export class ProjectRepository {
   async findById(id: string) {
@@ -17,7 +17,7 @@ export class ProjectRepository {
     return handle(() => db.select().from(project).where(inArray(project.id, ids)));
   }
 
-  async create(data: CreateProjectInput & { id: string }) {
+  async create(data: Pick<NewProject, "description" | "id" | "name">) {
     return handle(() =>
       db.insert(project).values({
         id: data.id,
@@ -27,7 +27,7 @@ export class ProjectRepository {
     );
   }
 
-  async update(id: string, data: UpdateProjectInput) {
+  async update(id: string, data: ProjectUpdate) {
     return handle(() => db.update(project).set(data).where(eq(project.id, id)));
   }
 

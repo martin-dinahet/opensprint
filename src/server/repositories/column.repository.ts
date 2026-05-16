@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { column } from "@/server/db/schema";
-import type { CreateColumnInput, UpdateColumnInput } from "@/server/use-cases/column/dto";
+import type { ColumnUpdate, NewColumn } from "@/shared/types";
 
 export class ColumnRepository {
   async findById(id: string) {
@@ -13,7 +13,7 @@ export class ColumnRepository {
     return handle(() => db.select().from(column).where(eq(column.projectId, projectId)).orderBy(asc(column.position)));
   }
 
-  async create(data: CreateColumnInput & { id: string; projectId: string; position: number }) {
+  async create(data: Pick<NewColumn, "id" | "name" | "position" | "projectId">) {
     return handle(() =>
       db.insert(column).values({
         id: data.id,
@@ -24,7 +24,7 @@ export class ColumnRepository {
     );
   }
 
-  async update(id: string, data: UpdateColumnInput) {
+  async update(id: string, data: ColumnUpdate) {
     return handle(() => db.update(column).set(data).where(eq(column.id, id)));
   }
 

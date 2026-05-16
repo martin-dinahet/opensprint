@@ -1,7 +1,15 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
+const {
+  columnRepositoryMock,
+  memberRepositoryMock,
+  nanoidMock,
+  projectRepositoryMock,
+  taskItemRepositoryMock,
+  taskRepositoryMock,
+  taskTagRepositoryMock,
+} = vi.hoisted(() => ({
   columnRepositoryMock: {
     findById: vi.fn(),
   },
@@ -10,6 +18,18 @@ const { columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMo
     findByUserAndProject: vi.fn(),
   },
   nanoidMock: vi.fn(),
+  projectRepositoryMock: {
+    findById: vi.fn(),
+  },
+  taskItemRepositoryMock: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    findById: vi.fn(),
+    findByTask: vi.fn(),
+    findByTasks: vi.fn(),
+    update: vi.fn(),
+    updatePosition: vi.fn(),
+  },
   taskRepositoryMock: {
     create: vi.fn(),
     delete: vi.fn(),
@@ -19,6 +39,16 @@ const { columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMo
     updateAssignee: vi.fn(),
     updateColumnAndPosition: vi.fn(),
     updatePosition: vi.fn(),
+  },
+  taskTagRepositoryMock: {
+    attach: vi.fn(),
+    createProjectTag: vi.fn(),
+    deleteProjectTag: vi.fn(),
+    detach: vi.fn(),
+    findProjectTagById: vi.fn(),
+    findProjectTags: vi.fn(),
+    findTagsByTasks: vi.fn(),
+    updateProjectTag: vi.fn(),
   },
 }));
 
@@ -34,23 +64,46 @@ vi.mock("@/server/repositories/member.repository", () => ({
   memberRepository: memberRepositoryMock,
 }));
 
+vi.mock("@/server/repositories/project.repository", () => ({
+  projectRepository: projectRepositoryMock,
+}));
+
 vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 
+vi.mock("@/server/repositories/task-item.repository", () => ({
+  taskItemRepository: taskItemRepositoryMock,
+}));
+
+vi.mock("@/server/repositories/task-tag.repository", () => ({
+  taskTagRepository: taskTagRepositoryMock,
+}));
+
 const {
   AssignTaskUseCase,
+  AttachTaskTagUseCase,
+  CreateProjectTaskTagUseCase,
   CreateTaskUseCase,
+  CreateTaskItemUseCase,
+  DeleteProjectTaskTagUseCase,
   DeleteTaskUseCase,
+  DeleteTaskItemUseCase,
+  DetachTaskTagUseCase,
+  ListProjectTaskTagsUseCase,
   ListTasksUseCase,
   MoveTaskUseCase,
+  ReorderTaskItemsUseCase,
   ReorderTaskUseCase,
+  UpdateProjectTaskTagUseCase,
   UpdateTaskUseCase,
+  UpdateTaskItemUseCase,
 } = await import("@/server/use-cases/task");
 
 const now = new Date("2026-01-01T00:00:00.000Z");
 const column = { id: "column-1", projectId: "project-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
 const targetColumn = { ...column, id: "column-2", position: 1 };
+const project = { id: "project-1", name: "Launch", description: null, createdAt: now, updatedAt: now };
 const ownerMembership = { id: "member-1", projectId: "project-1", userId: "user-1", role: "owner", joinedAt: now };
 const assigneeMembership = {
   id: "assignee-member",
@@ -71,14 +124,34 @@ const task = {
   createdAt: now,
   updatedAt: now,
 };
+const taskItem = {
+  id: "item-1",
+  taskId: "task-1",
+  title: "Write assertion",
+  done: false,
+  position: 0,
+  createdAt: now,
+  updatedAt: now,
+};
+const taskTag = {
+  id: "tag-1",
+  projectId: "project-1",
+  name: "Frontend",
+  color: "#2563eb",
+  createdAt: now,
+  updatedAt: now,
+};
 
 describe("task use cases", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("task-new");
     columnRepositoryMock.findById.mockResolvedValue(ok([column]));
+    projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     taskRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
+    taskItemRepositoryMock.findByTasks.mockResolvedValue(ok([]));
+    taskTagRepositoryMock.findTagsByTasks.mockResolvedValue(ok([]));
   });
 
   it("lists tasks for project members", async () => {
@@ -87,7 +160,7 @@ describe("task use cases", () => {
     const result = await ListTasksUseCase.execute("user-1", "column-1");
 
     expect(result.isOk()).toBe(true);
-    expect(result.unwrap()).toEqual([task]);
+    expect(result.unwrap()).toEqual([{ ...task, items: [], tags: [] }]);
     expect(taskRepositoryMock.findByColumn).toHaveBeenCalledWith("column-1");
   });
 
@@ -151,6 +224,54 @@ describe("task use cases", () => {
       position: 1,
     });
     expect(result.unwrap()).toMatchObject({ id: "task-new", position: 1 });
+  });
+
+  it("creates a task with initial checklist items and selected project tags", async () => {
+    nanoidMock.mockReturnValueOnce("task-new").mockReturnValueOnce("item-new");
+    taskTagRepositoryMock.findProjectTagById.mockResolvedValue(ok([taskTag]));
+    taskRepositoryMock.findByColumn.mockResolvedValue(ok([]));
+    taskRepositoryMock.create.mockResolvedValue(ok(undefined));
+    taskItemRepositoryMock.create.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.attach.mockResolvedValue(ok(undefined));
+    taskRepositoryMock.findById.mockResolvedValue(ok([{ ...task, id: "task-new" }]));
+    taskItemRepositoryMock.findByTasks.mockResolvedValue(ok([{ ...taskItem, id: "item-new", taskId: "task-new" }]));
+    taskTagRepositoryMock.findTagsByTasks.mockResolvedValue(ok([{ taskId: "task-new", ...taskTag }]));
+
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", {
+      title: "Review PR",
+      items: [{ title: "Read diff" }],
+      tagIds: ["tag-1"],
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(taskItemRepositoryMock.create).toHaveBeenCalledWith({
+      id: "item-new",
+      taskId: "task-new",
+      title: "Read diff",
+      done: false,
+      position: 0,
+    });
+    expect(taskTagRepositoryMock.attach).toHaveBeenCalledWith("task-new", "tag-1");
+    expect(result.unwrap()).toMatchObject({
+      id: "task-new",
+      items: [{ id: "item-new", title: "Write assertion" }],
+      tags: [{ id: "tag-1", name: "Frontend" }],
+    });
+  });
+
+  it("rejects task creation when selected tags are outside the project", async () => {
+    taskTagRepositoryMock.findProjectTagById.mockResolvedValue(ok([{ ...taskTag, projectId: "other-project" }]));
+
+    const result = await CreateTaskUseCase.execute("user-1", "column-1", {
+      title: "Review PR",
+      tagIds: ["tag-1"],
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(404);
+    }
+    expect(taskRepositoryMock.create).not.toHaveBeenCalled();
   });
 
   it("rejects task creation for non-members", async () => {
@@ -452,5 +573,86 @@ describe("task use cases", () => {
       expect(result.error.statusCode).toBe(500);
       expect(result.error.message).toContain("database unavailable");
     }
+  });
+
+  it("creates checklist items at the next task position", async () => {
+    nanoidMock.mockReturnValue("item-new");
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    taskItemRepositoryMock.findByTask.mockResolvedValue(ok([taskItem]));
+    taskItemRepositoryMock.create.mockResolvedValue(ok(undefined));
+    taskItemRepositoryMock.findById.mockResolvedValue(ok([{ ...taskItem, id: "item-new", position: 1 }]));
+
+    const result = await CreateTaskItemUseCase.execute("user-1", "task-1", { title: "Review UI" });
+
+    expect(result.isOk()).toBe(true);
+    expect(taskItemRepositoryMock.create).toHaveBeenCalledWith({
+      id: "item-new",
+      taskId: "task-1",
+      title: "Review UI",
+      done: false,
+      position: 1,
+    });
+    expect(result.unwrap()).toMatchObject({ id: "item-new", title: "Write assertion" });
+  });
+
+  it("updates, deletes, and reorders checklist items within the same task", async () => {
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    taskItemRepositoryMock.findById.mockResolvedValue(ok([taskItem]));
+    taskItemRepositoryMock.update.mockResolvedValue(ok(undefined));
+    taskItemRepositoryMock.delete.mockResolvedValue(ok(undefined));
+    taskItemRepositoryMock.findByTask.mockResolvedValue(ok([taskItem, { ...taskItem, id: "item-2", position: 1 }]));
+    taskItemRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
+
+    const updateResult = await UpdateTaskItemUseCase.execute("user-1", "task-1", "item-1", { done: true });
+    const reorderResult = await ReorderTaskItemsUseCase.execute("user-1", "task-1", { itemIds: ["item-2", "item-1"] });
+    const deleteResult = await DeleteTaskItemUseCase.execute("user-1", "task-1", "item-1");
+
+    expect(updateResult.isOk()).toBe(true);
+    expect(taskItemRepositoryMock.update).toHaveBeenCalledWith("item-1", { done: true });
+    expect(reorderResult.isOk()).toBe(true);
+    expect(taskItemRepositoryMock.updatePosition).toHaveBeenCalledWith("item-2", 0);
+    expect(taskItemRepositoryMock.updatePosition).toHaveBeenCalledWith("item-1", 1);
+    expect(deleteResult.isOk()).toBe(true);
+    expect(taskItemRepositoryMock.delete).toHaveBeenCalledWith("item-1");
+  });
+
+  it("manages reusable project task tags and task attachments", async () => {
+    nanoidMock.mockReturnValue("tag-new");
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    taskTagRepositoryMock.findProjectTags.mockResolvedValue(ok([taskTag]));
+    taskTagRepositoryMock.createProjectTag.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.updateProjectTag.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.deleteProjectTag.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.findProjectTagById.mockResolvedValue(ok([taskTag]));
+    taskTagRepositoryMock.attach.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.detach.mockResolvedValue(ok(undefined));
+
+    const listResult = await ListProjectTaskTagsUseCase.execute("user-1", "project-1");
+    const createResult = await CreateProjectTaskTagUseCase.execute("user-1", "project-1", {
+      name: "Frontend",
+      color: "#2563eb",
+    });
+    const updateResult = await UpdateProjectTaskTagUseCase.execute("user-1", "project-1", "tag-1", {
+      name: "UI",
+    });
+    const attachResult = await AttachTaskTagUseCase.execute("user-1", "task-1", { tagId: "tag-1" });
+    const detachResult = await DetachTaskTagUseCase.execute("user-1", "task-1", "tag-1");
+    const deleteResult = await DeleteProjectTaskTagUseCase.execute("user-1", "project-1", "tag-1");
+
+    expect(listResult.unwrap()).toEqual([taskTag]);
+    expect(taskTagRepositoryMock.createProjectTag).toHaveBeenCalledWith({
+      id: "tag-new",
+      projectId: "project-1",
+      name: "Frontend",
+      color: "#2563eb",
+    });
+    expect(createResult.isOk()).toBe(true);
+    expect(updateResult.isOk()).toBe(true);
+    expect(taskTagRepositoryMock.attach).toHaveBeenCalledWith("task-1", "tag-1");
+    expect(attachResult.unwrap()).toEqual(taskTag);
+    expect(detachResult.isOk()).toBe(true);
+    expect(taskTagRepositoryMock.detach).toHaveBeenCalledWith("task-1", "tag-1");
+    expect(deleteResult.isOk()).toBe(true);
+    expect(taskTagRepositoryMock.deleteProjectTag).toHaveBeenCalledWith("tag-1");
   });
 });
