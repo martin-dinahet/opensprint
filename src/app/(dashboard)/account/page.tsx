@@ -2,7 +2,7 @@
 
 import { Loader2Icon, SaveIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { useSignOut } from "@/features/auth";
@@ -14,7 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/shared/shadcn/field";
 import { Input } from "@/shared/shadcn/input";
 import { NativeSelect, NativeSelectOption } from "@/shared/shadcn/native-select";
-import { AppShellHeader, UserAvatar } from "@/widgets/app-sidebar";
+import { UserAvatar } from "@/widgets/app-sidebar";
+import { useDashboardHeader } from "@/widgets/header";
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
@@ -39,6 +40,9 @@ export default function Page() {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const user = session.data?.user;
+  const header = useMemo(() => ({ title: "Account", eyebrow: "Settings" }), []);
+
+  useDashboardHeader(header);
 
   useEffect(() => {
     setName(user?.name ?? "");
@@ -78,98 +82,94 @@ export default function Page() {
   };
 
   return (
-    <>
-      <AppShellHeader title="Account" eyebrow="Settings" />
-
-      <main className="flex-1 p-6">
-        <div className="mx-auto grid max-w-4xl gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile</CardTitle>
-              <CardDescription>Update the identity shown around projects and task assignments.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form action={updateProfile} className="grid gap-5">
-                <div className="flex items-center gap-3">
-                  <UserAvatar user={{ email: user?.email, image, name }} className="size-10" />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-sm">{name || user?.email}</p>
-                    <p className="truncate text-muted-foreground text-sm">{user?.email}</p>
-                  </div>
+    <main className="flex-1 p-6">
+      <div className="mx-auto grid max-w-4xl gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile</CardTitle>
+            <CardDescription>Update the identity shown around projects and task assignments.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={updateProfile} className="grid gap-5">
+              <div className="flex items-center gap-3">
+                <UserAvatar user={{ email: user?.email, image, name }} className="size-10" />
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-sm">{name || user?.email}</p>
+                  <p className="truncate text-muted-foreground text-sm">{user?.email}</p>
                 </div>
+              </div>
 
-                <FieldGroup>
-                  <Field data-invalid={!!fieldErrors?.name}>
-                    <FieldLabel htmlFor="name">Display name</FieldLabel>
-                    <Input id="name" name="name" value={name} onChange={(event) => setName(event.target.value)} />
-                    <FieldError>{fieldErrors?.name?.[0]}</FieldError>
-                  </Field>
+              <FieldGroup>
+                <Field data-invalid={!!fieldErrors?.name}>
+                  <FieldLabel htmlFor="name">Display name</FieldLabel>
+                  <Input id="name" name="name" value={name} onChange={(event) => setName(event.target.value)} />
+                  <FieldError>{fieldErrors?.name?.[0]}</FieldError>
+                </Field>
 
-                  <Field data-invalid={!!fieldErrors?.image}>
-                    <FieldLabel htmlFor="image">Avatar image URL</FieldLabel>
-                    <Input
-                      id="image"
-                      name="image"
-                      value={image}
-                      onChange={(event) => setImage(event.target.value)}
-                      placeholder="https://example.com/avatar.png"
-                    />
-                    <FieldDescription>Leave empty to use generated initials.</FieldDescription>
-                    <FieldError>{fieldErrors?.image?.[0]}</FieldError>
-                  </Field>
+                <Field data-invalid={!!fieldErrors?.image}>
+                  <FieldLabel htmlFor="image">Avatar image URL</FieldLabel>
+                  <Input
+                    id="image"
+                    name="image"
+                    value={image}
+                    onChange={(event) => setImage(event.target.value)}
+                    placeholder="https://example.com/avatar.png"
+                  />
+                  <FieldDescription>Leave empty to use generated initials.</FieldDescription>
+                  <FieldError>{fieldErrors?.image?.[0]}</FieldError>
+                </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                    <Input id="email" value={user?.email ?? ""} readOnly />
-                    <FieldDescription>Email changes are not part of this account settings pass.</FieldDescription>
-                  </Field>
-                </FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input id="email" value={user?.email ?? ""} readOnly />
+                  <FieldDescription>Email changes are not part of this account settings pass.</FieldDescription>
+                </Field>
+              </FieldGroup>
 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={pending}>
-                    {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
-                    Save profile
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={pending}>
+                  {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
+                  Save profile
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>Choose how OpenSprint should look on this device.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Field>
-                <FieldLabel htmlFor="theme">Theme</FieldLabel>
-                <NativeSelect
-                  id="theme"
-                  value={theme}
-                  onChange={(event) => setTheme(event.target.value)}
-                  className="w-48"
-                >
-                  <NativeSelectOption value="light">Light</NativeSelectOption>
-                  <NativeSelectOption value="dark">Dark</NativeSelectOption>
-                  <NativeSelectOption value="system">System</NativeSelectOption>
-                </NativeSelect>
-              </Field>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+            <CardDescription>Choose how OpenSprint should look on this device.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Field>
+              <FieldLabel htmlFor="theme">Theme</FieldLabel>
+              <NativeSelect
+                id="theme"
+                value={theme}
+                onChange={(event) => setTheme(event.target.value)}
+                className="w-48"
+              >
+                <NativeSelectOption value="light">Light</NativeSelectOption>
+                <NativeSelectOption value="dark">Dark</NativeSelectOption>
+                <NativeSelectOption value="system">System</NativeSelectOption>
+              </NativeSelect>
+            </Field>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Session</CardTitle>
-              <CardDescription>End your current OpenSprint session on this browser.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" onClick={signOut.action} disabled={signOut.pending}>
-                {signOut.pending ? "Signing out..." : "Sign out"}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </>
+        <Card>
+          <CardHeader>
+            <CardTitle>Session</CardTitle>
+            <CardDescription>End your current OpenSprint session on this browser.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={signOut.action} disabled={signOut.pending}>
+              {signOut.pending ? "Signing out..." : "Sign out"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 }

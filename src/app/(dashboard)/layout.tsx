@@ -4,9 +4,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { authClient } from "@/shared/lib/auth-client";
 import { LoadingScreen } from "@/shared/shadcn/loading-screen";
-import { SidebarInset, SidebarProvider } from "@/shared/shadcn/sidebar";
-import { AppSidebar } from "@/widgets/app-sidebar";
-import { HeaderWidget } from "@/widgets/header";
+import { DashboardHeaderProvider, HeaderWidget } from "@/widgets/header";
 
 type Props = {
   children: ReactNode;
@@ -19,12 +17,11 @@ export default function DashboardLayout({ children }: Props) {
   if (!session.data?.user) redirect("/sign-in");
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="min-h-[calc(100svh-1rem)] overflow-hidden border border-border/70">
+    <DashboardHeaderProvider>
+      <div className="flex min-h-svh flex-col overflow-hidden bg-background">
         <HeaderWidget />
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </DashboardHeaderProvider>
   );
 }
