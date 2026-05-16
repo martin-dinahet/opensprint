@@ -1,9 +1,9 @@
 import type { Result } from "@punpun-dev/ts-result";
 import { err, ok } from "@punpun-dev/ts-result";
-import type { Column, Member } from "@/server/db/types";
 import { type AppError, NotFoundError, UnauthorizedError } from "@/server/lib/errors";
 import { columnRepository } from "@/server/repositories/column.repository";
 import { memberRepository } from "@/server/repositories/member.repository";
+import type { Column, Member } from "@/shared/types";
 
 export const assertColumnAccess = async (
   userId: string,

@@ -1,9 +1,9 @@
 import type { Result } from "@punpun-dev/ts-result";
 import { err, ok } from "@punpun-dev/ts-result";
-import type { Member, Project } from "@/server/db/types";
 import { type AppError, NotFoundError, UnauthorizedError } from "@/server/lib/errors";
 import { memberRepository } from "@/server/repositories/member.repository";
 import { projectRepository } from "@/server/repositories/project.repository";
+import type { Member, Project } from "@/shared/types";
 
 export const assertProjectAccess = async (
   userId: string,
