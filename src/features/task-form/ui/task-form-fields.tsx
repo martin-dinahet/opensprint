@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFileText, IconFlag, IconTextCaption, IconUser } from "@tabler/icons-react";
+import { IconCalendar, IconFileText, IconFlag, IconTextCaption, IconUser } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskPriority } from "@/entities/task";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/shared/shadcn/field";
@@ -11,6 +11,7 @@ type Props = {
   assigneeId: string | null;
   description?: string;
   disabled: boolean;
+  dueDate?: string;
   errors?: Record<string, string[]> | null;
   members: MemberWithUserOutput[];
   priority: TaskPriority;
@@ -34,6 +35,7 @@ export const TaskFormFields = ({
   assigneeId,
   description,
   disabled,
+  dueDate,
   errors,
   members,
   priority,
@@ -76,7 +78,7 @@ export const TaskFormFields = ({
         <InputGroup>
           <InputGroupAddon align="block-start">
             <IconFileText />
-            Markdown supported
+            Plain text
           </InputGroupAddon>
           <InputGroupTextarea
             id="taskDescription"
@@ -89,7 +91,7 @@ export const TaskFormFields = ({
             onChange={setDescription ? (event) => setDescription(event.target.value) : undefined}
           />
         </InputGroup>
-        <FieldDescription>Use Markdown for headings, lists, links, tables, and checklists.</FieldDescription>
+        <FieldDescription>Use plain text for notes, links, and acceptance criteria.</FieldDescription>
         <FieldError>{descriptionError}</FieldError>
       </Field>
 
@@ -138,6 +140,16 @@ export const TaskFormFields = ({
               ))}
             </SelectContent>
           </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="taskDueDate">Due date</FieldLabel>
+          <InputGroup>
+            <InputGroupAddon>
+              <IconCalendar />
+            </InputGroupAddon>
+            <InputGroupInput id="taskDueDate" name="dueDate" type="date" disabled={disabled} defaultValue={dueDate} />
+          </InputGroup>
         </Field>
       </div>
     </FieldGroup>
