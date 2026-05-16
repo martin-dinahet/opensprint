@@ -11,22 +11,19 @@ type ProjectKanbanContextValue = {
   columns: ColumnOutput[];
   createColumnOpen: boolean;
   createTaskOpen: boolean;
-  editTask: TaskOutput | null;
   isLoading: boolean;
   kanbanDrag: ReturnType<typeof useKanbanDrag>;
   members: MemberWithUserOutput[];
   openCreateColumn: () => void;
   openCreateTask: (columnId: string) => void;
-  openEditTask: (task: TaskOutput) => void;
-  openViewTask: (task: TaskOutput) => void;
+  openTask: (task: TaskOutput) => void;
   projectId: string;
   removeColumn: (columnId: string) => void;
   removeTask: (columnId: string, taskId: string) => void;
   setCreateColumnOpen: (open: boolean) => void;
   setCreateTaskOpen: (open: boolean) => void;
-  setEditTask: (task: TaskOutput | null) => void;
-  setViewTask: (task: TaskOutput | null) => void;
-  viewTask: TaskOutput | null;
+  setSelectedTask: (task: TaskOutput | null) => void;
+  selectedTask: TaskOutput | null;
 };
 
 const ProjectKanbanContext = createContext<ProjectKanbanContextValue | null>(null);
@@ -47,8 +44,7 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
   const [createColumnOpen, setCreateColumnOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpenState] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState("");
-  const [editTask, setEditTask] = useState<TaskOutput | null>(null);
-  const [viewTask, setViewTask] = useState<TaskOutput | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskOutput | null>(null);
 
   const setCreateTaskOpen = useCallback((open: boolean) => {
     setCreateTaskOpenState(open);
@@ -63,7 +59,6 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
       columns,
       createColumnOpen,
       createTaskOpen,
-      editTask,
       isLoading: columnsLoading,
       kanbanDrag,
       members,
@@ -72,16 +67,14 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
         setActiveColumnId(columnId);
         setCreateTaskOpenState(true);
       },
-      openEditTask: setEditTask,
-      openViewTask: setViewTask,
+      openTask: setSelectedTask,
       projectId,
       removeColumn: (columnId) => deleteColumn.mutate({ projectId, columnId }),
       removeTask: (columnId, taskId) => deleteTask.mutate({ columnId, taskId }),
       setCreateColumnOpen,
       setCreateTaskOpen,
-      setEditTask,
-      setViewTask,
-      viewTask,
+      selectedTask,
+      setSelectedTask,
     }),
     [
       activeColumnId,
@@ -91,12 +84,11 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
       createTaskOpen,
       deleteColumn,
       deleteTask,
-      editTask,
       kanbanDrag,
       members,
       projectId,
+      selectedTask,
       setCreateTaskOpen,
-      viewTask,
     ],
   );
 

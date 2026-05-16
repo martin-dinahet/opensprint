@@ -46,9 +46,8 @@ describe("KanbanColumnView", () => {
         members={[makeMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } })]}
         onAddTask={vi.fn()}
         onDeleteColumn={vi.fn()}
-        onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
-        onViewTask={vi.fn()}
+        onOpenTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -68,9 +67,8 @@ describe("KanbanColumnView", () => {
         tasks={[]}
         onAddTask={vi.fn()}
         onDeleteColumn={vi.fn()}
-        onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
-        onViewTask={vi.fn()}
+        onOpenTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -88,9 +86,8 @@ describe("KanbanColumnView", () => {
         tasks={[]}
         onAddTask={onAddTask}
         onDeleteColumn={vi.fn()}
-        onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
-        onViewTask={vi.fn()}
+        onOpenTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -110,20 +107,19 @@ describe("KanbanColumnView", () => {
         tasks={[task]}
         onAddTask={vi.fn()}
         onDeleteColumn={vi.fn()}
-        onEditTask={vi.fn()}
         onDeleteTask={onDeleteTask}
-        onViewTask={vi.fn()}
+        onOpenTask={vi.fn()}
         isHovered={false}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete task" }));
 
     expect(onDeleteTask).not.toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "Delete task?" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete task" }));
+    const confirmButtons = screen.getAllByRole("button", { name: "Delete task" });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
 
     expect(onDeleteTask).toHaveBeenCalledWith(task.id);
   });
@@ -138,9 +134,8 @@ describe("KanbanColumnView", () => {
         tasks={[makeTask()]}
         onAddTask={vi.fn()}
         onDeleteColumn={onDeleteColumn}
-        onEditTask={vi.fn()}
         onDeleteTask={vi.fn()}
-        onViewTask={vi.fn()}
+        onOpenTask={vi.fn()}
         isHovered={false}
       />,
     );
@@ -158,27 +153,22 @@ describe("KanbanColumnView", () => {
 });
 
 describe("TaskCard", () => {
-  it("renders task details and fires view/edit/delete callbacks", () => {
+  it("renders task details and fires open/delete callbacks", () => {
     const task = makeTask({ title: "Design API", priority: "high", assigneeId: "member-1" });
     const members = [makeMember({ user: { id: "user-1", name: null, email: "owner@example.com", image: null } })];
-    const onEdit = vi.fn();
     const onDelete = vi.fn();
-    const onView = vi.fn();
+    const onOpen = vi.fn();
 
-    renderWithClient(<TaskCard task={task} onEdit={onEdit} onView={onView} onDelete={onDelete} members={members} />);
+    renderWithClient(<TaskCard task={task} onOpen={onOpen} onDelete={onDelete} members={members} />);
 
     expect(screen.getByText("Design API")).toBeInTheDocument();
     expect(screen.getByText("high")).toBeInTheDocument();
     expect(screen.getByText("owner@example.com")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Design API/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
-    fireEvent.click(screen.getByRole("button", { name: "Task actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete task" }));
 
-    expect(onView).toHaveBeenCalledWith(task);
-    expect(onEdit).toHaveBeenCalledWith(task);
+    expect(onOpen).toHaveBeenCalledWith(task);
     expect(onDelete).toHaveBeenCalledWith("task-1");
   });
 });

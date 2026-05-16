@@ -50,19 +50,15 @@ function Consumer() {
       <span data-testid="member-count">{context.members.length}</span>
       <span data-testid="loading">{String(context.isLoading)}</span>
       <span data-testid="create-task">{String(context.createTaskOpen)}</span>
-      <span data-testid="edit-task">{context.editTask?.id ?? ""}</span>
-      <span data-testid="view-task">{context.viewTask?.id ?? ""}</span>
+      <span data-testid="selected-task">{context.selectedTask?.id ?? ""}</span>
       <button type="button" onClick={() => context.openCreateTask("column-1")}>
         open task
       </button>
       <button type="button" onClick={() => context.setCreateTaskOpen(false)}>
         close task
       </button>
-      <button type="button" onClick={() => context.openEditTask(makeTask({ id: "task-1" }))}>
-        edit task
-      </button>
-      <button type="button" onClick={() => context.openViewTask(makeTask({ id: "task-2" }))}>
-        view task
+      <button type="button" onClick={() => context.openTask(makeTask({ id: "task-1" }))}>
+        select task
       </button>
       <button type="button" onClick={() => context.removeColumn("column-1")}>
         remove column
@@ -115,11 +111,8 @@ describe("ProjectKanbanProvider", () => {
     expect(screen.getByTestId("active-column")).toHaveTextContent("");
     expect(screen.getByTestId("create-task")).toHaveTextContent("false");
 
-    fireEvent.click(screen.getByRole("button", { name: "edit task" }));
-    expect(screen.getByTestId("edit-task")).toHaveTextContent("task-1");
-
-    fireEvent.click(screen.getByRole("button", { name: "view task" }));
-    expect(screen.getByTestId("view-task")).toHaveTextContent("task-2");
+    fireEvent.click(screen.getByRole("button", { name: "select task" }));
+    expect(screen.getByTestId("selected-task")).toHaveTextContent("task-1");
 
     fireEvent.click(screen.getByRole("button", { name: "remove column" }));
     expect(deleteColumnMock.mutate).toHaveBeenCalledWith({ projectId: "project-1", columnId: "column-1" });
