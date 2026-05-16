@@ -2,6 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { AppError } from "@/server/lib/errors";
 import { taskRepository } from "@/server/repositories/task.repository";
 import { assertColumnAccess } from "./column-access";
+import { buildTaskOutputs } from "./task-output";
 
 export class ListTasksUseCase {
   static async execute(userId: string, columnId: string) {
@@ -14,19 +15,13 @@ export class ListTasksUseCase {
       return err(new AppError("tasks-fetch-failed", `Unable to fetch tasks: ${tasksResult.error.message}`, 500));
     }
 
-    return ok(
-      (tasksResult.unwrap() || []).map((t) => ({
-        id: t.id,
-        columnId: t.columnId,
-        assigneeId: t.assigneeId,
-        title: t.title,
-        description: t.description,
-        priority: t.priority,
-        position: t.position,
-        dueDate: t.dueDate,
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-      })),
-    );
+    const outputResult = await buildTaskOutputs(tasksResult.unwrap() || []);
+    if (outputResult.isErr()) {
+      return err(
+        new AppError("tasks-fetch-failed", `Unable to fetch task details: ${outputResult.error.message}`, 500),
+      );
+    }
+
+    return ok(outputResult.unwrap());
   }
 }

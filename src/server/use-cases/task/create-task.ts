@@ -3,8 +3,11 @@ import { nanoid } from "nanoid";
 import { AppError, NotFoundError } from "@/server/lib/errors";
 import { memberRepository } from "@/server/repositories/member.repository";
 import { taskRepository } from "@/server/repositories/task.repository";
+import { taskItemRepository } from "@/server/repositories/task-item.repository";
+import { taskTagRepository } from "@/server/repositories/task-tag.repository";
 import { assertColumnAccess } from "./column-access";
 import type { CreateTaskInput } from "./dto";
+import { buildTaskOutput } from "./task-output";
 
 export class CreateTaskUseCase {
   static async execute(userId: string, columnId: string, input: CreateTaskInput) {
@@ -19,6 +22,17 @@ export class CreateTaskUseCase {
       const assignee = assigneeResult.unwrap();
       if (!assignee || assignee.length === 0 || assignee[0].projectId !== column.projectId) {
         return err(new NotFoundError("Assignee"));
+      }
+    }
+
+    const tagIds = [...new Set(input.tagIds ?? [])];
+    for (const tagId of tagIds) {
+      const tagResult = await taskTagRepository.findProjectTagById(tagId);
+      if (tagResult.isErr()) return err(tagResult.error);
+
+      const tags = tagResult.unwrap();
+      if (!tags || tags.length === 0 || tags[0].projectId !== column.projectId) {
+        return err(new NotFoundError("Task tag"));
       }
     }
 
@@ -48,6 +62,31 @@ export class CreateTaskUseCase {
       return err(new AppError("task-create-failed", `Unable to create task: ${createResult.error.message}`, 500));
     }
 
+    for (const [position, item] of (input.items ?? []).entries()) {
+      const itemResult = await taskItemRepository.create({
+        id: nanoid(),
+        taskId,
+        title: item.title,
+        done: false,
+        position,
+      });
+
+      if (itemResult.isErr()) {
+        return err(
+          new AppError("task-item-create-failed", `Unable to create task item: ${itemResult.error.message}`, 500),
+        );
+      }
+    }
+
+    for (const tagId of tagIds) {
+      const attachResult = await taskTagRepository.attach(taskId, tagId);
+      if (attachResult.isErr()) {
+        return err(
+          new AppError("task-tag-attach-failed", `Unable to attach task tag: ${attachResult.error.message}`, 500),
+        );
+      }
+    }
+
     const newTaskResult = await taskRepository.findById(taskId);
     if (newTaskResult.isErr()) return err(newTaskResult.error);
 
@@ -56,17 +95,13 @@ export class CreateTaskUseCase {
       return err(new AppError("task-fetch-failed", "Unable to fetch new task", 500));
     }
 
-    return ok({
-      id: newTask[0].id,
-      columnId: newTask[0].columnId,
-      assigneeId: newTask[0].assigneeId,
-      title: newTask[0].title,
-      description: newTask[0].description,
-      priority: newTask[0].priority,
-      position: newTask[0].position,
-      dueDate: newTask[0].dueDate,
-      createdAt: newTask[0].createdAt,
-      updatedAt: newTask[0].updatedAt,
-    });
+    const outputResult = await buildTaskOutput(newTask[0]);
+    if (outputResult.isErr()) {
+      return err(
+        new AppError("task-fetch-failed", `Unable to fetch new task details: ${outputResult.error.message}`, 500),
+      );
+    }
+
+    return ok(outputResult.unwrap());
   }
 }
