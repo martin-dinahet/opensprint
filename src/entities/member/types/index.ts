@@ -1,15 +1,15 @@
 export type {
   AddMemberInput,
   UpdateMemberInput,
-} from "@/server/features/member/dto";
+} from "@/server/use-cases/member/dto";
 
-export type ProjectMemberRole = "owner" | "admin" | "member";
+export type MemberRole = "owner" | "admin" | "member";
 
 export type MemberWithUserOutput = {
   id: string;
   userId: string;
   projectId: string;
-  role: ProjectMemberRole;
+  role: MemberRole;
   joinedAt: string;
   user: {
     id: string;

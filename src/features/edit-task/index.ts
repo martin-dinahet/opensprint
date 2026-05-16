@@ -1,2 +1,2 @@
-export { EditTaskDialog } from "./edit-task-dialog";
-export { useEditTaskForm } from "./use-edit-task-form";
+export { useEditTaskForm } from "./model/use-edit-task-form";
+export { EditTaskDialog } from "./ui/edit-task-dialog";

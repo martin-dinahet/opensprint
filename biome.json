@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!src/shared/ui", "!drizzle"]
+    "includes": ["**", "!src/shared/shadcn", "!drizzle"]
   },
   "formatter": {
     "enabled": true,
@@ -17,7 +17,10 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      }
     }
   },
   "css": {

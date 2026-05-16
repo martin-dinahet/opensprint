@@ -1,4 +1,2 @@
-export { BoardColumn } from "./board-column";
-export { Kanban, KanbanBoard } from "./kanban";
-export { ProjectKanbanProvider, useProjectKanban } from "./project-kanban-context";
-export { useKanbanDrag } from "./use-kanban-drag";
+export { ProjectKanbanProvider, useKanbanDrag, useProjectKanban } from "./lib";
+export { Kanban, KanbanColumn, KanbanColumnView } from "./ui";

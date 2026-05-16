@@ -14,7 +14,7 @@ export const memberApi = {
   list: async (projectId: string) => {
     return requestApiResult<{ members: MemberWithUserOutput[] }>(
       () => api.projects[":id"].members.$get({ param: { id: projectId } }),
-      "Failed to fetch project members",
+      "Failed to fetch members",
       (body) => ({
         members: (body as { members?: MemberWithUserOutput[] } | null)?.members ?? [],
       }),
@@ -24,21 +24,21 @@ export const memberApi = {
   add: async (projectId: string, data: AddMemberInput) => {
     return requestApiResult<MemberWithUserOutput>(
       () => api.projects[":id"].members.$post({ param: { id: projectId }, json: data }),
-      "Failed to add project member",
+      "Failed to add member",
     );
   },
 
   update: async (projectId: string, memberId: string, data: UpdateMemberInput) => {
     return requestApiResult<MemberWithUserOutput>(
       () => api.projects[":id"].members[":memberId"].$patch({ param: { id: projectId, memberId }, json: data }),
-      "Failed to update project member",
+      "Failed to update member",
     );
   },
 
   remove: async (projectId: string, memberId: string) => {
     return requestApiResult<{ success: boolean }>(
       () => api.projects[":id"].members[":memberId"].$delete({ param: { id: projectId, memberId } }),
-      "Failed to remove project member",
+      "Failed to remove member",
     );
   },
 };

@@ -1,29 +1,27 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
-import { AuthRoute } from "./features/auth/route";
-import { boardRoute } from "./features/board/route";
-import { HealthRoute } from "./features/health/route";
-import { projectRoute } from "./features/project/route";
-import { projectMemberRoute } from "./features/project-member/route";
-import { taskManagementRoute, taskRoute } from "./features/task/route";
+import { authController } from "./controllers/auth.controller";
+import { columnController } from "./controllers/column.controller";
+import { healthController } from "./controllers/health.controller";
+import { projectController } from "./controllers/project.controller";
+import { taskController, taskManagementController } from "./controllers/task.controller";
 import { handleError } from "./lib/handle-error";
 import { handleNotFound } from "./lib/handle-notfound";
-import type { ServerVariables } from "./lib/types";
+import type { ServerVariables } from "./types/server-type";
 
-export type { ServerVariables } from "./lib/types";
+export type { ServerVariables } from "./types/server-type";
 
 const app = new Hono<ServerVariables>()
   .use(logger())
   .notFound((c) => handleNotFound(c))
   .onError((error, c) => handleError(error, c))
   .basePath("/api")
-  .route("/health", HealthRoute)
-  .route("/auth", AuthRoute)
-  .route("/projects", projectRoute)
-  .route("/projects", projectMemberRoute)
-  .route("/projects", boardRoute)
-  .route("/boards", taskRoute)
-  .route("/tasks", taskManagementRoute);
+  .route("/health", healthController)
+  .route("/auth", authController)
+  .route("/projects", projectController)
+  .route("/projects", columnController)
+  .route("/columns", taskController)
+  .route("/tasks", taskManagementController);
 
 export type ServerType = typeof app;
 export { app as server };

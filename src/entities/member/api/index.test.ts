@@ -54,7 +54,7 @@ describe("member API", () => {
     expect(apiMock.projects[":id"].members.$get).toHaveBeenCalledWith({ param: { id: "project-1" } });
     expect(requestApiResultMock).toHaveBeenCalledWith(
       expect.any(Function),
-      "Failed to fetch project members",
+      "Failed to fetch members",
       expect.any(Function),
     );
   });
@@ -68,7 +68,7 @@ describe("member API", () => {
       param: { id: "project-1" },
       json: { email: "teammate@example.com", role: "member" },
     });
-    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to add project member");
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to add member");
   });
 
   it("updates member roles with route params", async () => {
@@ -80,7 +80,7 @@ describe("member API", () => {
       param: { id: "project-1", memberId: "member-1" },
       json: { role: "admin" },
     });
-    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to update project member");
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to update member");
   });
 
   it("removes members with route params", async () => {
@@ -91,6 +91,6 @@ describe("member API", () => {
     expect(apiMock.projects[":id"].members[":memberId"].$delete).toHaveBeenCalledWith({
       param: { id: "project-1", memberId: "member-1" },
     });
-    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to remove project member");
+    expect(requestApiResultMock).toHaveBeenCalledWith(expect.any(Function), "Failed to remove member");
   });
 });

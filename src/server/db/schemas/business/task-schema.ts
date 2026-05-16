@@ -1,6 +1,6 @@
 import { index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { board } from "./board-schema";
-import { projectMember } from "./project-member-schema";
+import { column } from "./column-schema";
+import { member } from "./member-schema";
 
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 
@@ -10,13 +10,13 @@ export const task = pgTable(
     // ID
     id: text("id") //
       .primaryKey(),
-    // BOARD_ID
-    boardId: text("board_id") //
+    // COLUMN_ID
+    columnId: text("column_id") //
       .notNull()
-      .references(() => board.id),
+      .references(() => column.id),
     // ASSIGNEE_ID
     assigneeId: text("assignee_id") //
-      .references(() => projectMember.id),
+      .references(() => member.id),
     // TITLE
     title:
       text("title") //
@@ -43,5 +43,5 @@ export const task = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("task_board_id_idx").on(table.boardId), index("task_assignee_id_idx").on(table.assigneeId)],
+  (table) => [index("task_column_id_idx").on(table.columnId), index("task_assignee_id_idx").on(table.assigneeId)],
 );

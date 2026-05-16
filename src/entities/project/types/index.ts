@@ -1,7 +1,7 @@
 export type {
   CreateProjectInput,
   UpdateProjectInput,
-} from "@/server/features/project/dto";
+} from "@/server/use-cases/project/dto";
 
 export type ProjectListOutput = {
   id: string;
