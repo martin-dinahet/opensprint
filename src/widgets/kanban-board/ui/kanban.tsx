@@ -46,7 +46,7 @@ type TaskCardProps = {
   task: TaskOutput;
 };
 
-type KanbanBoardProps = ColumnProps & {
+type KanbanColumnViewProps = ColumnProps & {
   members?: Parameters<typeof EntityTaskCard>[0]["members"];
   onAddTask: () => void;
   onDeleteColumn: (id: string) => void;
@@ -256,7 +256,7 @@ const ConfirmableTaskCard = ({
   );
 };
 
-export const KanbanBoard = ({
+export const KanbanColumnView = ({
   column,
   isHovered,
   members = [],
@@ -266,7 +266,7 @@ export const KanbanBoard = ({
   onEditTask,
   onViewTask,
   tasks,
-}: KanbanBoardProps) => {
+}: KanbanColumnViewProps) => {
   return (
     <ColumnView
       column={column}

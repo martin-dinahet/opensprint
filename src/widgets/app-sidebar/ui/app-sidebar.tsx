@@ -3,6 +3,7 @@
 import { CreateProjectDialog } from "@/features/create-project";
 import { Sidebar, SidebarContent, SidebarRail } from "@/shared/shadcn/sidebar";
 import { AppSidebarProvider, useAppSidebar } from "../lib";
+import { AccountMenu } from "./account-menu";
 import { ProjectList } from "./project-list";
 
 function AppSidebarLayout() {
@@ -14,6 +15,7 @@ function AppSidebarLayout() {
         <SidebarContent className="gap-1 px-1 py-2">
           <ProjectList />
         </SidebarContent>
+        <AccountMenu />
         <SidebarRail />
       </Sidebar>
 

@@ -27,7 +27,7 @@ export default function Page() {
 
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-5xl">
-          <p className="text-sm text-muted-foreground">Pick up active work or start a new board.</p>
+          <p className="text-sm text-muted-foreground">Pick up active work or start a new project.</p>
 
           {isLoading ? (
             <LoadingScreen label="Loading projects..." variant="shell" />

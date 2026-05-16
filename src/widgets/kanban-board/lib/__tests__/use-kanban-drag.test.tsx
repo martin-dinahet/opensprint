@@ -20,8 +20,8 @@ vi.mock("@dnd-kit/sortable", () => ({
   sortableKeyboardCoordinates: vi.fn(),
 }));
 
-const todo = makeColumn({ id: "board-1", name: "Todo" });
-const doing = makeColumn({ id: "board-2", name: "Doing" });
+const todo = makeColumn({ id: "column-1", name: "Todo" });
+const doing = makeColumn({ id: "column-2", name: "Doing" });
 const taskOne = makeTask({ id: "task-1", columnId: todo.id, position: 0 });
 const taskTwo = makeTask({ id: "task-2", columnId: todo.id, position: 1 });
 const taskThree = makeTask({ id: "task-3", columnId: doing.id, position: 0 });
@@ -50,7 +50,7 @@ describe("useKanbanDrag", () => {
     vi.clearAllMocks();
   });
 
-  it("registers board tasks and exposes configured sensors", () => {
+  it("registers column tasks and exposes configured sensors", () => {
     const { moveTask, reorderTask } = setup();
     const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
@@ -59,7 +59,7 @@ describe("useKanbanDrag", () => {
     });
 
     expect(result.current.getColumnTasks(todo.id)).toEqual([taskOne]);
-    expect(result.current.getColumnTasks("unknown-board")).toEqual([]);
+    expect(result.current.getColumnTasks("unknown-column")).toEqual([]);
     expect(result.current.sensors).toHaveLength(2);
   });
 
@@ -83,7 +83,7 @@ describe("useKanbanDrag", () => {
     expect(result.current.dragInFlight).toBe(false);
   });
 
-  it("reorders tasks optimistically within a board while hovering", () => {
+  it("reorders tasks optimistically within a column while hovering", () => {
     const { moveTask, reorderTask } = setup();
     const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
@@ -101,7 +101,7 @@ describe("useKanbanDrag", () => {
     expect(result.current.getColumnTasks(todo.id).map((task) => task.id)).toEqual(["task-2", "task-1"]);
   });
 
-  it("moves tasks optimistically across boards while hovering", () => {
+  it("moves tasks optimistically across columns while hovering", () => {
     const { moveTask, reorderTask } = setup();
     const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
@@ -147,7 +147,7 @@ describe("useKanbanDrag", () => {
     expect(result.current.overColumnId).toBeNull();
   });
 
-  it("persists cross-board drops and resets after the mutation resolves", async () => {
+  it("persists cross-column drops and resets after the mutation resolves", async () => {
     const { moveTask, reorderTask } = setup();
     const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 
@@ -175,7 +175,7 @@ describe("useKanbanDrag", () => {
     expect(result.current.isCrossColumnDrop).toBe(false);
   });
 
-  it("persists same-board reorder and resets after the mutation resolves", async () => {
+  it("persists same-column reorder and resets after the mutation resolves", async () => {
     const { moveTask, reorderTask } = setup();
     const { result } = renderHook(() => useKanbanDrag(moveTask as never, reorderTask as never));
 

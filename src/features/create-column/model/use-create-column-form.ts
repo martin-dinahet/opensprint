@@ -11,11 +11,11 @@ const createColumnSchema = z.object({
 });
 
 type Options = {
-  boardId: string;
   onOpenChange: (open: boolean) => void;
+  projectId: string;
 };
 
-export function useCreateColumnForm({ boardId, onOpenChange }: Options) {
+export function useCreateColumnForm({ onOpenChange, projectId }: Options) {
   const createColumn = useCreateColumn();
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -35,13 +35,13 @@ export function useCreateColumnForm({ boardId, onOpenChange }: Options) {
         setFieldErrors(fieldErrors);
         return;
       }
-      if (!boardId) {
-        setGlobalError("Choose a board before creating a column.");
+      if (!projectId) {
+        setGlobalError("Choose a project before creating a column.");
         return;
       }
 
       const result = await handleClientResult(
-        () => createColumn.mutateAsync({ boardId, data }),
+        () => createColumn.mutateAsync({ projectId, data }),
         "Unable to create column",
       );
       result.match({

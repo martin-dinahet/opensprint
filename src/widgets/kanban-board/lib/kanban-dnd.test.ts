@@ -19,8 +19,8 @@ describe("kanban collision detection", () => {
 
   it("prefers task collisions under the pointer", () => {
     const boardCollision = {
-      id: "board-1",
-      data: { droppableContainer: { data: { current: { type: "board" } } } },
+      id: "column-1",
+      data: { droppableContainer: { data: { current: { type: "column" } } } },
     };
     const taskCollision = {
       id: "task-1",
@@ -36,8 +36,8 @@ describe("kanban collision detection", () => {
 
   it("uses pointer collisions when no task is directly hit", () => {
     const boardCollision = {
-      id: "board-1",
-      data: { droppableContainer: { data: { current: { type: "board" } } } },
+      id: "column-1",
+      data: { droppableContainer: { data: { current: { type: "column" } } } },
     };
     pointerWithinMock.mockReturnValue([boardCollision]);
 
@@ -45,7 +45,7 @@ describe("kanban collision detection", () => {
   });
 
   it("falls back to closest corners when there is no pointer collision", () => {
-    const closestCollision = { id: "board-1" };
+    const closestCollision = { id: "column-1" };
     pointerWithinMock.mockReturnValue([]);
     closestCornersMock.mockReturnValue([closestCollision]);
 

@@ -1,6 +1,6 @@
 import { index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { boardColumn } from "./board-column-schema";
-import { projectMember } from "./project-member-schema";
+import { column } from "./column-schema";
+import { member } from "./member-schema";
 
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 
@@ -13,10 +13,10 @@ export const task = pgTable(
     // COLUMN_ID
     columnId: text("column_id") //
       .notNull()
-      .references(() => boardColumn.id),
+      .references(() => column.id),
     // ASSIGNEE_ID
     assigneeId: text("assignee_id") //
-      .references(() => projectMember.id),
+      .references(() => member.id),
     // TITLE
     title:
       text("title") //

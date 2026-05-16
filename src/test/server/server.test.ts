@@ -2,9 +2,9 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/server/lib/errors";
 import { createHonoTestClient } from "@/test/backend";
-import { makeBoard, makeProject, makeTask, makeUser } from "@/test/factories";
+import { makeColumn, makeProject, makeTask, makeUser } from "@/test/factories";
 
-const { authMock, boardUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
+const { authMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
   authMock: {
     api: {
       getSession: vi.fn(),
@@ -12,34 +12,33 @@ const { authMock, boardUseCasesMock, memberUseCasesMock, projectUseCasesMock, ta
     handler: vi.fn(),
   },
   projectUseCasesMock: {
-    createProject: vi.fn(),
-    deleteProject: vi.fn(),
-    getProject: vi.fn(),
-    listProjects: vi.fn(),
-    updateProject: vi.fn(),
+    CreateProjectUseCase: { execute: vi.fn() },
+    DeleteProjectUseCase: { execute: vi.fn() },
+    GetProjectUseCase: { execute: vi.fn() },
+    ListProjectsUseCase: { execute: vi.fn() },
+    UpdateProjectUseCase: { execute: vi.fn() },
   },
-  boardUseCasesMock: {
-    createBoard: vi.fn(),
-    deleteBoard: vi.fn(),
-    getBoard: vi.fn(),
-    listBoards: vi.fn(),
-    reorderBoards: vi.fn(),
-    updateBoard: vi.fn(),
+  columnUseCasesMock: {
+    CreateColumnUseCase: { execute: vi.fn() },
+    DeleteColumnUseCase: { execute: vi.fn() },
+    ListColumnsUseCase: { execute: vi.fn() },
+    ReorderColumnsUseCase: { execute: vi.fn() },
+    UpdateColumnUseCase: { execute: vi.fn() },
   },
   memberUseCasesMock: {
-    addMember: vi.fn(),
-    listMembers: vi.fn(),
-    removeMember: vi.fn(),
-    updateMember: vi.fn(),
+    AddMemberUseCase: { execute: vi.fn() },
+    ListMembersUseCase: { execute: vi.fn() },
+    RemoveMemberUseCase: { execute: vi.fn() },
+    UpdateMemberUseCase: { execute: vi.fn() },
   },
   taskUseCasesMock: {
-    assignTask: vi.fn(),
-    createTask: vi.fn(),
-    deleteTask: vi.fn(),
-    listTasks: vi.fn(),
-    moveTask: vi.fn(),
-    reorderTask: vi.fn(),
-    updateTask: vi.fn(),
+    AssignTaskUseCase: { execute: vi.fn() },
+    CreateTaskUseCase: { execute: vi.fn() },
+    DeleteTaskUseCase: { execute: vi.fn() },
+    ListTasksUseCase: { execute: vi.fn() },
+    MoveTaskUseCase: { execute: vi.fn() },
+    ReorderTaskUseCase: { execute: vi.fn() },
+    UpdateTaskUseCase: { execute: vi.fn() },
   },
 }));
 
@@ -48,7 +47,7 @@ vi.mock("@/server/lib/auth", () => ({
 }));
 
 vi.mock("@/server/use-cases/project", () => projectUseCasesMock);
-vi.mock("@/server/use-cases/board", () => boardUseCasesMock);
+vi.mock("@/server/use-cases/column", () => columnUseCasesMock);
 vi.mock("@/server/use-cases/member", () => memberUseCasesMock);
 vi.mock("@/server/use-cases/task", () => taskUseCasesMock);
 
@@ -71,14 +70,14 @@ describe("server routes", () => {
   });
 
   it("lists projects through Hono testClient", async () => {
-    projectUseCasesMock.listProjects.mockResolvedValue(ok([makeProject()]));
+    projectUseCasesMock.ListProjectsUseCase.execute.mockResolvedValue(ok([makeProject()]));
 
     const client = createHonoTestClient(server);
     const response = await client.api.projects.$get();
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ projects: [makeProject()] });
-    expect(projectUseCasesMock.listProjects).toHaveBeenCalledWith("user-1");
+    expect(projectUseCasesMock.ListProjectsUseCase.execute).toHaveBeenCalledWith("user-1");
   });
 
   it("returns 401 when a guarded route has no session", async () => {
@@ -101,11 +100,13 @@ describe("server routes", () => {
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body).toMatchObject({ success: false });
-    expect(projectUseCasesMock.createProject).not.toHaveBeenCalled();
+    expect(projectUseCasesMock.CreateProjectUseCase.execute).not.toHaveBeenCalled();
   });
 
   it("maps use case errors to route responses", async () => {
-    projectUseCasesMock.getProject.mockResolvedValue(err(new AppError("project-not-found", "Project not found", 404)));
+    projectUseCasesMock.GetProjectUseCase.execute.mockResolvedValue(
+      err(new AppError("project-not-found", "Project not found", 404)),
+    );
 
     const client = createHonoTestClient(server);
     const response = await client.api.projects[":id"].$get({ param: { id: "missing-project" } });
@@ -118,7 +119,7 @@ describe("server routes", () => {
   });
 
   it("passes params and validated bodies to update use cases", async () => {
-    projectUseCasesMock.updateProject.mockResolvedValue(
+    projectUseCasesMock.UpdateProjectUseCase.execute.mockResolvedValue(
       ok({ id: "project-1", name: "Updated", description: null, updatedAt: new Date("2026-01-01T00:00:00.000Z") }),
     );
 
@@ -129,14 +130,16 @@ describe("server routes", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(projectUseCasesMock.updateProject).toHaveBeenCalledWith("user-1", "project-1", { name: "Updated" });
+    expect(projectUseCasesMock.UpdateProjectUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
+      name: "Updated",
+    });
   });
 
   it("routes project creation and deletion requests", async () => {
-    projectUseCasesMock.createProject.mockResolvedValue(
+    projectUseCasesMock.CreateProjectUseCase.execute.mockResolvedValue(
       ok({ id: "project-new", name: "New project", description: null }),
     );
-    projectUseCasesMock.deleteProject.mockResolvedValue(ok({ success: true }));
+    projectUseCasesMock.DeleteProjectUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
     const createResponse = await client.api.projects.$post({
@@ -146,67 +149,71 @@ describe("server routes", () => {
 
     expect(createResponse.status).toBe(200);
     expect(deleteResponse.status).toBe(200);
-    expect(projectUseCasesMock.createProject).toHaveBeenCalledWith("user-1", {
+    expect(projectUseCasesMock.CreateProjectUseCase.execute).toHaveBeenCalledWith("user-1", {
       name: "New project",
       description: "Detailed enough",
     });
-    expect(projectUseCasesMock.deleteProject).toHaveBeenCalledWith("user-1", "project-1");
+    expect(projectUseCasesMock.DeleteProjectUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
   });
 
-  it("routes board listing with project params", async () => {
-    boardUseCasesMock.listBoards.mockResolvedValue(ok([makeBoard()]));
+  it("routes column listing with project params", async () => {
+    columnUseCasesMock.ListColumnsUseCase.execute.mockResolvedValue(ok([makeColumn()]));
 
     const client = createHonoTestClient(server);
-    const response = await client.api.projects[":id"].boards.$get({ param: { id: "project-1" } });
+    const response = await client.api.projects[":projectId"].columns.$get({ param: { projectId: "project-1" } });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ boards: [makeBoard()] });
-    expect(boardUseCasesMock.listBoards).toHaveBeenCalledWith("user-1", "project-1");
+    await expect(response.json()).resolves.toEqual({ columns: [makeColumn()] });
+    expect(columnUseCasesMock.ListColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
   });
 
-  it("routes board create, get, update, and delete requests", async () => {
-    boardUseCasesMock.createBoard.mockResolvedValue(ok(makeBoard({ id: "board-new", name: "Doing" })));
-    boardUseCasesMock.getBoard.mockResolvedValue(ok(makeBoard()));
-    boardUseCasesMock.updateBoard.mockResolvedValue(ok({ ...makeBoard(), name: "Done" }));
-    boardUseCasesMock.deleteBoard.mockResolvedValue(ok({ success: true }));
+  it("routes column create, update, and delete requests", async () => {
+    columnUseCasesMock.CreateColumnUseCase.execute.mockResolvedValue(
+      ok(makeColumn({ id: "column-new", name: "Doing" })),
+    );
+    columnUseCasesMock.UpdateColumnUseCase.execute.mockResolvedValue(ok({ ...makeColumn(), name: "Done" }));
+    columnUseCasesMock.DeleteColumnUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
-    await client.api.projects[":id"].boards.$post({
-      param: { id: "project-1" },
+    await client.api.projects[":projectId"].columns.$post({
+      param: { projectId: "project-1" },
       json: { name: "Doing" },
     });
-    await client.api.projects[":id"].boards[":boardId"].$get({
-      param: { id: "project-1", boardId: "board-1" },
-    });
-    await client.api.projects[":id"].boards[":boardId"].$patch({
-      param: { id: "project-1", boardId: "board-1" },
+    await client.api.projects[":projectId"].columns[":columnId"].$patch({
+      param: { projectId: "project-1", columnId: "column-1" },
       json: { name: "Done" },
     });
-    await client.api.projects[":id"].boards[":boardId"].$delete({
-      param: { id: "project-1", boardId: "board-1" },
+    await client.api.projects[":projectId"].columns[":columnId"].$delete({
+      param: { projectId: "project-1", columnId: "column-1" },
     });
 
-    expect(boardUseCasesMock.createBoard).toHaveBeenCalledWith("user-1", "project-1", { name: "Doing" });
-    expect(boardUseCasesMock.getBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1");
-    expect(boardUseCasesMock.updateBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1", { name: "Done" });
-    expect(boardUseCasesMock.deleteBoard).toHaveBeenCalledWith("user-1", "project-1", "board-1");
+    expect(columnUseCasesMock.CreateColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
+      name: "Doing",
+    });
+    expect(columnUseCasesMock.UpdateColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "column-1", {
+      name: "Done",
+    });
+    expect(columnUseCasesMock.DeleteColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "column-1");
   });
 
-  it("routes board reorder requests", async () => {
-    boardUseCasesMock.reorderBoards.mockResolvedValue(ok({ success: true }));
+  it("routes column reorder requests", async () => {
+    columnUseCasesMock.ReorderColumnsUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
-    const response = await client.api.projects[":id"].boards.reorder.$patch({
-      param: { id: "project-1" },
-      json: { boardIds: ["board-2", "board-1"] },
+    const response = await client.api.projects[":projectId"].columns.reorder.$patch({
+      param: { projectId: "project-1" },
+      json: { columnIds: ["column-2", "column-1"] },
     });
 
     expect(response.status).toBe(200);
-    expect(boardUseCasesMock.reorderBoards).toHaveBeenCalledWith("user-1", "project-1", ["board-2", "board-1"]);
+    expect(columnUseCasesMock.ReorderColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", [
+      "column-2",
+      "column-1",
+    ]);
   });
 
   it("routes member creation requests", async () => {
-    memberUseCasesMock.addMember.mockResolvedValue(
+    memberUseCasesMock.AddMemberUseCase.execute.mockResolvedValue(
       ok({
         id: "member-1",
         userId: "user-2",
@@ -223,15 +230,15 @@ describe("server routes", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(memberUseCasesMock.addMember).toHaveBeenCalledWith("user-1", "project-1", {
+    expect(memberUseCasesMock.AddMemberUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
       email: "user@example.com",
       role: "admin",
     });
   });
 
   it("routes member list, update, and delete requests", async () => {
-    memberUseCasesMock.listMembers.mockResolvedValue(ok([]));
-    memberUseCasesMock.updateMember.mockResolvedValue(
+    memberUseCasesMock.ListMembersUseCase.execute.mockResolvedValue(ok([]));
+    memberUseCasesMock.UpdateMemberUseCase.execute.mockResolvedValue(
       ok({
         id: "member-1",
         userId: "user-2",
@@ -240,7 +247,7 @@ describe("server routes", () => {
         joinedAt: new Date("2026-01-01T00:00:00.000Z"),
       }),
     );
-    memberUseCasesMock.removeMember.mockResolvedValue(ok({ success: true }));
+    memberUseCasesMock.RemoveMemberUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
     await client.api.projects[":id"].members.$get({ param: { id: "project-1" } });
@@ -252,11 +259,11 @@ describe("server routes", () => {
       param: { id: "project-1", memberId: "member-1" },
     });
 
-    expect(memberUseCasesMock.listMembers).toHaveBeenCalledWith("user-1", "project-1");
-    expect(memberUseCasesMock.updateMember).toHaveBeenCalledWith("user-1", "project-1", "member-1", {
+    expect(memberUseCasesMock.ListMembersUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
+    expect(memberUseCasesMock.UpdateMemberUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "member-1", {
       role: "admin",
     });
-    expect(memberUseCasesMock.removeMember).toHaveBeenCalledWith("user-1", "project-1", "member-1");
+    expect(memberUseCasesMock.RemoveMemberUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "member-1");
   });
 
   it("validates member update roles", async () => {
@@ -267,11 +274,11 @@ describe("server routes", () => {
     });
 
     expect(response.status).toBe(403);
-    expect(memberUseCasesMock.updateMember).not.toHaveBeenCalled();
+    expect(memberUseCasesMock.UpdateMemberUseCase.execute).not.toHaveBeenCalled();
   });
 
   it("routes column task creation requests", async () => {
-    taskUseCasesMock.createTask.mockResolvedValue(ok(makeTask({ id: "task-new", title: "New task" })));
+    taskUseCasesMock.CreateTaskUseCase.execute.mockResolvedValue(ok(makeTask({ id: "task-new", title: "New task" })));
 
     const client = createHonoTestClient(server);
     const response = await client.api.columns[":columnId"].tasks.$post({
@@ -280,16 +287,16 @@ describe("server routes", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(taskUseCasesMock.createTask).toHaveBeenCalledWith("user-1", "column-1", {
+    expect(taskUseCasesMock.CreateTaskUseCase.execute).toHaveBeenCalledWith("user-1", "column-1", {
       title: "New task",
       priority: "high",
     });
   });
 
   it("routes task list, update, and delete requests", async () => {
-    taskUseCasesMock.listTasks.mockResolvedValue(ok([makeTask()]));
-    taskUseCasesMock.updateTask.mockResolvedValue(ok(makeTask({ title: "Updated" })));
-    taskUseCasesMock.deleteTask.mockResolvedValue(ok({ success: true }));
+    taskUseCasesMock.ListTasksUseCase.execute.mockResolvedValue(ok([makeTask()]));
+    taskUseCasesMock.UpdateTaskUseCase.execute.mockResolvedValue(ok(makeTask({ title: "Updated" })));
+    taskUseCasesMock.DeleteTaskUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
     await client.api.columns[":columnId"].tasks.$get({ param: { columnId: "column-1" } });
@@ -301,14 +308,16 @@ describe("server routes", () => {
       param: { columnId: "column-1", taskId: "task-1" },
     });
 
-    expect(taskUseCasesMock.listTasks).toHaveBeenCalledWith("user-1", "column-1");
-    expect(taskUseCasesMock.updateTask).toHaveBeenCalledWith("user-1", "column-1", "task-1", { title: "Updated" });
-    expect(taskUseCasesMock.deleteTask).toHaveBeenCalledWith("user-1", "column-1", "task-1");
+    expect(taskUseCasesMock.ListTasksUseCase.execute).toHaveBeenCalledWith("user-1", "column-1");
+    expect(taskUseCasesMock.UpdateTaskUseCase.execute).toHaveBeenCalledWith("user-1", "column-1", "task-1", {
+      title: "Updated",
+    });
+    expect(taskUseCasesMock.DeleteTaskUseCase.execute).toHaveBeenCalledWith("user-1", "column-1", "task-1");
   });
 
   it("routes task assignment and reorder requests", async () => {
-    taskUseCasesMock.assignTask.mockResolvedValue(ok({ id: "task-1", assigneeId: null }));
-    taskUseCasesMock.reorderTask.mockResolvedValue(ok({ id: "task-1", position: 2 }));
+    taskUseCasesMock.AssignTaskUseCase.execute.mockResolvedValue(ok({ id: "task-1", assigneeId: null }));
+    taskUseCasesMock.ReorderTaskUseCase.execute.mockResolvedValue(ok({ id: "task-1", position: 2 }));
 
     const client = createHonoTestClient(server);
     await client.api.tasks[":taskId"].assign.$patch({
@@ -320,12 +329,12 @@ describe("server routes", () => {
       json: { position: 2 },
     });
 
-    expect(taskUseCasesMock.assignTask).toHaveBeenCalledWith("user-1", "task-1", { assigneeId: null });
-    expect(taskUseCasesMock.reorderTask).toHaveBeenCalledWith("user-1", "task-1", { position: 2 });
+    expect(taskUseCasesMock.AssignTaskUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", { assigneeId: null });
+    expect(taskUseCasesMock.ReorderTaskUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", { position: 2 });
   });
 
   it("routes task movement requests", async () => {
-    taskUseCasesMock.moveTask.mockResolvedValue(ok({ id: "task-1", columnId: "column-2", position: 0 }));
+    taskUseCasesMock.MoveTaskUseCase.execute.mockResolvedValue(ok({ id: "task-1", columnId: "column-2", position: 0 }));
 
     const client = createHonoTestClient(server);
     const response = await client.api.tasks[":taskId"].move.$patch({
@@ -334,7 +343,7 @@ describe("server routes", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(taskUseCasesMock.moveTask).toHaveBeenCalledWith("user-1", "task-1", {
+    expect(taskUseCasesMock.MoveTaskUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
       columnId: "column-2",
       position: 0,
     });

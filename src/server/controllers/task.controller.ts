@@ -3,13 +3,13 @@ import { guard } from "@/server/lib/guard";
 import { validate } from "@/server/lib/validate";
 import type { ServerVariables } from "@/server/types/server-type";
 import {
-  assignTask,
-  createTask,
-  deleteTask,
-  listTasks,
-  moveTask,
-  reorderTask,
-  updateTask,
+  AssignTaskUseCase,
+  CreateTaskUseCase,
+  DeleteTaskUseCase,
+  ListTasksUseCase,
+  MoveTaskUseCase,
+  ReorderTaskUseCase,
+  UpdateTaskUseCase,
 } from "@/server/use-cases/task";
 import {
   AssignTaskInput,
@@ -30,7 +30,7 @@ export const taskController = new Hono<ServerVariables>() //
     const columnId = c.req.param("columnId");
     const currentUser = c.get("user");
 
-    const result = await listTasks(currentUser.id, columnId);
+    const result = await ListTasksUseCase.execute(currentUser.id, columnId);
 
     return result.match({
       ok: (tasks) => c.json({ tasks }),
@@ -43,7 +43,7 @@ export const taskController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await createTask(currentUser.id, columnId, body);
+    const result = await CreateTaskUseCase.execute(currentUser.id, columnId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -57,7 +57,7 @@ export const taskController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await updateTask(currentUser.id, columnId, taskId, body);
+    const result = await UpdateTaskUseCase.execute(currentUser.id, columnId, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -70,7 +70,7 @@ export const taskController = new Hono<ServerVariables>() //
     const taskId = c.req.param("taskId");
     const currentUser = c.get("user");
 
-    const result = await deleteTask(currentUser.id, columnId, taskId);
+    const result = await DeleteTaskUseCase.execute(currentUser.id, columnId, taskId);
 
     return result.match({
       ok: (response) => c.json(response),
@@ -84,7 +84,7 @@ export const taskManagementController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await assignTask(currentUser.id, taskId, body);
+    const result = await AssignTaskUseCase.execute(currentUser.id, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -97,7 +97,7 @@ export const taskManagementController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await moveTask(currentUser.id, taskId, body);
+    const result = await MoveTaskUseCase.execute(currentUser.id, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),
@@ -110,7 +110,7 @@ export const taskManagementController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await reorderTask(currentUser.id, taskId, body);
+    const result = await ReorderTaskUseCase.execute(currentUser.id, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),

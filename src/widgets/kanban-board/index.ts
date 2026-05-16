@@ -1,2 +1,2 @@
 export { ProjectKanbanProvider, useKanbanDrag, useProjectKanban } from "./lib";
-export { BoardColumn, Kanban, KanbanBoard } from "./ui";
+export { Kanban, KanbanColumn, KanbanColumnView } from "./ui";

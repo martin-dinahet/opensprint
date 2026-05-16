@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
-import { projectMember, user } from "@/server/db/schema";
+import { member, user } from "@/server/db/schema";
 import type { UpdateMemberInput } from "@/server/use-cases/member/dto";
 
 export class MemberRepository {
@@ -9,26 +9,26 @@ export class MemberRepository {
     return handle(() =>
       db
         .select()
-        .from(projectMember)
-        .where(and(eq(projectMember.userId, userId), eq(projectMember.projectId, projectId))),
+        .from(member)
+        .where(and(eq(member.userId, userId), eq(member.projectId, projectId))),
     );
   }
 
   async findByProject(projectId: string) {
-    return handle(() => db.select().from(projectMember).where(eq(projectMember.projectId, projectId)));
+    return handle(() => db.select().from(member).where(eq(member.projectId, projectId)));
   }
 
   async findById(id: string) {
-    return handle(() => db.select().from(projectMember).where(eq(projectMember.id, id)));
+    return handle(() => db.select().from(member).where(eq(member.id, id)));
   }
 
   async findByUserId(userId: string) {
-    return handle(() => db.select().from(projectMember).where(eq(projectMember.userId, userId)));
+    return handle(() => db.select().from(member).where(eq(member.userId, userId)));
   }
 
   async create(data: { id: string; projectId: string; userId: string; role: "owner" | "admin" | "member" }) {
     return handle(() =>
-      db.insert(projectMember).values({
+      db.insert(member).values({
         id: data.id,
         projectId: data.projectId,
         userId: data.userId,
@@ -38,15 +38,15 @@ export class MemberRepository {
   }
 
   async update(id: string, data: UpdateMemberInput) {
-    return handle(() => db.update(projectMember).set(data).where(eq(projectMember.id, id)));
+    return handle(() => db.update(member).set(data).where(eq(member.id, id)));
   }
 
   async delete(id: string) {
-    return handle(() => db.delete(projectMember).where(eq(projectMember.id, id)));
+    return handle(() => db.delete(member).where(eq(member.id, id)));
   }
 
   async deleteByProject(projectId: string) {
-    return handle(() => db.delete(projectMember).where(eq(projectMember.projectId, projectId)));
+    return handle(() => db.delete(member).where(eq(member.projectId, projectId)));
   }
 
   async findUserByEmail(email: string) {

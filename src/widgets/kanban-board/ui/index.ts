@@ -1,2 +1,2 @@
-export { BoardColumn } from "./board-column";
-export { Kanban, KanbanBoard } from "./kanban";
+export { KanbanColumn } from "./kanban-column";
+export { Kanban, KanbanColumnView } from "./kanban";

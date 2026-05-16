@@ -6,7 +6,7 @@ export type {
 
 export type ColumnOutput = {
   id: string;
-  boardId: string;
+  projectId: string;
   name: string;
   position: number;
   createdAt: string;
@@ -15,7 +15,7 @@ export type ColumnOutput = {
 
 export type UpdateColumnOutput = {
   id: string;
-  boardId: string;
+  projectId: string;
   name: string;
   position: number;
   updatedAt: string;

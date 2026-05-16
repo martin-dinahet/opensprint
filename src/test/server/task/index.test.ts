@@ -1,38 +1,29 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { boardRepositoryMock, columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(
-  () => ({
-    boardRepositoryMock: {
-      findById: vi.fn(),
-    },
-    columnRepositoryMock: {
-      findById: vi.fn(),
-    },
-    memberRepositoryMock: {
-      findById: vi.fn(),
-      findByUserAndProject: vi.fn(),
-    },
-    nanoidMock: vi.fn(),
-    taskRepositoryMock: {
-      create: vi.fn(),
-      delete: vi.fn(),
-      findByColumn: vi.fn(),
-      findById: vi.fn(),
-      update: vi.fn(),
-      updateAssignee: vi.fn(),
-      updateColumnAndPosition: vi.fn(),
-      updatePosition: vi.fn(),
-    },
-  }),
-);
+const { columnRepositoryMock, memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() => ({
+  columnRepositoryMock: {
+    findById: vi.fn(),
+  },
+  memberRepositoryMock: {
+    findById: vi.fn(),
+    findByUserAndProject: vi.fn(),
+  },
+  nanoidMock: vi.fn(),
+  taskRepositoryMock: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    findByColumn: vi.fn(),
+    findById: vi.fn(),
+    update: vi.fn(),
+    updateAssignee: vi.fn(),
+    updateColumnAndPosition: vi.fn(),
+    updatePosition: vi.fn(),
+  },
+}));
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
-}));
-
-vi.mock("@/server/repositories/board.repository", () => ({
-  boardRepository: boardRepositoryMock,
 }));
 
 vi.mock("@/server/repositories/column.repository", () => ({
@@ -52,15 +43,7 @@ const { assignTask, createTask, deleteTask, listTasks, moveTask, reorderTask, up
 );
 
 const now = new Date("2026-01-01T00:00:00.000Z");
-const board = {
-  id: "board-1",
-  projectId: "project-1",
-  name: "Sprint Board",
-  position: 0,
-  createdAt: now,
-  updatedAt: now,
-};
-const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
+const column = { id: "column-1", projectId: "project-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
 const targetColumn = { ...column, id: "column-2", position: 1 };
 const ownerMembership = { id: "member-1", projectId: "project-1", userId: "user-1", role: "owner", joinedAt: now };
 const assigneeMembership = {
@@ -88,7 +71,6 @@ describe("task use cases", () => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("task-new");
     columnRepositoryMock.findById.mockResolvedValue(ok([column]));
-    boardRepositoryMock.findById.mockResolvedValue(ok([board]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     taskRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
   });
@@ -139,7 +121,7 @@ describe("task use cases", () => {
     expect(taskRepositoryMock.findByColumn).not.toHaveBeenCalled();
   });
 
-  it("creates a task at the next board position", async () => {
+  it("creates a task at the next column position", async () => {
     memberRepositoryMock.findById.mockResolvedValue(ok([assigneeMembership]));
     taskRepositoryMock.findByColumn.mockResolvedValue(ok([task]));
     taskRepositoryMock.create.mockResolvedValue(ok(undefined));

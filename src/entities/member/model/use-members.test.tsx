@@ -4,9 +4,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { memberApi, memberKeys } from "@/entities/member/api";
-import { makeProjectMember } from "@/test/factories";
+import { makeMember } from "@/test/factories";
 import { createTestQueryClient } from "@/test/render";
-import { useAddProjectMember, useProjectMembers, useRemoveProjectMember, useUpdateProjectMember } from ".";
+import { useAddMember, useMembers, useRemoveMember, useUpdateMember } from ".";
 
 vi.mock("@/entities/member/api", () => ({
   memberKeys: {
@@ -28,11 +28,11 @@ describe("member hooks", () => {
   });
 
   it("loads project members with the project query key", async () => {
-    const members = [makeProjectMember()];
+    const members = [makeMember()];
     vi.mocked(memberApi.list).mockResolvedValue(ok({ members }));
     const queryClient = createTestQueryClient();
 
-    const { result } = renderHook(() => useProjectMembers("project-1"), {
+    const { result } = renderHook(() => useMembers("project-1"), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),
@@ -48,7 +48,7 @@ describe("member hooks", () => {
   it("does not load members without a project id", () => {
     const queryClient = createTestQueryClient();
 
-    const { result } = renderHook(() => useProjectMembers(""), {
+    const { result } = renderHook(() => useMembers(""), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),
@@ -59,12 +59,12 @@ describe("member hooks", () => {
   });
 
   it("adds members and invalidates the project member list", async () => {
-    const member = makeProjectMember();
+    const member = makeMember();
     vi.mocked(memberApi.add).mockResolvedValue(ok(member));
     const queryClient = createTestQueryClient();
     queryClient.setQueryData(memberKeys.list("project-1"), []);
 
-    const { result } = renderHook(() => useAddProjectMember("project-1"), {
+    const { result } = renderHook(() => useAddMember("project-1"), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),
@@ -77,12 +77,12 @@ describe("member hooks", () => {
   });
 
   it("updates members and invalidates the project member list", async () => {
-    const member = makeProjectMember({ role: "admin" });
+    const member = makeMember({ role: "admin" });
     vi.mocked(memberApi.update).mockResolvedValue(ok(member));
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(memberKeys.list("project-1"), [makeProjectMember()]);
+    queryClient.setQueryData(memberKeys.list("project-1"), [makeMember()]);
 
-    const { result } = renderHook(() => useUpdateProjectMember("project-1"), {
+    const { result } = renderHook(() => useUpdateMember("project-1"), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),
@@ -97,9 +97,9 @@ describe("member hooks", () => {
   it("removes members and invalidates the project member list", async () => {
     vi.mocked(memberApi.remove).mockResolvedValue(ok({ success: true }));
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(memberKeys.list("project-1"), [makeProjectMember()]);
+    queryClient.setQueryData(memberKeys.list("project-1"), [makeMember()]);
 
-    const { result } = renderHook(() => useRemoveProjectMember("project-1"), {
+    const { result } = renderHook(() => useRemoveMember("project-1"), {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),

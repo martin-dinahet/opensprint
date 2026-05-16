@@ -2,9 +2,20 @@ import { Hono } from "hono";
 import { guard } from "@/server/lib/guard";
 import { validate } from "@/server/lib/validate";
 import type { ServerVariables } from "@/server/types/server-type";
-import { addMember, listMembers, removeMember, updateMember } from "@/server/use-cases/member";
+import {
+  AddMemberUseCase,
+  ListMembersUseCase,
+  RemoveMemberUseCase,
+  UpdateMemberUseCase,
+} from "@/server/use-cases/member";
 import { AddMemberInput, UpdateMemberInput } from "@/server/use-cases/member/dto";
-import { createProject, deleteProject, getProject, listProjects, updateProject } from "@/server/use-cases/project";
+import {
+  CreateProjectUseCase,
+  DeleteProjectUseCase,
+  GetProjectUseCase,
+  ListProjectsUseCase,
+  UpdateProjectUseCase,
+} from "@/server/use-cases/project";
 import { CreateProjectInput, UpdateProjectInput } from "@/server/use-cases/project/dto";
 
 const CreateProjectSchema = CreateProjectInput;
@@ -16,7 +27,7 @@ export const projectController = new Hono<ServerVariables>() //
   .get("/", guard(), async (c) => {
     const currentUser = c.get("user");
 
-    const result = await listProjects(currentUser.id);
+    const result = await ListProjectsUseCase.execute(currentUser.id);
 
     return result.match({
       ok: (projects) => c.json({ projects }),
@@ -28,7 +39,7 @@ export const projectController = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    const result = await getProject(currentUser.id, projectId);
+    const result = await GetProjectUseCase.execute(currentUser.id, projectId);
 
     return result.match({
       ok: (project) => c.json(project),
@@ -41,7 +52,7 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await updateProject(currentUser.id, projectId, body);
+    const result = await UpdateProjectUseCase.execute(currentUser.id, projectId, body);
 
     return result.match({
       ok: (project) => c.json(project),
@@ -53,7 +64,7 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await createProject(currentUser.id, body);
+    const result = await CreateProjectUseCase.execute(currentUser.id, body);
 
     return result.match({
       ok: (project) => c.json(project),
@@ -65,7 +76,7 @@ export const projectController = new Hono<ServerVariables>() //
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    const result = await deleteProject(currentUser.id, projectId);
+    const result = await DeleteProjectUseCase.execute(currentUser.id, projectId);
 
     return result.match({
       ok: (response) => c.json(response),
@@ -73,12 +84,12 @@ export const projectController = new Hono<ServerVariables>() //
     });
   })
 
-  // Project member routes
+  // Member routes
   .get("/:id/members", guard(), async (c) => {
     const projectId = c.req.param("id");
     const currentUser = c.get("user");
 
-    const result = await listMembers(currentUser.id, projectId);
+    const result = await ListMembersUseCase.execute(currentUser.id, projectId);
 
     return result.match({
       ok: (members) => c.json({ members }),
@@ -91,7 +102,7 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await addMember(currentUser.id, projectId, body);
+    const result = await AddMemberUseCase.execute(currentUser.id, projectId, body);
 
     return result.match({
       ok: (member) => c.json(member),
@@ -105,7 +116,7 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
     const body = c.req.valid("json");
 
-    const result = await updateMember(currentUser.id, projectId, memberId, body);
+    const result = await UpdateMemberUseCase.execute(currentUser.id, projectId, memberId, body);
 
     return result.match({
       ok: (member) => c.json(member),
@@ -118,7 +129,7 @@ export const projectController = new Hono<ServerVariables>() //
     const memberId = c.req.param("memberId");
     const currentUser = c.get("user");
 
-    const result = await removeMember(currentUser.id, projectId, memberId);
+    const result = await RemoveMemberUseCase.execute(currentUser.id, projectId, memberId);
 
     return result.match({
       ok: (response) => c.json(response),

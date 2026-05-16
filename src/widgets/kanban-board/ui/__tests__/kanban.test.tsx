@@ -2,9 +2,9 @@ import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { TaskCard } from "@/entities/task";
-import { makeColumn, makeProjectMember, makeTask } from "@/test/factories";
+import { makeColumn, makeMember, makeTask } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
-import { KanbanBoard } from "@/widgets/kanban-board";
+import { KanbanColumnView } from "@/widgets/kanban-board";
 
 vi.mock("@dnd-kit/core", () => ({
   useDroppable: () => ({
@@ -34,18 +34,16 @@ vi.mock("@dnd-kit/utilities", () => ({
   },
 }));
 
-describe("KanbanBoard", () => {
-  it("renders board heading, task count, and tasks", () => {
+describe("KanbanColumnView", () => {
+  it("renders column heading, task count, and tasks", () => {
     renderWithClient(
-      <KanbanBoard
+      <KanbanColumnView
         column={makeColumn({ name: "Doing" })}
         tasks={[
           makeTask({ title: "First task", priority: "urgent", assigneeId: "member-1" }),
           makeTask({ id: "task-2", title: "Second task" }),
         ]}
-        members={[
-          makeProjectMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } }),
-        ]}
+        members={[makeMember({ user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com", image: null } })]}
         onAddTask={vi.fn()}
         onDeleteColumn={vi.fn()}
         onEditTask={vi.fn()}
@@ -63,9 +61,9 @@ describe("KanbanBoard", () => {
     expect(screen.getByText("Second task")).toBeInTheDocument();
   });
 
-  it("renders one actionable empty state for boards without tasks", () => {
+  it("renders one actionable empty state for columns without tasks", () => {
     renderWithClient(
-      <KanbanBoard
+      <KanbanColumnView
         column={makeColumn()}
         tasks={[]}
         onAddTask={vi.fn()}
@@ -85,7 +83,7 @@ describe("KanbanBoard", () => {
     const onAddTask = vi.fn();
 
     renderWithClient(
-      <KanbanBoard
+      <KanbanColumnView
         column={makeColumn()}
         tasks={[]}
         onAddTask={onAddTask}
@@ -107,7 +105,7 @@ describe("KanbanBoard", () => {
     const task = makeTask({ title: "Delete carefully" });
 
     renderWithClient(
-      <KanbanBoard
+      <KanbanColumnView
         column={makeColumn()}
         tasks={[task]}
         onAddTask={vi.fn()}
@@ -130,13 +128,13 @@ describe("KanbanBoard", () => {
     expect(onDeleteTask).toHaveBeenCalledWith(task.id);
   });
 
-  it("confirms before deleting a board", () => {
+  it("confirms before deleting a column", () => {
     const onDeleteColumn = vi.fn();
-    const board = makeColumn({ id: "board-1", name: "Archive" });
+    const column = makeColumn({ id: "column-1", name: "Archive" });
 
     renderWithClient(
-      <KanbanBoard
-        column={board}
+      <KanbanColumnView
+        column={column}
         tasks={[makeTask()]}
         onAddTask={vi.fn()}
         onDeleteColumn={onDeleteColumn}
@@ -155,16 +153,14 @@ describe("KanbanBoard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Delete column" }));
 
-    expect(onDeleteColumn).toHaveBeenCalledWith(board.id);
+    expect(onDeleteColumn).toHaveBeenCalledWith(column.id);
   });
 });
 
 describe("TaskCard", () => {
   it("renders task details and fires view/edit/delete callbacks", () => {
     const task = makeTask({ title: "Design API", priority: "high", assigneeId: "member-1" });
-    const members = [
-      makeProjectMember({ user: { id: "user-1", name: null, email: "owner@example.com", image: null } }),
-    ];
+    const members = [makeMember({ user: { id: "user-1", name: null, email: "owner@example.com", image: null } })];
     const onEdit = vi.fn();
     const onDelete = vi.fn();
     const onView = vi.fn();

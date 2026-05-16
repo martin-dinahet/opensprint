@@ -3,7 +3,7 @@ import type { AddMemberInput, UpdateMemberInput } from "@/entities/member";
 import { memberApi, memberKeys } from "@/entities/member/api";
 import { unwrapClientResult } from "@/shared/api/result";
 
-export function useProjectMembers(projectId: string) {
+export function useMembers(projectId: string) {
   return useQuery({
     queryKey: memberKeys.list(projectId),
     queryFn: async () => unwrapClientResult(await memberApi.list(projectId)).members,
@@ -11,7 +11,7 @@ export function useProjectMembers(projectId: string) {
   });
 }
 
-export function useAddProjectMember(projectId: string) {
+export function useAddMember(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -22,7 +22,7 @@ export function useAddProjectMember(projectId: string) {
   });
 }
 
-export function useUpdateProjectMember(projectId: string) {
+export function useUpdateMember(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -34,7 +34,7 @@ export function useUpdateProjectMember(projectId: string) {
   });
 }
 
-export function useRemoveProjectMember(projectId: string) {
+export function useRemoveMember(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({

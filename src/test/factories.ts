@@ -1,4 +1,3 @@
-import type { BoardOutput } from "@/entities/board";
 import type { ColumnOutput } from "@/entities/column";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { ProjectListOutput } from "@/entities/project";
@@ -39,7 +38,7 @@ export function makeMembership(
   };
 }
 
-export function makeProjectMember(overrides: Partial<MemberWithUserOutput> = {}): MemberWithUserOutput {
+export function makeMember(overrides: Partial<MemberWithUserOutput> = {}): MemberWithUserOutput {
   return {
     id: "member-1",
     projectId: "project-1",
@@ -51,22 +50,10 @@ export function makeProjectMember(overrides: Partial<MemberWithUserOutput> = {})
   };
 }
 
-export function makeBoard(overrides: Partial<BoardOutput> = {}): BoardOutput {
-  return {
-    id: "board-1",
-    projectId: "project-1",
-    name: "Todo",
-    position: 0,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    ...overrides,
-  };
-}
-
 export function makeColumn(overrides: Partial<ColumnOutput> = {}): ColumnOutput {
   return {
     id: "column-1",
-    boardId: "board-1",
+    projectId: "project-1",
     name: "Todo",
     position: 0,
     createdAt: timestamp,

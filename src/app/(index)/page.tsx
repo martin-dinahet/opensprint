@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/shared/shadcn/button";
 
 const columns = [
   { name: "Backlog", tasks: ["Scope release notes", "Review onboarding copy", "Invite product team"] },
-  { name: "In progress", tasks: ["Polish board drag states", "Wire project creation"] },
+  { name: "In progress", tasks: ["Polish column drag states", "Wire project creation"] },
   { name: "Ready", tasks: ["Auth flows", "API result handling"] },
 ];
 
@@ -73,7 +73,7 @@ export default function Home() {
               </p>
               <h1 className="text-balance font-semibold text-5xl tracking-tight sm:text-6xl lg:text-7xl">OpenSprint</h1>
               <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-                Plan projects, move tasks, and keep ownership visible without turning the board into a ceremony.
+                Plan projects, move tasks, and keep ownership visible without turning the project into a ceremony.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href={isSignedIn ? "/dashboard" : "/sign-up"}>
@@ -111,7 +111,7 @@ export default function Home() {
         </section>
 
         <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
-          {["Feature-owned boards", "Fast task movement", "Clear team access"].map((item) => (
+          {["Feature-owned projects", "Fast task movement", "Clear team access"].map((item) => (
             <div key={item} className="flex items-center gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-muted">
                 <IconCheck className="h-4 w-4" />

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     default: "OpenSprint",
     template: "%s | OpenSprint",
   },
-  description: "A focused project workspace for planning boards, tasks, and team access.",
+  description: "A focused project workspace for planning projects, tasks, and team access.",
 };
 
 type Props = {

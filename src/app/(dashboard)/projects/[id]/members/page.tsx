@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import z from "zod";
 import {
   type MemberWithUserOutput,
-  type ProjectMemberRole,
-  useAddProjectMember,
-  useProjectMembers,
-  useRemoveProjectMember,
-  useUpdateProjectMember,
+  type MemberRole,
+  useAddMember,
+  useMembers,
+  useRemoveMember,
+  useUpdateMember,
 } from "@/entities/member";
 import { useProject } from "@/entities/project";
 import { handleClientResult } from "@/shared/api/result";
@@ -62,10 +62,10 @@ export default function Page({ params }: Props) {
   const { id: projectId } = use(params);
   const session = authClient.useSession();
   const { data: project } = useProject(projectId);
-  const { data: members = [], isLoading } = useProjectMembers(projectId);
-  const addMember = useAddProjectMember(projectId);
-  const updateMember = useUpdateProjectMember(projectId);
-  const removeMember = useRemoveProjectMember(projectId);
+  const { data: members = [], isLoading } = useMembers(projectId);
+  const addMember = useAddMember(projectId);
+  const updateMember = useUpdateMember(projectId);
+  const removeMember = useRemoveMember(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<MemberWithUserOutput | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -272,7 +272,7 @@ export default function Page({ params }: Props) {
   );
 }
 
-function RoleBadge({ role }: { role: ProjectMemberRole }) {
+function RoleBadge({ role }: { role: MemberRole }) {
   const variant = role === "owner" ? "default" : role === "admin" ? "secondary" : "outline";
   return <Badge variant={variant}>{role}</Badge>;
 }

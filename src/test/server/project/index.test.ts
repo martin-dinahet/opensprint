@@ -1,22 +1,30 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { memberRepositoryMock, nanoidMock, projectRepositoryMock } = vi.hoisted(() => ({
-  memberRepositoryMock: {
-    create: vi.fn(),
-    deleteByProject: vi.fn(),
-    findByUserAndProject: vi.fn(),
-    findByUserId: vi.fn(),
-  },
-  nanoidMock: vi.fn(),
-  projectRepositoryMock: {
-    create: vi.fn(),
-    delete: vi.fn(),
-    findById: vi.fn(),
-    findByIds: vi.fn(),
-    update: vi.fn(),
-  },
-}));
+const { columnRepositoryMock, memberRepositoryMock, nanoidMock, projectRepositoryMock, taskRepositoryMock } =
+  vi.hoisted(() => ({
+    columnRepositoryMock: {
+      delete: vi.fn(),
+      findByProject: vi.fn(),
+    },
+    memberRepositoryMock: {
+      create: vi.fn(),
+      deleteByProject: vi.fn(),
+      findByUserAndProject: vi.fn(),
+      findByUserId: vi.fn(),
+    },
+    nanoidMock: vi.fn(),
+    projectRepositoryMock: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findById: vi.fn(),
+      findByIds: vi.fn(),
+      update: vi.fn(),
+    },
+    taskRepositoryMock: {
+      deleteByColumn: vi.fn(),
+    },
+  }));
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
@@ -26,8 +34,16 @@ vi.mock("@/server/repositories/member.repository", () => ({
   memberRepository: memberRepositoryMock,
 }));
 
+vi.mock("@/server/repositories/column.repository", () => ({
+  columnRepository: columnRepositoryMock,
+}));
+
 vi.mock("@/server/repositories/project.repository", () => ({
   projectRepository: projectRepositoryMock,
+}));
+
+vi.mock("@/server/repositories/task.repository", () => ({
+  taskRepository: taskRepositoryMock,
 }));
 
 const { createProject, deleteProject, getProject, listProjects, updateProject } = await import(
@@ -218,6 +234,9 @@ describe("project use cases", () => {
   it("deletes projects for owners", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    columnRepositoryMock.findByProject.mockResolvedValue(ok([{ id: "column-1" }]));
+    taskRepositoryMock.deleteByColumn.mockResolvedValue(ok(undefined));
+    columnRepositoryMock.delete.mockResolvedValue(ok(undefined));
     memberRepositoryMock.deleteByProject.mockResolvedValue(ok(undefined));
     projectRepositoryMock.delete.mockResolvedValue(ok(undefined));
 
@@ -225,6 +244,8 @@ describe("project use cases", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result.unwrap()).toEqual({ success: true });
+    expect(taskRepositoryMock.deleteByColumn).toHaveBeenCalledWith("column-1");
+    expect(columnRepositoryMock.delete).toHaveBeenCalledWith("column-1");
     expect(memberRepositoryMock.deleteByProject).toHaveBeenCalledWith("project-1");
     expect(projectRepositoryMock.delete).toHaveBeenCalledWith("project-1");
   });
@@ -239,6 +260,7 @@ describe("project use cases", () => {
     if (result.isErr()) {
       expect(result.error.statusCode).toBe(403);
     }
+    expect(columnRepositoryMock.findByProject).not.toHaveBeenCalled();
     expect(memberRepositoryMock.deleteByProject).not.toHaveBeenCalled();
   });
 });

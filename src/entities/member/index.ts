@@ -1,3 +1,3 @@
 export { memberApi, memberKeys } from "./api";
-export { useAddProjectMember, useProjectMembers, useRemoveProjectMember, useUpdateProjectMember } from "./model";
+export { useAddMember, useMembers, useRemoveMember, useUpdateMember } from "./model";
 export type * from "./types";

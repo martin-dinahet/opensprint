@@ -14,13 +14,13 @@ import { Label } from "@/shared/shadcn/label";
 import { useCreateColumnForm } from "../model/use-create-column-form";
 
 type Props = {
-  boardId: string;
   onOpenChange: (open: boolean) => void;
   open: boolean;
+  projectId: string;
 };
 
-export function CreateColumnDialog({ boardId, onOpenChange, open }: Props) {
-  const { action, fieldErrors, globalError, pending, reset } = useCreateColumnForm({ boardId, onOpenChange });
+export function CreateColumnDialog({ onOpenChange, open, projectId }: Props) {
+  const { action, fieldErrors, globalError, pending, reset } = useCreateColumnForm({ onOpenChange, projectId });
   const nameError = fieldErrors?.name?.[0];
 
   return (
@@ -35,7 +35,7 @@ export function CreateColumnDialog({ boardId, onOpenChange, open }: Props) {
         <form action={action}>
           <DialogHeader>
             <DialogTitle>Add column</DialogTitle>
-            <DialogDescription>Create a new workflow column in this board.</DialogDescription>
+            <DialogDescription>Create a new workflow column in this project.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {globalError && (

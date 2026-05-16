@@ -38,7 +38,7 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
         <form action={action}>
           <DialogHeader>
             <DialogTitle>Create project</DialogTitle>
-            <DialogDescription>Add a workspace for boards, tasks, and collaborators.</DialogDescription>
+            <DialogDescription>Add a workspace for columns, tasks, and collaborators.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {globalError && (

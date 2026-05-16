@@ -39,21 +39,21 @@ describe("task hooks", () => {
     vi.clearAllMocks();
   });
 
-  it("loads tasks with the board query key", async () => {
+  it("loads tasks with the column query key", async () => {
     const tasks = [makeTask()];
     vi.mocked(taskApi.list).mockResolvedValue(ok({ tasks }));
     const queryClient = createTestQueryClient();
 
-    const { result } = renderHook(() => useTasks("board-1"), { wrapper: wrapper(queryClient) });
+    const { result } = renderHook(() => useTasks("column-1"), { wrapper: wrapper(queryClient) });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(tasks);
-    expect(taskApi.list).toHaveBeenCalledWith("board-1");
-    expect(queryClient.getQueryData(taskKeys.list("board-1"))).toEqual(tasks);
+    expect(taskApi.list).toHaveBeenCalledWith("column-1");
+    expect(queryClient.getQueryData(taskKeys.list("column-1"))).toEqual(tasks);
   });
 
-  it("does not load tasks without a board id", () => {
+  it("does not load tasks without a column id", () => {
     const { result } = renderHook(() => useTasks(""), { wrapper: wrapper() });
 
     expect(result.current.fetchStatus).toBe("idle");
@@ -68,22 +68,22 @@ describe("task hooks", () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
     const createHook = renderHook(() => useCreateTask(), { wrapper: wrapper(queryClient) });
-    createHook.result.current.mutate({ columnId: "board-1", data: { title: "New task" } });
+    createHook.result.current.mutate({ columnId: "column-1", data: { title: "New task" } });
     await waitFor(() => expect(createHook.result.current.isSuccess).toBe(true));
 
     const updateHook = renderHook(() => useUpdateTask(), { wrapper: wrapper(queryClient) });
-    updateHook.result.current.mutate({ columnId: "board-1", taskId: "task-1", data: { title: "Updated" } });
+    updateHook.result.current.mutate({ columnId: "column-1", taskId: "task-1", data: { title: "Updated" } });
     await waitFor(() => expect(updateHook.result.current.isSuccess).toBe(true));
 
     const deleteHook = renderHook(() => useDeleteTask(), { wrapper: wrapper(queryClient) });
-    deleteHook.result.current.mutate({ columnId: "board-1", taskId: "task-1" });
+    deleteHook.result.current.mutate({ columnId: "column-1", taskId: "task-1" });
     await waitFor(() => expect(deleteHook.result.current.isSuccess).toBe(true));
 
-    expect(taskApi.create).toHaveBeenCalledWith("board-1", { title: "New task" });
-    expect(taskApi.update).toHaveBeenCalledWith("board-1", "task-1", { title: "Updated" });
-    expect(taskApi.delete).toHaveBeenCalledWith("board-1", "task-1");
+    expect(taskApi.create).toHaveBeenCalledWith("column-1", { title: "New task" });
+    expect(taskApi.update).toHaveBeenCalledWith("column-1", "task-1", { title: "Updated" });
+    expect(taskApi.delete).toHaveBeenCalledWith("column-1", "task-1");
     expect(invalidateSpy).toHaveBeenCalledTimes(3);
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: taskKeys.list("board-1") });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: taskKeys.list("column-1") });
   });
 
   it("invalidates all task queries after assignment and reorder", async () => {
@@ -105,27 +105,27 @@ describe("task hooks", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: taskKeys.all });
   });
 
-  it("optimistically moves a task between cached board lists", async () => {
-    const movedTask = makeTask({ id: "task-1", columnId: "board-1", position: 0 });
-    const targetTask = makeTask({ id: "task-2", columnId: "board-2", position: 0 });
+  it("optimistically moves a task between cached column lists", async () => {
+    const movedTask = makeTask({ id: "task-1", columnId: "column-1", position: 0 });
+    const targetTask = makeTask({ id: "task-2", columnId: "column-2", position: 0 });
     vi.mocked(taskApi.move).mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve(ok({ id: "task-1", columnId: "board-2", position: 0 })), 0);
+          setTimeout(() => resolve(ok({ id: "task-1", columnId: "column-2", position: 0 })), 0);
         }),
     );
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(taskKeys.list("board-1"), [movedTask]);
-    queryClient.setQueryData(taskKeys.list("board-2"), [targetTask]);
+    queryClient.setQueryData(taskKeys.list("column-1"), [movedTask]);
+    queryClient.setQueryData(taskKeys.list("column-2"), [targetTask]);
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "task-1", data: { columnId: "board-2", position: 0 } });
+    result.current.mutate({ taskId: "task-1", data: { columnId: "column-2", position: 0 } });
 
     await waitFor(() => {
-      expect(queryClient.getQueryData(taskKeys.list("board-1"))).toEqual([]);
-      expect(queryClient.getQueryData(taskKeys.list("board-2"))).toEqual([
-        { ...movedTask, columnId: "board-2", position: 0 },
+      expect(queryClient.getQueryData(taskKeys.list("column-1"))).toEqual([]);
+      expect(queryClient.getQueryData(taskKeys.list("column-2"))).toEqual([
+        { ...movedTask, columnId: "column-2", position: 0 },
         targetTask,
       ]);
     });
@@ -133,35 +133,35 @@ describe("task hooks", () => {
   });
 
   it("restores previous task lists when an optimistic move fails", async () => {
-    const movedTask = makeTask({ id: "task-1", columnId: "board-1", position: 0 });
-    const targetTask = makeTask({ id: "task-2", columnId: "board-2", position: 0 });
+    const movedTask = makeTask({ id: "task-1", columnId: "column-1", position: 0 });
+    const targetTask = makeTask({ id: "task-2", columnId: "column-2", position: 0 });
     vi.mocked(taskApi.move).mockResolvedValue(err(new ClientApiError("Move failed", 500)));
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(taskKeys.list("board-1"), [movedTask]);
-    queryClient.setQueryData(taskKeys.list("board-2"), [targetTask]);
+    queryClient.setQueryData(taskKeys.list("column-1"), [movedTask]);
+    queryClient.setQueryData(taskKeys.list("column-2"), [targetTask]);
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "task-1", data: { columnId: "board-2", position: 0 } });
+    result.current.mutate({ taskId: "task-1", data: { columnId: "column-2", position: 0 } });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(queryClient.getQueryData(taskKeys.list("board-1"))).toEqual([movedTask]);
-    expect(queryClient.getQueryData(taskKeys.list("board-2"))).toEqual([targetTask]);
+    expect(queryClient.getQueryData(taskKeys.list("column-1"))).toEqual([movedTask]);
+    expect(queryClient.getQueryData(taskKeys.list("column-2"))).toEqual([targetTask]);
   });
 
   it("skips optimistic cache edits when the moved task is unknown", async () => {
-    vi.mocked(taskApi.move).mockResolvedValue(ok({ id: "missing-task", columnId: "board-2", position: 0 }));
+    vi.mocked(taskApi.move).mockResolvedValue(ok({ id: "missing-task", columnId: "column-2", position: 0 }));
     const queryClient = createTestQueryClient();
-    queryClient.setQueryData(taskKeys.list("board-1"), [makeTask({ id: "task-1" })]);
+    queryClient.setQueryData(taskKeys.list("column-1"), [makeTask({ id: "task-1" })]);
 
     const { result } = renderHook(() => useMoveTask(), { wrapper: wrapper(queryClient) });
 
-    result.current.mutate({ taskId: "missing-task", data: { columnId: "board-2" } });
+    result.current.mutate({ taskId: "missing-task", data: { columnId: "column-2" } });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(queryClient.getQueryData(taskKeys.list("board-1"))).toEqual([makeTask({ id: "task-1" })]);
-    expect(queryClient.getQueryData(taskKeys.list("board-2"))).toBeUndefined();
+    expect(queryClient.getQueryData(taskKeys.list("column-1"))).toEqual([makeTask({ id: "task-1" })]);
+    expect(queryClient.getQueryData(taskKeys.list("column-2"))).toBeUndefined();
   });
 });

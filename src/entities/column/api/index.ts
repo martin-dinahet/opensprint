@@ -13,13 +13,13 @@ const BASE_KEY = "columns";
 export const columnKeys = {
   all: [BASE_KEY] as const,
   lists: () => [...columnKeys.all, "list"] as const,
-  list: (boardId: string) => [...columnKeys.lists(), boardId] as const,
+  list: (projectId: string) => [...columnKeys.lists(), projectId] as const,
 } as const;
 
 export const columnApi = {
-  list: async (boardId: string) => {
+  list: async (projectId: string) => {
     return requestApiResult<{ columns: ColumnOutput[] }>(
-      () => api.boards[":boardId"].columns.$get({ param: { boardId } }),
+      () => api.projects[":projectId"].columns.$get({ param: { projectId } }),
       "Failed to fetch columns",
       (body) => ({
         columns: (body as { columns?: ColumnOutput[] } | null)?.columns ?? [],
@@ -27,30 +27,30 @@ export const columnApi = {
     );
   },
 
-  create: async (boardId: string, data: CreateColumnInput) => {
+  create: async (projectId: string, data: CreateColumnInput) => {
     return requestApiResult<ColumnOutput>(
-      () => api.boards[":boardId"].columns.$post({ param: { boardId }, json: data }),
+      () => api.projects[":projectId"].columns.$post({ param: { projectId }, json: data }),
       "Failed to create column",
     );
   },
 
-  update: async (boardId: string, columnId: string, data: UpdateColumnInput) => {
+  update: async (projectId: string, columnId: string, data: UpdateColumnInput) => {
     return requestApiResult<UpdateColumnOutput>(
-      () => api.boards[":boardId"].columns[":columnId"].$patch({ param: { boardId, columnId }, json: data }),
+      () => api.projects[":projectId"].columns[":columnId"].$patch({ param: { projectId, columnId }, json: data }),
       "Failed to update column",
     );
   },
 
-  delete: async (boardId: string, columnId: string) => {
+  delete: async (projectId: string, columnId: string) => {
     return requestApiResult<{ success: boolean }>(
-      () => api.boards[":boardId"].columns[":columnId"].$delete({ param: { boardId, columnId } }),
+      () => api.projects[":projectId"].columns[":columnId"].$delete({ param: { projectId, columnId } }),
       "Failed to delete column",
     );
   },
 
-  reorder: async (boardId: string, data: ReorderColumnsInput) => {
+  reorder: async (projectId: string, data: ReorderColumnsInput) => {
     return requestApiResult<{ success: boolean }>(
-      () => api.boards[":boardId"].columns.reorder.$patch({ param: { boardId }, json: data }),
+      () => api.projects[":projectId"].columns.reorder.$patch({ param: { projectId }, json: data }),
       "Failed to reorder columns",
     );
   },
