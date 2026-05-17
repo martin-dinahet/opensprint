@@ -11,6 +11,7 @@ export const useSignUpForm = () => {
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [submittedValues, setSubmittedValues] = useState<Record<string, string>>({});
 
   const schema = z
     .object({
@@ -26,6 +27,7 @@ export const useSignUpForm = () => {
 
   const action = (formData: FormData) => {
     startTransition(async () => {
+      setSubmittedValues(Object.fromEntries(formData) as Record<string, string>);
       setFieldErrors(null);
       setGlobalError(null);
 
@@ -43,5 +45,5 @@ export const useSignUpForm = () => {
     });
   };
 
-  return { action, fieldErrors, globalError, pending };
+  return { action, fieldErrors, globalError, pending, submittedValues };
 };

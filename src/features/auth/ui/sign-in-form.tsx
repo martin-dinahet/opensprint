@@ -1,6 +1,6 @@
 "use client";
 
-import { IconAlertCircle, IconArrowRight, IconLoader2, IconLock, IconMail } from "@tabler/icons-react";
+import { IconAlertCircle, IconArrowRight, IconLock, IconMail } from "@tabler/icons-react";
 import Link from "next/link";
 import type { FC } from "react";
 import { Alert, AlertDescription } from "@/shared/shadcn/alert";
@@ -8,10 +8,11 @@ import { Button, buttonVariants } from "@/shared/shadcn/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/shadcn/card";
 import { Field, FieldError, FieldLabel } from "@/shared/shadcn/field";
 import { Input } from "@/shared/shadcn/input";
+import { Spinner } from "@/shared/shadcn/spinner";
 import { useSignInForm } from "../model/use-sign-in-form";
 
 export const SignInForm: FC = () => {
-  const { action, fieldErrors, globalError, pending } = useSignInForm();
+  const { action, fieldErrors, globalError, pending, submittedValues } = useSignInForm();
 
   return (
     <div>
@@ -39,6 +40,7 @@ export const SignInForm: FC = () => {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
+                  defaultValue={submittedValues.email}
                   autoComplete="email"
                   required
                   disabled={pending}
@@ -58,6 +60,7 @@ export const SignInForm: FC = () => {
                   name="password"
                   type="password"
                   placeholder="••••••••"
+                  defaultValue={submittedValues.password}
                   autoComplete="current-password"
                   required
                   disabled={pending}
@@ -72,10 +75,7 @@ export const SignInForm: FC = () => {
           <CardFooter className="mt-8 flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? (
-                <>
-                  <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
+                <Spinner />
               ) : (
                 <>
                   Sign in
