@@ -3,9 +3,9 @@
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSignOut } from "@/features/auth";
-import { authClient } from "@/shared/lib/auth-client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
-import { Button } from "@/shared/shadcn/button";
+import { authClient } from "@/shared";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
+import { Button } from "@/shared";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shared/shadcn/dropdown-menu";
-import { getInitials } from "../lib/get-initials";
+} from "@/shared";
+import { getInitials } from "../lib";
 
 export const HeaderUserControls = () => {
   const router = useRouter();

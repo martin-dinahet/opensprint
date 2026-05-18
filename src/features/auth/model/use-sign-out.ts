@@ -4,8 +4,8 @@ import { err, ok, type Result } from "@punpun-dev/ts-result";
 import { IconLoader2, IconLogout } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { handleClientResult } from "@/shared/api/result";
-import { authClient } from "@/shared/lib/auth-client";
+import { handleClientResult } from "@/shared";
+import { authClient } from "@/shared";
 
 type SignOutResponse = {
   error?: {

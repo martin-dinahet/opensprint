@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
 
 type User = {
   email?: string | null;

@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import z from "zod";
 import { useCreateColumn } from "@/entities/column";
-import { handleClientResult } from "@/shared/api/result";
-import { parseFormData } from "@/shared/lib/forms";
+import { handleClientResult } from "@/shared";
+import { parseFormData } from "@/shared";
 
 const createColumnSchema = z.object({
   name: z.string().trim().min(1).max(130),

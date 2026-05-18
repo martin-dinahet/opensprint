@@ -1,6 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authClient } from "@/shared/lib/auth-client";
+import { authClient } from "@/shared";
 import { signUpEmail } from "./sign-up-email";
 
 const { authClientMock, handleClientResultMock } = vi.hoisted(() => ({
@@ -12,13 +12,15 @@ const { authClientMock, handleClientResultMock } = vi.hoisted(() => ({
   handleClientResultMock: vi.fn(async (fn: () => Promise<unknown>) => ok(await fn())),
 }));
 
-vi.mock("@/shared/lib/auth-client", () => ({
-  authClient: authClientMock,
-}));
+vi.mock("@/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared")>();
 
-vi.mock("@/shared/api/result", () => ({
-  handleClientResult: handleClientResultMock,
-}));
+  return {
+    ...actual,
+    authClient: authClientMock,
+    handleClientResult: handleClientResultMock,
+  };
+});
 
 describe("signUpEmail", () => {
   beforeEach(() => {

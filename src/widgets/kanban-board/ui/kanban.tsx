@@ -17,14 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-} from "@/shared/shadcn/alert-dialog";
-import { Button } from "@/shared/shadcn/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/shadcn/dropdown-menu";
+} from "@/shared";
+import { Button } from "@/shared";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared";
 import { kanbanCollisionDetection, useProjectKanban } from "../lib";
 
 type RootProps = {

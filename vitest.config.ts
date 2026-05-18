@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      exclude: ["src/shared/shadcn/**", "drizzle/**", ".next/**", "coverage/**", "src/test/**"],
+      exclude: ["src/shared/ui/**", "drizzle/**", ".next/**", "coverage/**", "src/test/**"],
     },
     projects: [
       {

@@ -8,7 +8,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@/shared/shadcn/dropdown-menu";
+} from "@/shared";
 
 const themes = [
   { label: "Light", value: "light", icon: SunIcon },

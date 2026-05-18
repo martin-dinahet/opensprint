@@ -12,7 +12,7 @@ export type {
   UpdateTaskItemInput,
 } from "@/server/use-cases/task/dto";
 
-import type { ProjectTaskTag, Task, TaskItem } from "@/shared/types";
+import type { ProjectTaskTag, Task, TaskItem } from "@/shared";
 
 export type TaskPriority = Task["priority"];
 

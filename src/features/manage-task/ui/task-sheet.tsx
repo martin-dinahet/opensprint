@@ -35,18 +35,18 @@ import {
   useUpdateTask,
   useUpdateTaskItem,
 } from "@/entities/task";
-import { handleClientResult } from "@/shared/api/result";
-import { cn } from "@/shared/lib/utils";
-import { Alert, AlertDescription } from "@/shared/shadcn/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/shadcn/avatar";
-import { Badge } from "@/shared/shadcn/badge";
-import { Button } from "@/shared/shadcn/button";
-import { Input } from "@/shared/shadcn/input";
-import { Label } from "@/shared/shadcn/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/shadcn/select";
-import { Separator } from "@/shared/shadcn/separator";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/shared/shadcn/sheet";
-import { Textarea } from "@/shared/shadcn/textarea";
+import { handleClientResult } from "@/shared";
+import { cn } from "@/shared";
+import { Alert, AlertDescription } from "@/shared";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
+import { Badge } from "@/shared";
+import { Button } from "@/shared";
+import { Input } from "@/shared";
+import { Label } from "@/shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared";
+import { Separator } from "@/shared";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/shared";
+import { Textarea } from "@/shared";
 
 type DraftItem = {
   id: string;
@@ -329,31 +329,33 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
     const selected = isCreateMode ? selectedTagIds.has(tag.id) : attachedTagIds.has(tag.id);
 
     return (
-      <button
+      <span
         key={tag.id}
-        type="button"
-        aria-label={tag.name}
         className={cn(
           "group inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors",
           selected
             ? "border-primary/30 bg-primary/10 text-foreground font-medium shadow-xs"
             : "border-border text-muted-foreground hover:border-muted-foreground/30",
         )}
-        onClick={() => toggleTag(tag.id)}
       >
-        <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: tag.color }} />
-        <span className="truncate">{tag.name}</span>
-        <span
+        <button
+          type="button"
+          aria-label={tag.name}
+          className="inline-flex min-w-0 flex-1 items-center gap-1.5"
+          onClick={() => toggleTag(tag.id)}
+        >
+          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: tag.color }} />
+          <span className="truncate">{tag.name}</span>
+        </button>
+        <button
+          type="button"
           className="ml-0.5 inline-flex size-3.5 cursor-pointer items-center justify-center rounded-full text-muted-foreground/50 hover:text-foreground"
-          onClick={(event) => {
-            event.stopPropagation();
-            deleteTag.mutate({ projectId, tagId: tag.id });
-          }}
+          onClick={() => deleteTag.mutate({ projectId, tagId: tag.id })}
         >
           <IconX className="h-2.5 w-2.5" />
           <span className="sr-only">Delete tag</span>
-        </span>
-      </button>
+        </button>
+      </span>
     );
   };
 

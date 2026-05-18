@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
-import { cn } from "@/shared/lib/utils";
+import { cn } from "@/shared";
 import { ClientProviders } from "./providers";
 import "@/app/globals.css";
 

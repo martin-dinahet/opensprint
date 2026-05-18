@@ -7,8 +7,8 @@ import type {
   UpdateProjectTaskTagInput,
   UpdateTaskInput,
 } from "@/entities/task";
-import { taskApi, taskKeys } from "@/entities/task/api";
-import { unwrapClientResult } from "@/shared/api/result";
+import { taskApi, taskKeys } from "@/entities/task";
+import { unwrapClientResult } from "@/shared";
 
 export function useTasks(columnId: string) {
   return useQuery({

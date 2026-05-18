@@ -21,11 +21,8 @@ const { apiMock, requestApiResultMock } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@/shared/api/client", () => ({
+vi.mock("@/shared", () => ({
   api: apiMock,
-}));
-
-vi.mock("@/shared/api/result", () => ({
   requestApiResult: requestApiResultMock,
 }));
 

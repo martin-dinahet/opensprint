@@ -22,11 +22,8 @@ vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
 }));
 
-vi.mock("@/server/repositories/member.repository", () => ({
+vi.mock("@/server/repositories", () => ({
   memberRepository: memberRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 

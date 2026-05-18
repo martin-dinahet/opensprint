@@ -1,19 +1,12 @@
 "use client";
 
 import { IconAlertCircle, IconFileText, IconFolder, IconLoader2, IconPlus } from "@tabler/icons-react";
-import { Alert, AlertDescription } from "@/shared/shadcn/alert";
-import { Button } from "@/shared/shadcn/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/shadcn/dialog";
-import { Input } from "@/shared/shadcn/input";
-import { Label } from "@/shared/shadcn/label";
-import { Textarea } from "@/shared/shadcn/textarea";
+import { Alert, AlertDescription } from "@/shared";
+import { Button } from "@/shared";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
+import { Input } from "@/shared";
+import { Label } from "@/shared";
+import { Textarea } from "@/shared";
 import { useCreateProjectForm } from "../model/use-create-project-form";
 
 type Props = {

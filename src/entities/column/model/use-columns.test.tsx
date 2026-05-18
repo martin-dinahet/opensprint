@@ -3,12 +3,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { columnApi, columnKeys } from "@/entities/column/api";
+import { columnApi, columnKeys } from "@/entities/column";
 import { makeColumn } from "@/test/factories";
 import { createTestQueryClient } from "@/test/render";
 import { useColumns, useCreateColumn, useDeleteColumn, useUpdateColumn } from ".";
 
-vi.mock("@/entities/column/api", () => ({
+vi.mock("@/entities/column", () => ({
   columnKeys: {
     all: ["columns"],
     lists: () => ["columns", "list"],

@@ -18,5 +18,5 @@ export {
   useUpdateTask,
   useUpdateTaskItem,
 } from "./model";
-export { TaskCard, TaskCardContent } from "./task-card";
+export { TaskCard, TaskCardContent } from "./ui";
 export type * from "./types";

@@ -1,15 +1,9 @@
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/shadcn/collapsible";
-import { Icon } from "@/shared/shadcn/icon";
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/shared/shadcn/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared";
+import { Icon } from "@/shared";
+import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared";
 import {
   collapsedTextClass,
   getProjectNavigationItems,

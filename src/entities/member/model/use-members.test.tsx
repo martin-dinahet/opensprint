@@ -3,12 +3,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { memberApi, memberKeys } from "@/entities/member/api";
+import { memberApi, memberKeys } from "@/entities/member";
 import { makeMember } from "@/test/factories";
 import { createTestQueryClient } from "@/test/render";
 import { useAddMember, useMembers, useRemoveMember, useUpdateMember } from ".";
 
-vi.mock("@/entities/member/api", () => ({
+vi.mock("@/entities/member", () => ({
   memberKeys: {
     all: ["members"],
     lists: () => ["members", "list"],

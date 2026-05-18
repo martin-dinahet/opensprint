@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreateColumnInput, UpdateColumnInput } from "@/entities/column";
-import { columnApi, columnKeys } from "@/entities/column/api";
-import { unwrapClientResult } from "@/shared/api/result";
+import { columnApi, columnKeys } from "@/entities/column";
+import { unwrapClientResult } from "@/shared";
 
 export function useColumns(projectId: string) {
   return useQuery({

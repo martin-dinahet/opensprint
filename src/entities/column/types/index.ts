@@ -4,7 +4,7 @@ export type {
   UpdateColumnInput,
 } from "@/server/use-cases/column/dto";
 
-import type { Column } from "@/shared/types";
+import type { Column } from "@/shared";
 
 export type ColumnOutput = {
   id: Column["id"];

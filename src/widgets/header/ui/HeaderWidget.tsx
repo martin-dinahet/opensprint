@@ -1,11 +1,11 @@
 "use client";
 
 import type { FC } from "react";
-import { useDashboardHeaderState } from "../model/dashboard-header-context";
-import { HeaderBreadcrumbs } from "./breadcrumbs/ui/HeaderBreadcrumbs";
-import { HeaderLogo } from "./logo/ui/HeaderLogo";
-import { HeaderThemeSwitcher } from "./theme-switcher/ui/HeaderThemeSwitcher";
-import { HeaderUserControls } from "./user-controls/ui/HeaderUserControls";
+import { useDashboardHeaderState } from "../model";
+import { HeaderBreadcrumbs } from "./breadcrumbs";
+import { HeaderLogo } from "./logo";
+import { HeaderThemeSwitcher } from "./theme-switcher";
+import { HeaderUserControls } from "./user-controls";
 
 export const HeaderWidget: FC = () => {
   const { actions, description, eyebrow, title } = useDashboardHeaderState();

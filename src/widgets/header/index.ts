@@ -1,3 +1,3 @@
-export type { DashboardHeaderState } from "./model/dashboard-header-context";
-export { DashboardHeaderProvider, useDashboardHeader, useDashboardHeaderState } from "./model/dashboard-header-context";
+export type { DashboardHeaderState } from "./model";
+export { DashboardHeaderProvider, useDashboardHeader, useDashboardHeaderState } from "./model";
 export { HeaderWidget } from "./ui/HeaderWidget";

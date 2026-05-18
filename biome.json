@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!src/shared/shadcn", "!drizzle"]
+    "includes": ["**", "!src/shared/ui", "!drizzle"]
   },
   "formatter": {
     "enabled": true,

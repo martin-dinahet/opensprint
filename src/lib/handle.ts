@@ -1,5 +1,5 @@
 import { handle as handleResult } from "@punpun-dev/ts-result";
-import { AppError } from "@/server/lib/errors";
+import { AppError } from "@/server/lib";
 
 export const toAppError = (error: unknown): AppError => {
   if (error instanceof AppError) {

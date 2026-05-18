@@ -3,8 +3,8 @@
 import { FolderKanbanIcon } from "lucide-react";
 import Link from "next/link";
 import type { FC } from "react";
-import { cn } from "@/shared/lib/utils";
-import { buttonVariants } from "@/shared/shadcn/button";
+import { cn } from "@/shared";
+import { buttonVariants } from "@/shared";
 
 export const HeaderLogo: FC = () => {
   return (

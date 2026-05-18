@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AddMemberInput, UpdateMemberInput } from "@/entities/member";
-import { memberApi, memberKeys } from "@/entities/member/api";
-import { unwrapClientResult } from "@/shared/api/result";
+import { memberApi, memberKeys } from "@/entities/member";
+import { unwrapClientResult } from "@/shared";
 
 export function useMembers(projectId: string) {
   return useQuery({

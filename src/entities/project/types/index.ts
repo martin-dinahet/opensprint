@@ -3,7 +3,7 @@ export type {
   UpdateProjectInput,
 } from "@/server/use-cases/project/dto";
 
-import type { Project } from "@/shared/types";
+import type { Project } from "@/shared";
 
 export type ProjectListOutput = {
   id: Project["id"];

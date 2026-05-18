@@ -1,8 +1,8 @@
 import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/shadcn/collapsible";
-import { Icon } from "@/shared/shadcn/icon";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared";
+import { Icon } from "@/shared";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
-} from "@/shared/shadcn/sidebar";
+} from "@/shared";
 import {
   collapsedTextClass,
   projectListLimit,

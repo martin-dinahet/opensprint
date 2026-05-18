@@ -1,0 +1,29 @@
+import type { Result } from "@punpun-dev/ts-result";
+import { err, ok } from "@punpun-dev/ts-result";
+import { type AppError, NotFoundError, UnauthorizedError } from "@/server/lib";
+import { columnRepository } from "@/server/repositories";
+import { memberRepository } from "@/server/repositories";
+import type { Column, Member } from "@/shared";
+
+export const assertColumnAccess = async (
+  userId: string,
+  columnId: string,
+): Promise<Result<{ column: Column; membership: Member }, AppError>> => {
+  const columnResult = await columnRepository.findById(columnId);
+  if (columnResult.isErr()) return err(columnResult.error);
+
+  const columns = columnResult.unwrap();
+  if (!columns || columns.length === 0) {
+    return err(new NotFoundError("Column"));
+  }
+
+  const membershipResult = await memberRepository.findByUserAndProject(userId, columns[0].projectId);
+  if (membershipResult.isErr()) return err(membershipResult.error);
+
+  const memberships = membershipResult.unwrap();
+  if (!memberships || memberships.length === 0) {
+    return err(new UnauthorizedError("Not a member of this project"));
+  }
+
+  return ok({ column: columns[0], membership: memberships[0] });
+};

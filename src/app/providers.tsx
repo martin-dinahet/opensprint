@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Toaster } from "@/shared/shadcn/sonner";
-import { TooltipProvider } from "@/shared/shadcn/tooltip";
+import { Toaster } from "@/shared";
+import { TooltipProvider } from "@/shared";
 
 type Props = {
   children: ReactNode;

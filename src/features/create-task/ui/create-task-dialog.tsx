@@ -1,16 +1,9 @@
 import { IconAlertCircle, IconLoader2, IconPlus } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import { TaskFormFields } from "@/features/task-form";
-import { Alert, AlertDescription } from "@/shared/shadcn/alert";
-import { Button } from "@/shared/shadcn/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/shadcn/dialog";
+import { Alert, AlertDescription } from "@/shared";
+import { Button } from "@/shared";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
 import { useCreateTaskForm } from "../model/use-create-task-form";
 
 type Props = {

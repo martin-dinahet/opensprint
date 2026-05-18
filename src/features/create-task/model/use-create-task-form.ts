@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import z from "zod";
 import { type TaskPriority, useCreateTask } from "@/entities/task";
-import { handleClientResult } from "@/shared/api/result";
-import { parseFormData } from "@/shared/lib/forms";
+import { handleClientResult } from "@/shared";
+import { parseFormData } from "@/shared";
 
 const defaultPriority: TaskPriority = "medium";
 

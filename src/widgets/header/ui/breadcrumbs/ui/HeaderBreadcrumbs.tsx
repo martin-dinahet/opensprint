@@ -11,8 +11,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/shared/shadcn/breadcrumb";
-import { formatLabel } from "../lib/format-label";
+} from "@/shared";
+import { formatLabel } from "../lib";
 
 export const HeaderBreadcrumbs: FC = () => {
   const pathname = usePathname();

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/shared/lib/utils";
+import { cn } from "@/shared";
 
 type Props = {
   activeTab: "board" | "members";

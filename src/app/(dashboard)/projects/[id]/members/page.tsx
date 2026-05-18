@@ -13,9 +13,9 @@ import {
   useUpdateMember,
 } from "@/entities/member";
 import { ProjectTabs } from "@/features/project-tabs";
-import { handleClientResult } from "@/shared/api/result";
-import { authClient } from "@/shared/lib/auth-client";
-import { parseFormData } from "@/shared/lib/forms";
+import { handleClientResult } from "@/shared";
+import { authClient } from "@/shared";
+import { parseFormData } from "@/shared";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,28 +25,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/shared/shadcn/alert-dialog";
-import { Badge } from "@/shared/shadcn/badge";
-import { Button } from "@/shared/shadcn/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/shadcn/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/shadcn/dropdown-menu";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared/shadcn/field";
-import { Input } from "@/shared/shadcn/input";
-import { LoadingScreen } from "@/shared/shadcn/loading-screen";
-import { NativeSelect, NativeSelectOption } from "@/shared/shadcn/native-select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/shadcn/table";
+} from "@/shared";
+import { Badge } from "@/shared";
+import { Button } from "@/shared";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared";
+import { Input } from "@/shared";
+import { LoadingScreen } from "@/shared";
+import { NativeSelect, NativeSelectOption } from "@/shared";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared";
 import { UserAvatar } from "@/widgets/app-sidebar";
 import { useDashboardHeader } from "@/widgets/header";
 

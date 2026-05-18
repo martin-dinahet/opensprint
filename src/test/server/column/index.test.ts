@@ -1,6 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AppError } from "@/server/lib/errors";
+import { AppError } from "@/server/lib";
 
 const { columnRepositoryMock, memberRepositoryMock, nanoidMock, projectRepositoryMock, taskRepositoryMock } =
   vi.hoisted(() => ({
@@ -28,19 +28,10 @@ vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
 }));
 
-vi.mock("@/server/repositories/column.repository", () => ({
+vi.mock("@/server/repositories", () => ({
   columnRepository: columnRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/member.repository", () => ({
   memberRepository: memberRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/project.repository", () => ({
   projectRepository: projectRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 

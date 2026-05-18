@@ -1,6 +1,6 @@
 import type { AddMemberInput, MemberWithUserOutput, UpdateMemberInput } from "@/entities/member";
-import { api } from "@/shared/api/client";
-import { requestApiResult } from "@/shared/api/result";
+import { api } from "@/shared";
+import { requestApiResult } from "@/shared";
 
 const BASE_KEY = "members";
 

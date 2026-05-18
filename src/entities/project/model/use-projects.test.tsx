@@ -3,12 +3,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { projectApi, projectKeys } from "@/entities/project/api";
+import { projectApi, projectKeys } from "@/entities/project";
 import { makeProject } from "@/test/factories";
 import { createTestQueryClient } from "@/test/render";
 import { useCreateProject, useDeleteProject, useProject, useProjects, useUpdateProject } from ".";
 
-vi.mock("@/entities/project/api", () => ({
+vi.mock("@/entities/project", () => ({
   projectKeys: {
     all: ["projects"],
     lists: () => ["projects", "list"],

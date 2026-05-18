@@ -3,7 +3,7 @@ export type {
   UpdateMemberInput,
 } from "@/server/use-cases/member/dto";
 
-import type { Member, User } from "@/shared/types";
+import type { Member, User } from "@/shared";
 
 export type MemberRole = Member["role"];
 

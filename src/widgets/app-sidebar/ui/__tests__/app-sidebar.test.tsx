@@ -1,8 +1,8 @@
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SidebarProvider } from "@/shared/shadcn/sidebar";
-import { TooltipProvider } from "@/shared/shadcn/tooltip";
+import { SidebarProvider } from "@/shared";
+import { TooltipProvider } from "@/shared";
 import { makeProject } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 import { AppSidebar } from "@/widgets/app-sidebar";
@@ -19,11 +19,17 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.push }),
 }));
 
-vi.mock("@/shared/lib/auth-client", () => ({
-  authClient: {
-    useSession: () => ({ data: { user: mocks.user }, isPending: false }),
-  },
-}));
+vi.mock("@/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared")>();
+
+  return {
+    ...actual,
+    authClient: {
+      ...actual.authClient,
+      useSession: () => ({ data: { user: mocks.user }, isPending: false }),
+    },
+  };
+});
 
 vi.mock("@/features/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/features/auth")>();

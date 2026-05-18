@@ -1,1 +1,1 @@
-export { ProjectTabs } from "./ui/project-tabs";
+export { ProjectTabs } from "./ui";

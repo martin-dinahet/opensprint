@@ -3,9 +3,9 @@
 import { IconCalendar, IconFileText, IconFlag, IconTextCaption, IconUser } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskPriority } from "@/entities/task";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/shared/shadcn/field";
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupTextarea } from "@/shared/shadcn/input-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/shadcn/select";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/shared";
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupTextarea } from "@/shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared";
 
 type Props = {
   assigneeId: string | null;

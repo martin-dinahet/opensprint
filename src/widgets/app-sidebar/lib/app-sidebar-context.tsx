@@ -5,7 +5,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import type { ProjectListOutput } from "@/entities/project";
 import { useProjects } from "@/entities/project";
 import { useSignOut } from "@/features/auth";
-import { authClient } from "@/shared/lib/auth-client";
+import { authClient } from "@/shared";
 import { getProjectId } from "./navigation";
 
 type SidebarUser = {

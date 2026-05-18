@@ -30,19 +30,10 @@ vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
 }));
 
-vi.mock("@/server/repositories/member.repository", () => ({
+vi.mock("@/server/repositories", () => ({
   memberRepository: memberRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/column.repository", () => ({
   columnRepository: columnRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/project.repository", () => ({
   projectRepository: projectRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
 }));
 

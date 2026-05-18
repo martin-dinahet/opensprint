@@ -1,4 +1,4 @@
-import { LABELS } from "../model/labels";
+import { LABELS } from "../model";
 
 export const formatLabel = (slug: string): string => {
   return (

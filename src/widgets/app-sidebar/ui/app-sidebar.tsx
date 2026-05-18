@@ -1,7 +1,7 @@
 "use client";
 
 import { CreateProjectDialog } from "@/features/create-project";
-import { Sidebar, SidebarContent, SidebarRail } from "@/shared/shadcn/sidebar";
+import { Sidebar, SidebarContent, SidebarRail } from "@/shared";
 import { AppSidebarProvider, useAppSidebar } from "../lib";
 import { AccountMenu } from "./account-menu";
 import { ProjectList } from "./project-list";

@@ -1,6 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AppError } from "@/server/lib/errors";
+import { AppError } from "@/server/lib";
 import { createHonoTestClient } from "@/test/backend";
 import { makeColumn, makeProject, makeTask, makeUser } from "@/test/factories";
 
@@ -33,18 +33,47 @@ const { authMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, t
   },
   taskUseCasesMock: {
     AssignTaskUseCase: { execute: vi.fn() },
+    AttachTaskTagUseCase: { execute: vi.fn() },
+    CreateProjectTaskTagUseCase: { execute: vi.fn() },
     CreateTaskUseCase: { execute: vi.fn() },
+    CreateTaskItemUseCase: { execute: vi.fn() },
+    DeleteProjectTaskTagUseCase: { execute: vi.fn() },
     DeleteTaskUseCase: { execute: vi.fn() },
+    DeleteTaskItemUseCase: { execute: vi.fn() },
+    DetachTaskTagUseCase: { execute: vi.fn() },
+    ListProjectTaskTagsUseCase: { execute: vi.fn() },
     ListTasksUseCase: { execute: vi.fn() },
     MoveTaskUseCase: { execute: vi.fn() },
+    ReorderTaskItemsUseCase: { execute: vi.fn() },
     ReorderTaskUseCase: { execute: vi.fn() },
+    UpdateProjectTaskTagUseCase: { execute: vi.fn() },
     UpdateTaskUseCase: { execute: vi.fn() },
+    UpdateTaskItemUseCase: { execute: vi.fn() },
   },
 }));
 
-vi.mock("@/server/lib/auth", () => ({
-  auth: authMock,
-}));
+vi.mock("@/server/lib", async () => {
+  const errors = await vi.importActual<typeof import("@/server/lib/errors")>("@/server/lib/errors");
+  const validate = await vi.importActual<typeof import("@/server/lib/validate")>("@/server/lib/validate");
+  const handleError = await vi.importActual<typeof import("@/server/lib/handle-error")>("@/server/lib/handle-error");
+  const handleNotFound =
+    await vi.importActual<typeof import("@/server/lib/handle-notfound")>("@/server/lib/handle-notfound");
+
+  return {
+    ...errors,
+    ...validate,
+    ...handleError,
+    ...handleNotFound,
+    auth: authMock,
+    guard: () => async (c, next) => {
+      const session = await authMock.api.getSession({ headers: c.req.raw.headers });
+      if (!session) return c.json({ success: false, errors: { root: "Not authenticated" } }, 401);
+      c.set("user", session.user);
+      c.set("session", session.session);
+      await next();
+    },
+  };
+});
 
 vi.mock("@/server/use-cases/project", () => projectUseCasesMock);
 vi.mock("@/server/use-cases/column", () => columnUseCasesMock);
@@ -91,6 +120,16 @@ describe("server routes", () => {
       success: false,
       errors: { root: "Not authenticated" },
     });
+  });
+
+  it("passes auth routes through to Better Auth", async () => {
+    authMock.handler.mockResolvedValue(new Response("auth-ok", { status: 202 }));
+
+    const response = await server.request("/api/auth/sign-out", { method: "POST" });
+
+    expect(response.status).toBe(202);
+    await expect(response.text()).resolves.toBe("auth-ok");
+    expect(authMock.handler).toHaveBeenCalledWith(expect.any(Request));
   });
 
   it("validates project create bodies", async () => {
@@ -266,6 +305,45 @@ describe("server routes", () => {
     expect(memberUseCasesMock.RemoveMemberUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "member-1");
   });
 
+  it("routes project task tag list, create, update, and delete requests", async () => {
+    const tag = {
+      id: "tag-1",
+      projectId: "project-1",
+      name: "Frontend",
+      color: "#2563eb",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    taskUseCasesMock.ListProjectTaskTagsUseCase.execute.mockResolvedValue(ok([tag]));
+    taskUseCasesMock.CreateProjectTaskTagUseCase.execute.mockResolvedValue(ok(tag));
+    taskUseCasesMock.UpdateProjectTaskTagUseCase.execute.mockResolvedValue(ok({ ...tag, name: "UI" }));
+    taskUseCasesMock.DeleteProjectTaskTagUseCase.execute.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.projects[":id"]["task-tags"].$get({ param: { id: "project-1" } });
+    await client.api.projects[":id"]["task-tags"].$post({
+      param: { id: "project-1" },
+      json: { name: "Frontend", color: "#2563eb" },
+    });
+    await client.api.projects[":id"]["task-tags"][":tagId"].$patch({
+      param: { id: "project-1", tagId: "tag-1" },
+      json: { name: "UI" },
+    });
+    await client.api.projects[":id"]["task-tags"][":tagId"].$delete({
+      param: { id: "project-1", tagId: "tag-1" },
+    });
+
+    expect(taskUseCasesMock.ListProjectTaskTagsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
+    expect(taskUseCasesMock.CreateProjectTaskTagUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
+      name: "Frontend",
+      color: "#2563eb",
+    });
+    expect(taskUseCasesMock.UpdateProjectTaskTagUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "tag-1", {
+      name: "UI",
+    });
+    expect(taskUseCasesMock.DeleteProjectTaskTagUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "tag-1");
+  });
+
   it("validates member update roles", async () => {
     const client = createHonoTestClient(server);
     const response = await client.api.projects[":id"].members[":memberId"].$patch({
@@ -347,5 +425,76 @@ describe("server routes", () => {
       columnId: "column-2",
       position: 0,
     });
+  });
+
+  it("routes task item create, update, reorder, and delete requests", async () => {
+    const item = {
+      id: "item-1",
+      taskId: "task-1",
+      title: "Review copy",
+      done: false,
+      position: 0,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    taskUseCasesMock.CreateTaskItemUseCase.execute.mockResolvedValue(ok(item));
+    taskUseCasesMock.UpdateTaskItemUseCase.execute.mockResolvedValue(ok({ ...item, done: true }));
+    taskUseCasesMock.ReorderTaskItemsUseCase.execute.mockResolvedValue(ok([item]));
+    taskUseCasesMock.DeleteTaskItemUseCase.execute.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.tasks[":taskId"].items.$post({
+      param: { taskId: "task-1" },
+      json: { title: "Review copy" },
+    });
+    await client.api.tasks[":taskId"].items[":itemId"].$patch({
+      param: { taskId: "task-1", itemId: "item-1" },
+      json: { done: true },
+    });
+    await client.api.tasks[":taskId"].items.reorder.$patch({
+      param: { taskId: "task-1" },
+      json: { itemIds: ["item-1"] },
+    });
+    await client.api.tasks[":taskId"].items[":itemId"].$delete({
+      param: { taskId: "task-1", itemId: "item-1" },
+    });
+
+    expect(taskUseCasesMock.CreateTaskItemUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
+      title: "Review copy",
+    });
+    expect(taskUseCasesMock.UpdateTaskItemUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", "item-1", {
+      done: true,
+    });
+    expect(taskUseCasesMock.ReorderTaskItemsUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
+      itemIds: ["item-1"],
+    });
+    expect(taskUseCasesMock.DeleteTaskItemUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", "item-1");
+  });
+
+  it("routes task tag attach and detach requests", async () => {
+    const tag = {
+      id: "tag-1",
+      projectId: "project-1",
+      name: "Frontend",
+      color: "#2563eb",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    taskUseCasesMock.AttachTaskTagUseCase.execute.mockResolvedValue(ok(tag));
+    taskUseCasesMock.DetachTaskTagUseCase.execute.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.tasks[":taskId"].tags.$post({
+      param: { taskId: "task-1" },
+      json: { tagId: "tag-1" },
+    });
+    await client.api.tasks[":taskId"].tags[":tagId"].$delete({
+      param: { taskId: "task-1", tagId: "tag-1" },
+    });
+
+    expect(taskUseCasesMock.AttachTaskTagUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
+      tagId: "tag-1",
+    });
+    expect(taskUseCasesMock.DetachTaskTagUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", "tag-1");
   });
 });

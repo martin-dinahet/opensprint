@@ -1,1 +1,1 @@
-export { TaskDetailDialog } from "./ui/task-detail-dialog";
+export { TaskDetailDialog } from "./ui";

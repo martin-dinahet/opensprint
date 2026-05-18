@@ -3,8 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import z from "zod";
 import { type TaskOutput, type TaskPriority, useAssignTask, useUpdateTask } from "@/entities/task";
-import { handleClientResult } from "@/shared/api/result";
-import { parseFormData } from "@/shared/lib/forms";
+import { handleClientResult } from "@/shared";
+import { parseFormData } from "@/shared";
 
 const editTaskSchema = z.object({
   title: z.string().trim().min(1).max(300),

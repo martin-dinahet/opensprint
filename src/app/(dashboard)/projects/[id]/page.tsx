@@ -10,9 +10,9 @@ import { taskApi, taskKeys } from "@/entities/task";
 import { CreateColumnDialog } from "@/features/create-column";
 import { TaskSheet } from "@/features/manage-task";
 import { ProjectTabs } from "@/features/project-tabs";
-import { unwrapClientResult } from "@/shared/api/result";
-import { Button } from "@/shared/shadcn/button";
-import { LoadingScreen } from "@/shared/shadcn/loading-screen";
+import { unwrapClientResult } from "@/shared";
+import { Button } from "@/shared";
+import { LoadingScreen } from "@/shared";
 import { useDashboardHeader } from "@/widgets/header";
 import { Kanban, KanbanColumn, ProjectKanbanProvider, useProjectKanban } from "@/widgets/kanban-board";
 

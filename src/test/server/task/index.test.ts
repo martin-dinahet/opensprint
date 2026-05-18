@@ -56,27 +56,12 @@ vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
 }));
 
-vi.mock("@/server/repositories/column.repository", () => ({
+vi.mock("@/server/repositories", () => ({
   columnRepository: columnRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/member.repository", () => ({
   memberRepository: memberRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/project.repository", () => ({
   projectRepository: projectRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task.repository", () => ({
   taskRepository: taskRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task-item.repository", () => ({
   taskItemRepository: taskItemRepositoryMock,
-}));
-
-vi.mock("@/server/repositories/task-tag.repository", () => ({
   taskTagRepository: taskTagRepositoryMock,
 }));
 
