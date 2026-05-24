@@ -2,8 +2,8 @@
 
 import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
-import { type ReactNode, useState } from "react";
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { type ReactNode, useState, useTransition } from "react";
 import type { ColumnOutput } from "@/entities/column";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard, TaskCardContent } from "@/entities/task";
@@ -22,6 +22,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  Input,
 } from "@/shared";
 import { kanbanCollisionDetection, useProjectKanban } from "../lib";
 
@@ -50,6 +55,7 @@ type KanbanColumnViewProps = ColumnProps & {
   onDeleteColumn: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onOpenTask: (task: TaskOutput) => void;
+  onRenameColumn?: (name: string) => Promise<unknown> | unknown;
 };
 
 const Root = ({ children }: RootProps) => {
@@ -78,7 +84,7 @@ const Columns = ({ children }: ColumnsProps) => {
 };
 
 const Column = ({ column, isHovered, tasks }: ColumnProps) => {
-  const { openCreateTask, removeColumn } = useProjectKanban();
+  const { openCreateTask, removeColumn, renameColumn } = useProjectKanban();
 
   return (
     <ColumnView
@@ -86,6 +92,7 @@ const Column = ({ column, isHovered, tasks }: ColumnProps) => {
       isHovered={isHovered}
       onAddTask={() => openCreateTask(column.id)}
       onDeleteColumn={() => removeColumn(column.id)}
+      onRenameColumn={(name) => renameColumn(column.id, name)}
       tasks={tasks}
     />
   );
@@ -97,11 +104,13 @@ const ColumnView = ({
   isHovered,
   onAddTask,
   onDeleteColumn,
+  onRenameColumn,
   tasks,
 }: ColumnProps & {
   children?: ReactNode;
   onAddTask: () => void;
   onDeleteColumn: () => void;
+  onRenameColumn?: (name: string) => Promise<unknown> | unknown;
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -110,6 +119,7 @@ const ColumnView = ({
 
   const isHighlighted = isOver || isHovered;
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
 
   return (
     <div
@@ -133,6 +143,10 @@ const ColumnView = ({
               <span className="sr-only">Column actions</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setRenameOpen(true)}>
+                <IconEdit />
+                Rename column
+              </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                 <IconTrash />
                 Delete column
@@ -162,6 +176,9 @@ const ColumnView = ({
           </div>
         </SortableContext>
       </div>
+      {onRenameColumn ? (
+        <RenameColumnDialog column={column} onRename={onRenameColumn} open={renameOpen} onOpenChange={setRenameOpen} />
+      ) : null}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -191,6 +208,78 @@ const ColumnView = ({
     </div>
   );
 };
+
+function RenameColumnDialog({
+  column,
+  onOpenChange,
+  onRename,
+  open,
+}: {
+  column: ColumnOutput;
+  onOpenChange: (open: boolean) => void;
+  onRename: (name: string) => Promise<unknown> | unknown;
+  open: boolean;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const action = (formData: FormData) => {
+    startTransition(async () => {
+      setError(null);
+      const name = String(formData.get("name") ?? "").trim();
+
+      if (!name) {
+        setError("Column name is required");
+        return;
+      }
+
+      try {
+        await onRename(name);
+        onOpenChange(false);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Unable to rename column");
+      }
+    });
+  };
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setError(null);
+        onOpenChange(nextOpen);
+      }}
+    >
+      <AlertDialogContent>
+        <form action={action}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rename column</AlertDialogTitle>
+            <AlertDialogDescription>Update the column name shown on this board.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <FieldGroup className="py-4">
+            <Field data-invalid={!!error}>
+              <FieldLabel htmlFor={`column-name-${column.id}`}>Name</FieldLabel>
+              <Input
+                id={`column-name-${column.id}`}
+                name="name"
+                defaultValue={column.name}
+                disabled={pending}
+                autoFocus
+              />
+              <FieldError>{error}</FieldError>
+            </Field>
+          </FieldGroup>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+            <AlertDialogAction type="submit" disabled={pending}>
+              Save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 const TaskCard = ({ columnId, task }: TaskCardProps) => {
   const { members, openTask, removeTask } = useProjectKanban();
@@ -258,6 +347,7 @@ export const KanbanColumnView = ({
   onDeleteColumn,
   onDeleteTask,
   onOpenTask,
+  onRenameColumn,
   tasks,
 }: KanbanColumnViewProps) => {
   return (
@@ -266,6 +356,7 @@ export const KanbanColumnView = ({
       isHovered={isHovered}
       onAddTask={onAddTask}
       onDeleteColumn={() => onDeleteColumn(column.id)}
+      onRenameColumn={onRenameColumn}
       tasks={tasks}
     >
       {tasks.map((task) => (

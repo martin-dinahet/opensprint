@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { TaskCard } from "@/entities/task";
@@ -149,6 +149,35 @@ describe("KanbanColumnView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete column" }));
 
     expect(onDeleteColumn).toHaveBeenCalledWith(column.id);
+  });
+
+  it("renames a column from the column actions menu", async () => {
+    const onRenameColumn = vi.fn().mockResolvedValue(undefined);
+    const column = makeColumn({ id: "column-1", name: "Doing" });
+
+    renderWithClient(
+      <KanbanColumnView
+        column={column}
+        tasks={[]}
+        onAddTask={vi.fn()}
+        onDeleteColumn={vi.fn()}
+        onDeleteTask={vi.fn()}
+        onOpenTask={vi.fn()}
+        onRenameColumn={onRenameColumn}
+        isHovered={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Column actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Rename column" }));
+
+    expect(screen.getByRole("heading", { name: "Rename column" })).toBeInTheDocument();
+
+    const input = screen.getByLabelText("Name");
+    fireEvent.change(input, { target: { value: "  Backlog  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(onRenameColumn).toHaveBeenCalledWith("Backlog"));
   });
 });
 

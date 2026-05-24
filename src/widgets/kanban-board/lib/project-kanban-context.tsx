@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { type ColumnOutput, useColumns, useDeleteColumn } from "@/entities/column";
+import { type ColumnOutput, useColumns, useDeleteColumn, useUpdateColumn } from "@/entities/column";
 import { type MemberWithUserOutput, useMembers } from "@/entities/member";
 import { type TaskOutput, useDeleteTask, useMoveTask, useReorderTask } from "@/entities/task";
 import { useKanbanDrag } from "./use-kanban-drag";
@@ -21,6 +21,7 @@ type ProjectKanbanContextValue = {
   projectId: string;
   removeColumn: (columnId: string) => void;
   removeTask: (columnId: string, taskId: string) => void;
+  renameColumn: (columnId: string, name: string) => Promise<unknown>;
   setCreateColumnOpen: (open: boolean) => void;
   setCreateTaskOpen: (open: boolean) => void;
   setSelectedTask: (task: TaskOutput | null) => void;
@@ -39,6 +40,7 @@ export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) =
   const { data: columns = [], isLoading: columnsLoading } = useColumns(projectId, boardId);
   const { data: members = [] } = useMembers(projectId);
   const deleteColumn = useDeleteColumn();
+  const updateColumn = useUpdateColumn();
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
   const reorderTask = useReorderTask();
@@ -74,6 +76,7 @@ export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) =
       projectId,
       removeColumn: (columnId) => deleteColumn.mutate({ boardId, projectId, columnId }),
       removeTask: (columnId, taskId) => deleteTask.mutate({ columnId, taskId }),
+      renameColumn: (columnId, name) => updateColumn.mutateAsync({ boardId, projectId, columnId, data: { name } }),
       setCreateColumnOpen,
       setCreateTaskOpen,
       selectedTask,
@@ -93,6 +96,7 @@ export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) =
       projectId,
       selectedTask,
       setCreateTaskOpen,
+      updateColumn,
     ],
   );
 

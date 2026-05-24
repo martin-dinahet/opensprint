@@ -6,6 +6,7 @@ import { ProjectKanbanProvider, useProjectKanban } from "../project-kanban-conte
 const {
   deleteColumnMock,
   deleteTaskMock,
+  updateColumnMock,
   useColumnsMock,
   useKanbanDragMock,
   useMoveTaskMock,
@@ -14,6 +15,7 @@ const {
 } = vi.hoisted(() => ({
   deleteColumnMock: { mutate: vi.fn(), isPending: false },
   deleteTaskMock: { mutate: vi.fn(), isPending: false },
+  updateColumnMock: { mutateAsync: vi.fn(), isPending: false },
   useColumnsMock: vi.fn(),
   useKanbanDragMock: vi.fn(),
   useMoveTaskMock: vi.fn(),
@@ -24,6 +26,7 @@ const {
 vi.mock("@/entities/column", () => ({
   useColumns: useColumnsMock,
   useDeleteColumn: () => deleteColumnMock,
+  useUpdateColumn: () => updateColumnMock,
 }));
 
 vi.mock("@/entities/member", () => ({
@@ -62,6 +65,9 @@ function Consumer() {
       </button>
       <button type="button" onClick={() => context.removeColumn("column-1")}>
         remove column
+      </button>
+      <button type="button" onClick={() => context.renameColumn("column-1", "Renamed")}>
+        rename column
       </button>
       <button type="button" onClick={() => context.removeTask("column-1", "task-1")}>
         remove task
@@ -119,6 +125,14 @@ describe("ProjectKanbanProvider", () => {
       boardId: "board-1",
       projectId: "project-1",
       columnId: "column-1",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "rename column" }));
+    expect(updateColumnMock.mutateAsync).toHaveBeenCalledWith({
+      boardId: "board-1",
+      projectId: "project-1",
+      columnId: "column-1",
+      data: { name: "Renamed" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "remove task" }));
