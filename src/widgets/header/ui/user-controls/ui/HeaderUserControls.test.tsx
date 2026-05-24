@@ -60,7 +60,7 @@ describe("HeaderUserControls", () => {
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(screen.getByText("Account settings"));
     fireEvent.click(screen.getByRole("button"));
-    fireEvent.click(screen.getByText("Sign out"));
+    fireEvent.click(screen.getByText("Sign Out"));
 
     expect(pushMock).toHaveBeenCalledWith("/account");
     expect(signOutMock).toHaveBeenCalled();
@@ -75,6 +75,6 @@ describe("HeaderUserControls", () => {
     fireEvent.click(screen.getByRole("button"));
 
     expect(screen.getByText("Unable to sign out")).toBeInTheDocument();
-    expect(screen.getByText("Signing out...")).toBeInTheDocument();
+    expect(screen.getByText("Signing out…")).toBeInTheDocument();
   });
 });

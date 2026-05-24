@@ -13,6 +13,7 @@ import {
   MoveTaskUseCase,
   ReorderTaskItemsUseCase,
   ReorderTaskUseCase,
+  TransferTaskUseCase,
   UpdateTaskItemUseCase,
   UpdateTaskUseCase,
 } from "@/server/use-cases/task";
@@ -24,6 +25,7 @@ import {
   MoveTaskInput,
   ReorderTaskInput,
   ReorderTaskItemsInput,
+  TransferTaskInput,
   UpdateTaskInput,
   UpdateTaskItemInput,
 } from "@/server/use-cases/task/dto";
@@ -32,6 +34,7 @@ const CreateTaskSchema = CreateTaskInput;
 const UpdateTaskSchema = UpdateTaskInput;
 const AssignTaskSchema = AssignTaskInput;
 const MoveTaskSchema = MoveTaskInput;
+const TransferTaskSchema = TransferTaskInput;
 const ReorderTaskSchema = ReorderTaskInput;
 const CreateTaskItemSchema = CreateTaskItemInput;
 const UpdateTaskItemSchema = UpdateTaskItemInput;
@@ -111,6 +114,19 @@ export const taskManagementController = new Hono<ServerVariables>() //
     const body = c.req.valid("json");
 
     const result = await MoveTaskUseCase.execute(currentUser.id, taskId, body);
+
+    return result.match({
+      ok: (task) => c.json(task),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .patch("/:taskId/transfer", guard(), validate("json", TransferTaskSchema), async (c) => {
+    const taskId = c.req.param("taskId");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    const result = await TransferTaskUseCase.execute(currentUser.id, taskId, body);
 
     return result.match({
       ok: (task) => c.json(task),

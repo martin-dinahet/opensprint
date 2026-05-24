@@ -76,7 +76,7 @@ export const TaskFormFields = ({
           <InputGroupInput
             id="taskTitle"
             name="title"
-            placeholder="Draft sprint plan"
+            placeholder="Draft sprint plan…"
             disabled={disabled}
             aria-invalid={!!titleError}
             value={title}
@@ -96,7 +96,7 @@ export const TaskFormFields = ({
           <InputGroupTextarea
             id="taskDescription"
             name="description"
-            placeholder="Notes, links, checklists, or acceptance criteria"
+            placeholder="Notes, links, checklists, or acceptance criteria…"
             disabled={disabled}
             aria-invalid={!!descriptionError}
             className="min-h-56"

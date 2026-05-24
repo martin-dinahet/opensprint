@@ -57,7 +57,7 @@ export function CreateColumnDialog({ boardId, onOpenChange, open, projectId }: P
                 <Input
                   id="columnName"
                   name="name"
-                  placeholder="In progress"
+                  placeholder="In progress…"
                   disabled={pending}
                   aria-invalid={!!nameError}
                   className={`pl-9 ${nameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
@@ -79,7 +79,7 @@ export function CreateColumnDialog({ boardId, onOpenChange, open, projectId }: P
               {pending ? (
                 <>
                   <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Creating…
                 </>
               ) : (
                 <>

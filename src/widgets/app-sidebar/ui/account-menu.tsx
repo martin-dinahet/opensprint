@@ -19,11 +19,11 @@ export function AccountMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <SidebarFooter className="gap-1 px-3 pt-2 pb-3">
+    <SidebarFooter className="gap-1 border-sidebar-border/80 border-t px-3 pt-2 pb-3">
       <Collapsible
         open={open}
         onOpenChange={setOpen}
-        className="flex flex-col rounded-md bg-sidebar-accent/35 p-1 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+        className="flex flex-col rounded-md group-data-[collapsible=icon]:p-0"
       >
         <CollapsibleContent className={collapsedTextClass}>
           <SidebarMenu className="gap-1">
@@ -45,7 +45,7 @@ export function AccountMenu() {
                 disabled={signOutPending}
               >
                 <LogOutIcon />
-                <span>{signOutPending ? "Signing out..." : "Sign out"}</span>
+                <span>{signOutPending ? "Signing out…" : "Sign Out"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -58,7 +58,7 @@ export function AccountMenu() {
                 <SidebarMenuButton
                   size="lg"
                   tooltip="Account"
-                  className="h-11 rounded-md px-2 hover:bg-sidebar-accent/60 data-panel-open:bg-transparent"
+                  className="h-10 rounded-md px-2 hover:bg-sidebar-accent/60 data-panel-open:bg-sidebar-accent/60"
                 />
               }
             >

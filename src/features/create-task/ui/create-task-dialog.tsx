@@ -64,7 +64,7 @@ export const CreateTaskDialog = ({ columnId, members, onOpenChange, open }: Prop
               {pending ? (
                 <>
                   <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Creating…
                 </>
               ) : (
                 <>

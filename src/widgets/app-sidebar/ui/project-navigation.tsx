@@ -33,8 +33,8 @@ export function ProjectNavigation() {
   }
 
   return (
-    <SidebarGroup className={`${sidebarSectionClass} mt-2 border-sidebar-border/90 border-t pt-3`}>
-      <div className={sidebarSectionLabelClass}>Project</div>
+    <SidebarGroup className={`${sidebarSectionClass} mt-1 border-sidebar-border/80 border-t pt-2`}>
+      <div className={sidebarSectionLabelClass}>Current</div>
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger
           className={`group/section flex w-full items-center justify-between ${sidebarSectionTriggerClass}`}
@@ -52,7 +52,7 @@ export function ProjectNavigation() {
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton
                       tooltip={item.label}
-                      isActive={projectId ? pathname === item.href : false}
+                      isActive={projectId ? pathname === item.href || pathname.startsWith(`${item.href}/`) : false}
                       className={sidebarNavButtonClass}
                       render={<Link href={item.href} />}
                     >

@@ -10,6 +10,7 @@ import type {
   ReorderTaskItemsInput,
   TaskItemOutput,
   TaskOutput,
+  TransferTaskInput,
   UpdateProjectTaskTagInput,
   UpdateTaskInput,
   UpdateTaskItemInput,
@@ -71,6 +72,13 @@ export const taskApi = {
     return requestApiResult<{ id: string; columnId: string; position: number }>(
       () => api.tasks[":taskId"].move.$patch({ param: { taskId }, json: data }),
       "Failed to move task",
+    );
+  },
+
+  transfer: async (taskId: string, data: TransferTaskInput) => {
+    return requestApiResult<{ id: string; columnId: string; position: number }>(
+      () => api.tasks[":taskId"].transfer.$patch({ param: { taskId }, json: data }),
+      "Failed to transfer task",
     );
   },
 

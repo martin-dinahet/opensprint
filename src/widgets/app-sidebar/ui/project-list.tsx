@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -24,7 +24,7 @@ import {
 } from "../lib";
 
 export function ProjectList() {
-  const { isProjectsLoading, projectId, projects } = useAppSidebar();
+  const { isProjectsLoading, openCreateProject, projectId, projects } = useAppSidebar();
   const [open, setOpen] = useState(true);
   const SectionIcon = open ? ChevronDownIcon : ChevronRightIcon;
 
@@ -40,6 +40,17 @@ export function ProjectList() {
         <CollapsibleContent className="min-h-0 flex-1">
           <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto pr-1">
             <SidebarMenu className="gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  aria-label="New Project"
+                  tooltip="New Project"
+                  className={sidebarNavButtonClass}
+                  onClick={openCreateProject}
+                >
+                  <Icon icon={PlusIcon} />
+                  <span className={collapsedTextClass}>New Project</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               {isProjectsLoading
                 ? projectSkeletonKeys.map((key) => <SidebarMenuSkeleton key={key} showIcon />)
                 : projects.length
@@ -57,7 +68,7 @@ export function ProjectList() {
                             render={<Link href={href} />}
                           >
                             <Icon icon={FolderKanbanIcon} />
-                            <span className={collapsedTextClass}>{project.name}</span>
+                            <span className={`${collapsedTextClass} min-w-0 truncate`}>{project.name}</span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );

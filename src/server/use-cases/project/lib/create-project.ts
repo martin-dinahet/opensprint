@@ -48,7 +48,7 @@ export class CreateProjectUseCase {
     const boardResult = await boardRepository.create({
       id: defaultBoardId,
       projectId,
-      name: "Board",
+      name: input.defaultBoardName,
       position: 0,
     });
     if (boardResult.isErr()) {

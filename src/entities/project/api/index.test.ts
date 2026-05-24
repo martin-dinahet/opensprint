@@ -63,13 +63,13 @@ describe("project API", () => {
     apiMock.projects[":id"].$delete.mockResolvedValue({ success: true });
 
     await projectApi.get("project-1");
-    await projectApi.create({ name: "New project", description: "Detailed enough" });
+    await projectApi.create({ name: "New project", defaultBoardName: "Roadmap", description: "Detailed enough" });
     await projectApi.update("project-1", { name: "Updated" });
     await projectApi.delete("project-1");
 
     expect(apiMock.projects[":id"].$get).toHaveBeenCalledWith({ param: { id: "project-1" } });
     expect(apiMock.projects.$post).toHaveBeenCalledWith({
-      json: { name: "New project", description: "Detailed enough" },
+      json: { name: "New project", defaultBoardName: "Roadmap", description: "Detailed enough" },
     });
     expect(apiMock.projects[":id"].$patch).toHaveBeenCalledWith({
       param: { id: "project-1" },

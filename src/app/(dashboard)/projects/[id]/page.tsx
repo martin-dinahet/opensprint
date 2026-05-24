@@ -20,5 +20,5 @@ export default function ProjectPage({ params }: Props) {
     }
   }, [project?.defaultBoardId, projectId, router]);
 
-  return <LoadingScreen label={isLoading ? "Loading project..." : "Opening board..."} variant="shell" />;
+  return <LoadingScreen label={isLoading ? "Loading project…" : "Opening board…"} variant="shell" />;
 }

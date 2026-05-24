@@ -1,12 +1,12 @@
 "use client";
 
-import { IconLayoutKanban, IconPlus } from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconLayoutKanban, IconPlus } from "@tabler/icons-react";
 import { useQueries } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useMemo, useState, useTransition } from "react";
 import z from "zod";
-import { type BoardOutput, useBoard, useBoards, useCreateBoard } from "@/entities/board";
+import { type BoardOutput, useBoard, useBoards, useCreateBoard, useUpdateBoard } from "@/entities/board";
 import type { ColumnOutput } from "@/entities/column";
 import { useProject } from "@/entities/project";
 import { taskApi, taskKeys } from "@/entities/task";
@@ -16,10 +16,17 @@ import { ProjectTabs } from "@/features/project-tabs";
 import {
   Button,
   Dialog,
+  DialogDescription,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Field,
   FieldError,
   FieldGroup,
@@ -69,6 +76,7 @@ const ProjectKanbanContent = () => {
   const currentSelectedTask = taskLists.flat().find((task) => task.id === selectedTask?.id) ?? selectedTask;
   const header = useMemo(
     () => ({
+      title: board?.name ?? "Board",
       eyebrow: (
         <span className="flex items-center gap-2 text-muted-foreground text-sm">
           <Link href="/dashboard" className="hover:text-foreground">
@@ -76,13 +84,18 @@ const ProjectKanbanContent = () => {
           </Link>
           <span>/</span>
           <span className="truncate">{project?.name ?? "Project"}</span>
-          <span>/</span>
-          <span className="text-foreground">{board?.name ?? "Board"}</span>
         </span>
       ),
-      actions: <ProjectTabs activeTab="board" boardId={boardId} projectId={projectId} />,
+      actions: (
+        <ProjectHeaderActions
+          activeBoardId={boardId}
+          activeBoardName={board?.name ?? "Board"}
+          boards={boards}
+          projectId={projectId}
+        />
+      ),
     }),
-    [board, boardId, project, projectId],
+    [board, boardId, boards, project, projectId],
   );
 
   useDashboardHeader(header);
@@ -91,27 +104,24 @@ const ProjectKanbanContent = () => {
     <Kanban.Root>
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {isLoading ? (
-          <LoadingScreen label="Loading board..." variant="shell" />
+          <LoadingScreen label="Loading board…" variant="shell" />
         ) : (
-          <>
-            <BoardBar activeBoardId={boardId} boards={boards} projectId={projectId} />
-            <div className="flex flex-1 overflow-x-auto overflow-y-hidden">
-              <Kanban.Columns>
-                {columns.map((column) => (
-                  <KanbanColumn column={column} key={column.id} />
-                ))}
+          <div className="flex flex-1 overflow-x-auto overflow-y-hidden">
+            <Kanban.Columns>
+              {columns.map((column) => (
+                <KanbanColumn column={column} key={column.id} />
+              ))}
 
-                <Button
-                  className="h-12 w-96 shrink-0 border-2 border-dashed border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
-                  onClick={openCreateColumn}
-                  variant="ghost"
-                >
-                  <IconPlus className="mr-2 h-4 w-4" />
-                  Add column
-                </Button>
-              </Kanban.Columns>
-            </div>
-          </>
+              <Button
+                className="h-10 w-80 shrink-0 border border-dashed border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
+                onClick={openCreateColumn}
+                variant="ghost"
+              >
+                <IconPlus className="mr-2 h-4 w-4" />
+                Add Column
+              </Button>
+            </Kanban.Columns>
+          </div>
         )}
       </main>
 
@@ -147,26 +157,58 @@ const createBoardSchema = z.object({
   name: z.string().trim().min(1, "Board name is required").max(130),
 });
 
-function BoardBar({
+function ProjectHeaderActions({
   activeBoardId,
+  activeBoardName,
   boards,
   projectId,
 }: {
   activeBoardId: string;
+  activeBoardName: string;
+  boards: BoardOutput[];
+  projectId: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <ProjectTabs activeTab="board" boardId={activeBoardId} projectId={projectId} />
+      <BoardActions
+        activeBoardId={activeBoardId}
+        activeBoardName={activeBoardName}
+        boards={boards}
+        projectId={projectId}
+      />
+    </div>
+  );
+}
+
+function BoardActions({
+  activeBoardId,
+  activeBoardName,
+  boards,
+  projectId,
+}: {
+  activeBoardId: string;
+  activeBoardName: string;
   boards: BoardOutput[];
   projectId: string;
 }) {
   const createBoard = useCreateBoard(projectId);
+  const updateBoard = useUpdateBoard(projectId);
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const action = (formData: FormData) => {
+  const resetErrors = () => {
+    setFieldErrors(null);
+    setGlobalError(null);
+  };
+
+  const addBoard = (formData: FormData) => {
     startTransition(async () => {
-      setFieldErrors(null);
-      setGlobalError(null);
+      resetErrors();
 
       const parsed = parseFormData(createBoardSchema, formData);
       if (parsed.fieldErrors) {
@@ -176,7 +218,7 @@ function BoardBar({
 
       try {
         const board = await createBoard.mutateAsync(parsed.data);
-        setOpen(false);
+        setAddOpen(false);
         router.push(`/projects/${projectId}/boards/${board.id}`);
       } catch (error) {
         setGlobalError(error instanceof Error ? error.message : "Unable to create board");
@@ -184,59 +226,129 @@ function BoardBar({
     });
   };
 
+  const renameBoard = (formData: FormData) => {
+    startTransition(async () => {
+      resetErrors();
+
+      const parsed = parseFormData(createBoardSchema, formData);
+      if (parsed.fieldErrors) {
+        setFieldErrors(parsed.fieldErrors);
+        return;
+      }
+
+      try {
+        await updateBoard.mutateAsync({ boardId: activeBoardId, data: parsed.data });
+        setRenameOpen(false);
+      } catch (error) {
+        setGlobalError(error instanceof Error ? error.message : "Unable to rename board");
+      }
+    });
+  };
+
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b bg-background px-4 py-2">
-      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-        {boards.map((board) => (
-          <Button
-            key={board.id}
-            size="sm"
-            variant={board.id === activeBoardId ? "secondary" : "ghost"}
-            render={<Link href={`/projects/${projectId}/boards/${board.id}`} />}
-            className="shrink-0"
-          >
-            <IconLayoutKanban className="h-4 w-4" />
-            <span className="max-w-44 truncate">{board.name}</span>
-          </Button>
-        ))}
-      </div>
-      <Button size="icon-sm" variant="outline" onClick={() => setOpen(true)}>
-        <IconPlus className="h-4 w-4" />
-        <span className="sr-only">Add board</span>
-      </Button>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+          <IconDotsVertical />
+          Actions
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          {boards.length > 1 ? (
+            <>
+              <DropdownMenuLabel>Switch Board</DropdownMenuLabel>
+              {boards.map((board) => (
+                <DropdownMenuItem key={board.id} render={<Link href={`/projects/${projectId}/boards/${board.id}`} />}>
+                  <IconLayoutKanban />
+                  <span className="min-w-0 flex-1 truncate">{board.name}</span>
+                  {board.id === activeBoardId ? <span className="text-muted-foreground text-xs">Current</span> : null}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
+          <DropdownMenuItem onClick={() => setRenameOpen(true)}>
+            <IconEdit />
+            Rename Board
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setAddOpen(true)}>
+            <IconPlus />
+            Add Board
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Dialog
-        open={open}
+        open={addOpen}
         onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setFieldErrors(null);
-            setGlobalError(null);
-          }
-          setOpen(nextOpen);
+          if (!nextOpen) resetErrors();
+          setAddOpen(nextOpen);
         }}
       >
         <DialogContent>
-          <form action={action}>
+          <form action={addBoard}>
             <DialogHeader>
-              <DialogTitle>Add board</DialogTitle>
+              <DialogTitle>Add Board</DialogTitle>
+              <DialogDescription>Create another board in this project.</DialogDescription>
             </DialogHeader>
             <FieldGroup className="py-4">
               <Field data-invalid={!!fieldErrors?.name}>
                 <FieldLabel htmlFor="boardName">Name</FieldLabel>
-                <Input id="boardName" name="name" placeholder="Roadmap" disabled={pending || createBoard.isPending} />
+                <Input
+                  id="boardName"
+                  name="name"
+                  placeholder="Roadmap…"
+                  autoComplete="off"
+                  disabled={pending || createBoard.isPending}
+                />
                 <FieldError>{fieldErrors?.name?.[0] ?? globalError}</FieldError>
               </Field>
             </FieldGroup>
             <DialogFooter>
               <Button type="submit" disabled={pending || createBoard.isPending}>
                 <IconPlus className="h-4 w-4" />
-                Add board
+                Add Board
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+
+      <Dialog
+        open={renameOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) resetErrors();
+          setRenameOpen(nextOpen);
+        }}
+      >
+        <DialogContent>
+          <form action={renameBoard}>
+            <DialogHeader>
+              <DialogTitle>Rename Board</DialogTitle>
+              <DialogDescription>Update the board name shown in this project.</DialogDescription>
+            </DialogHeader>
+            <FieldGroup className="py-4">
+              <Field data-invalid={!!fieldErrors?.name}>
+                <FieldLabel htmlFor="renameBoardName">Name</FieldLabel>
+                <Input
+                  id="renameBoardName"
+                  name="name"
+                  defaultValue={activeBoardName}
+                  autoComplete="off"
+                  disabled={pending || updateBoard.isPending}
+                />
+                <FieldError>{fieldErrors?.name?.[0] ?? globalError}</FieldError>
+              </Field>
+            </FieldGroup>
+            <DialogFooter>
+              <Button type="submit" disabled={pending || updateBoard.isPending}>
+                <IconEdit className="h-4 w-4" />
+                Rename Board
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

@@ -22,6 +22,7 @@ import {
   useReorderTask,
   useReorderTaskItems,
   useTasks,
+  useTransferTask,
   useUpdateProjectTaskTag,
   useUpdateTask,
   useUpdateTaskItem,
@@ -51,6 +52,7 @@ vi.mock("@/entities/task", () => ({
     move: vi.fn(),
     reorder: vi.fn(),
     reorderItems: vi.fn(),
+    transfer: vi.fn(),
     update: vi.fn(),
     updateItem: vi.fn(),
     updateProjectTag: vi.fn(),
@@ -115,8 +117,9 @@ describe("task hooks", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: taskKeys.list("column-1") });
   });
 
-  it("invalidates all task queries after assignment and reorder", async () => {
+  it("invalidates all task queries after assignment, transfer, and reorder", async () => {
     vi.mocked(taskApi.assign).mockResolvedValue(ok({ id: "task-1", assigneeId: "member-1" }));
+    vi.mocked(taskApi.transfer).mockResolvedValue(ok({ id: "task-1", columnId: "column-3", position: 0 }));
     vi.mocked(taskApi.reorder).mockResolvedValue(ok({ id: "task-1", position: 2 }));
     const queryClient = createTestQueryClient();
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
@@ -129,8 +132,13 @@ describe("task hooks", () => {
     reorderHook.result.current.mutate({ taskId: "task-1", position: 2 });
     await waitFor(() => expect(reorderHook.result.current.isSuccess).toBe(true));
 
+    const transferHook = renderHook(() => useTransferTask(), { wrapper: wrapper(queryClient) });
+    transferHook.result.current.mutate({ taskId: "task-1", data: { columnId: "column-3" } });
+    await waitFor(() => expect(transferHook.result.current.isSuccess).toBe(true));
+
     expect(taskApi.assign).toHaveBeenCalledWith("task-1", { assigneeId: "member-1" });
     expect(taskApi.reorder).toHaveBeenCalledWith("task-1", { position: 2 });
+    expect(taskApi.transfer).toHaveBeenCalledWith("task-1", { columnId: "column-3" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: taskKeys.all });
   });
 

@@ -10,4 +10,5 @@ export * from "./task-items";
 export * from "./task-output";
 export * from "./task-position";
 export * from "./task-tags";
+export * from "./transfer-task";
 export * from "./update-task";

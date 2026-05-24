@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCreateProject } from "@/entities/project";
 import { useCreateProjectForm } from "./use-create-project-form";
 
-const { createProjectMock, pushMock } = vi.hoisted(() => ({
+const { createProjectMock, pushMock, toastSuccessMock } = vi.hoisted(() => ({
   createProjectMock: {
     isPending: false,
     mutateAsync: vi.fn(),
   },
   pushMock: vi.fn(),
+  toastSuccessMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -17,6 +18,12 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/entities/project", () => ({
   useCreateProject: vi.fn(() => createProjectMock),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: toastSuccessMock,
+  },
 }));
 
 function makeFormData(values: Record<string, string>) {
@@ -35,21 +42,23 @@ describe("useCreateProjectForm", () => {
   });
 
   it("creates a project, closes the dialog, and navigates to the project", async () => {
-    createProjectMock.mutateAsync.mockResolvedValue({ id: "project-new" });
+    createProjectMock.mutateAsync.mockResolvedValue({ id: "project-new", defaultBoardId: "board-new" });
     const onOpenChange = vi.fn();
     const { result } = renderHook(() => useCreateProjectForm({ onOpenChange }));
 
     act(() => {
-      result.current.action(makeFormData({ description: "", name: "Mobile app launch" }));
+      result.current.action(makeFormData({ defaultBoardName: "Roadmap", description: "", name: "Mobile app launch" }));
     });
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 
     expect(createProjectMock.mutateAsync).toHaveBeenCalledWith({
+      defaultBoardName: "Roadmap",
       description: undefined,
       name: "Mobile app launch",
     });
-    expect(pushMock).toHaveBeenCalledWith("/projects/project-new");
+    expect(pushMock).toHaveBeenCalledWith("/projects/project-new/boards/board-new");
+    expect(toastSuccessMock).toHaveBeenCalledWith('Project created with board "Roadmap"');
     expect(result.current.globalError).toBeNull();
   });
 
@@ -57,11 +66,12 @@ describe("useCreateProjectForm", () => {
     const { result } = renderHook(() => useCreateProjectForm({ onOpenChange: vi.fn() }));
 
     act(() => {
-      result.current.action(makeFormData({ description: "no", name: "x" }));
+      result.current.action(makeFormData({ defaultBoardName: "", description: "no", name: "x" }));
     });
 
     await waitFor(() => expect(result.current.fieldErrors?.name).toBeDefined());
 
+    expect(result.current.fieldErrors?.defaultBoardName).toBeDefined();
     expect(result.current.fieldErrors?.description).toBeDefined();
     expect(createProjectMock.mutateAsync).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
@@ -75,7 +85,9 @@ describe("useCreateProjectForm", () => {
     expect(result.current.pending).toBe(true);
 
     act(() => {
-      result.current.action(makeFormData({ description: "Detailed enough", name: "Mobile app launch" }));
+      result.current.action(
+        makeFormData({ defaultBoardName: "Roadmap", description: "Detailed enough", name: "Mobile app launch" }),
+      );
     });
 
     await waitFor(() => expect(result.current.globalError).toBe("Create failed"));
@@ -85,7 +97,7 @@ describe("useCreateProjectForm", () => {
     const { result } = renderHook(() => useCreateProjectForm({ onOpenChange: vi.fn() }));
 
     act(() => {
-      result.current.action(makeFormData({ description: "no", name: "x" }));
+      result.current.action(makeFormData({ defaultBoardName: "", description: "no", name: "x" }));
     });
 
     await waitFor(() => expect(result.current.fieldErrors).not.toBeNull());

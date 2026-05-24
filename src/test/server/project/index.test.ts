@@ -19,6 +19,7 @@ const {
     findByBoard: vi.fn(),
   },
   memberRepositoryMock: {
+    countByProjectIds: vi.fn(),
     create: vi.fn(),
     deleteByProject: vi.fn(),
     findByUserAndProject: vi.fn(),
@@ -33,6 +34,7 @@ const {
     update: vi.fn(),
   },
   taskRepositoryMock: {
+    countByProjectIds: vi.fn(),
     deleteByColumn: vi.fn(),
   },
 }));
@@ -72,13 +74,19 @@ describe("project use cases", () => {
   it("lists projects for the user's memberships", async () => {
     memberRepositoryMock.findByUserId.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.findByIds.mockResolvedValue(ok([project]));
+    memberRepositoryMock.countByProjectIds.mockResolvedValue(ok([{ projectId: "project-1", count: 2 }]));
+    taskRepositoryMock.countByProjectIds.mockResolvedValue(ok([{ projectId: "project-1", count: 7 }]));
     boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
 
     const result = await ListProjectsUseCase.execute("user-1");
 
     expect(result.isOk()).toBe(true);
-    expect(result.unwrap()).toEqual([{ ...project, defaultBoardId: "board-1" }]);
+    expect(result.unwrap()).toEqual([
+      { ...project, defaultBoardId: "board-1", memberCount: 2, openTaskCount: 7, status: "active" },
+    ]);
     expect(projectRepositoryMock.findByIds).toHaveBeenCalledWith(["project-1"]);
+    expect(memberRepositoryMock.countByProjectIds).toHaveBeenCalledWith(["project-1"]);
+    expect(taskRepositoryMock.countByProjectIds).toHaveBeenCalledWith(["project-1"]);
   });
 
   it("returns an empty project list for users without memberships", async () => {
@@ -106,6 +114,7 @@ describe("project use cases", () => {
 
     const result = await CreateProjectUseCase.execute("user-1", {
       name: "New Project",
+      defaultBoardName: "Roadmap",
       description: "Useful description",
     });
 
@@ -125,7 +134,7 @@ describe("project use cases", () => {
     expect(boardRepositoryMock.create).toHaveBeenCalledWith({
       id: "board-new",
       projectId: "project-new",
-      name: "Board",
+      name: "Roadmap",
       position: 0,
     });
     expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(1, {
@@ -158,7 +167,7 @@ describe("project use cases", () => {
     nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
     projectRepositoryMock.create.mockResolvedValue(err(new Error("database unavailable")));
 
-    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project" });
+    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project", defaultBoardName: "Board" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -172,7 +181,7 @@ describe("project use cases", () => {
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(err(new Error("member insert failed")));
 
-    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project" });
+    const result = await CreateProjectUseCase.execute("user-1", { name: "New Project", defaultBoardName: "Board" });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -185,11 +194,19 @@ describe("project use cases", () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
+    memberRepositoryMock.countByProjectIds.mockResolvedValue(ok([{ projectId: "project-1", count: 2 }]));
+    taskRepositoryMock.countByProjectIds.mockResolvedValue(ok([{ projectId: "project-1", count: 7 }]));
 
     const result = await GetProjectUseCase.execute("user-1", "project-1");
 
     expect(result.isOk()).toBe(true);
-    expect(result.unwrap()).toEqual({ ...project, defaultBoardId: "board-1" });
+    expect(result.unwrap()).toEqual({
+      ...project,
+      defaultBoardId: "board-1",
+      memberCount: 2,
+      openTaskCount: 7,
+      status: "active",
+    });
   });
 
   it("returns not found when a project does not exist", async () => {

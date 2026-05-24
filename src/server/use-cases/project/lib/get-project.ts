@@ -1,6 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { NotFoundError, UnauthorizedError } from "@/server/lib";
-import { boardRepository, memberRepository, projectRepository } from "@/server/repositories";
+import { boardRepository, memberRepository, projectRepository, taskRepository } from "@/server/repositories";
 
 export class GetProjectUseCase {
   static async execute(userId: string, projectId: string) {
@@ -23,11 +23,20 @@ export class GetProjectUseCase {
     const boardsResult = await boardRepository.findByProject(projectId);
     if (boardsResult.isErr()) return err(boardsResult.error);
 
+    const memberCountsResult = await memberRepository.countByProjectIds([projectId]);
+    if (memberCountsResult.isErr()) return err(memberCountsResult.error);
+
+    const taskCountsResult = await taskRepository.countByProjectIds([projectId]);
+    if (taskCountsResult.isErr()) return err(taskCountsResult.error);
+
     return ok({
       id: project[0].id,
       name: project[0].name,
       description: project[0].description,
       defaultBoardId: boardsResult.unwrap()?.[0]?.id ?? null,
+      memberCount: memberCountsResult.unwrap()[0]?.count ?? 0,
+      openTaskCount: taskCountsResult.unwrap()[0]?.count ?? 0,
+      status: "active" as const,
       createdAt: project[0].createdAt,
       updatedAt: project[0].updatedAt,
     });

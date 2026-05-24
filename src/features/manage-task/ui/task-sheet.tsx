@@ -3,6 +3,7 @@
 import {
   IconAlertCircle,
   IconArrowDown,
+  IconArrowRight,
   IconArrowUp,
   IconCalendar,
   IconCheck,
@@ -16,7 +17,10 @@ import {
 } from "@tabler/icons-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useBoards } from "@/entities/board";
+import { useColumns } from "@/entities/column";
 import type { MemberWithUserOutput } from "@/entities/member";
+import { useProjects } from "@/entities/project";
 import {
   type ProjectTaskTagOutput,
   type TaskItemOutput,
@@ -32,6 +36,7 @@ import {
   useDetachTaskTag,
   useProjectTaskTags,
   useReorderTaskItems,
+  useTransferTask,
   useUpdateTask,
   useUpdateTaskItem,
 } from "@/entities/task";
@@ -106,9 +111,16 @@ const moveArrayItem = <T,>(items: T[], index: number, direction: -1 | 1) => {
 export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, open, projectId, task }: Props) => {
   const isCreateMode = !task;
   const { data: projectTags = [] } = useProjectTaskTags(projectId);
+  const { data: projects = [] } = useProjects();
+  const [targetProjectId, setTargetProjectId] = useState("");
+  const [targetBoardId, setTargetBoardId] = useState("");
+  const [targetColumnId, setTargetColumnId] = useState("");
+  const { data: targetBoards = [] } = useBoards(targetProjectId);
+  const { data: targetColumns = [] } = useColumns(targetProjectId, targetBoardId);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const assignTask = useAssignTask();
+  const transferTask = useTransferTask();
   const createItem = useCreateTaskItem();
   const updateItem = useUpdateTaskItem();
   const deleteItem = useDeleteTaskItem();
@@ -141,9 +153,16 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
     setSelectedTagIds(new Set(task?.tags.map((tag) => tag.id) ?? []));
     setNewItemTitle("");
     setNewTagName("");
+    setTargetProjectId("");
+    setTargetBoardId("");
+    setTargetColumnId("");
     setError(null);
   }, [open, task]);
 
+  const transferableProjects = useMemo(
+    () => projects.filter((project) => project.id !== projectId),
+    [projectId, projects],
+  );
   const items = task?.items ?? [];
   const doneCount = items.filter((item) => item.done).length;
   const completion = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0;
@@ -153,6 +172,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
     createTask.isPending ||
     updateTask.isPending ||
     assignTask.isPending ||
+    transferTask.isPending ||
     createItem.isPending ||
     updateItem.isPending ||
     deleteItem.isPending ||
@@ -262,6 +282,27 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
     result.match({
       ok: () => setNewItemTitle(""),
       err: (error) => setError(error.message),
+    });
+  };
+
+  const transferCurrentTask = async () => {
+    if (!task || !targetColumnId) return;
+    setError(null);
+
+    const result = await handleClientResult(
+      () => transferTask.mutateAsync({ taskId: task.id, data: { columnId: targetColumnId } }),
+      "Unable to transfer task",
+    );
+
+    result.match({
+      ok: () => {
+        toast.success("Task transferred");
+        onOpenChange(false);
+      },
+      err: (error) => {
+        setError(error.message);
+        toast.error(error.message);
+      },
     });
   };
 
@@ -535,7 +576,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
                 <Textarea
                   id="task-sheet-description"
                   className="min-h-28 whitespace-pre-wrap"
-                  placeholder="Add notes, acceptance criteria, or links"
+                  placeholder="Add notes, acceptance criteria, or links…"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                 />
@@ -560,7 +601,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
 
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                   <Input
-                    placeholder="New tag"
+                    placeholder="New tag…"
                     value={newTagName}
                     onChange={(event) => setNewTagName(event.target.value)}
                     onKeyDown={(event) => {
@@ -614,7 +655,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
 
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Add checklist item"
+                    placeholder="Add checklist item…"
                     value={newItemTitle}
                     onChange={(event) => setNewItemTitle(event.target.value)}
                     onKeyDown={(event) => {
@@ -630,6 +671,90 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
                   </Button>
                 </div>
               </section>
+
+              {!isCreateMode ? (
+                <section className="space-y-3 rounded-md border bg-muted/10 p-3">
+                  <div>
+                    <h3 className="flex items-center gap-2 font-medium text-sm">
+                      <IconArrowRight className="h-4 w-4 text-muted-foreground" />
+                      Transfer
+                    </h3>
+                    <p className="text-muted-foreground text-xs">Move this task to another project column.</p>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Select
+                      items={Object.fromEntries(transferableProjects.map((project) => [project.id, project.name]))}
+                      value={targetProjectId}
+                      onValueChange={(value) => {
+                        setTargetProjectId(typeof value === "string" ? value : "");
+                        setTargetBoardId("");
+                        setTargetColumnId("");
+                      }}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transferableProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      items={Object.fromEntries(targetBoards.map((board) => [board.id, board.name]))}
+                      value={targetBoardId}
+                      onValueChange={(value) => {
+                        setTargetBoardId(typeof value === "string" ? value : "");
+                        setTargetColumnId("");
+                      }}
+                      disabled={!targetProjectId}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Board" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {targetBoards.map((board) => (
+                          <SelectItem key={board.id} value={board.id}>
+                            {board.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      items={Object.fromEntries(targetColumns.map((column) => [column.id, column.name]))}
+                      value={targetColumnId}
+                      onValueChange={(value) => setTargetColumnId(typeof value === "string" ? value : "")}
+                      disabled={!targetBoardId}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {targetColumns.map((column) => (
+                          <SelectItem key={column.id} value={column.id}>
+                            {column.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={transferCurrentTask}
+                    disabled={!targetProjectId || !targetBoardId || !targetColumnId || pending}
+                  >
+                    <IconArrowRight className="h-4 w-4" />
+                    Transfer task
+                  </Button>
+                </section>
+              ) : null}
             </div>
           </div>
 

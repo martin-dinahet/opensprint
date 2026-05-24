@@ -88,10 +88,14 @@ describe("project hooks", () => {
       ),
     });
 
-    result.current.mutate({ name: "New project", description: "Detailed enough" });
+    result.current.mutate({ name: "New project", defaultBoardName: "Roadmap", description: "Detailed enough" });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(projectApi.create).toHaveBeenCalledWith({ name: "New project", description: "Detailed enough" });
+    expect(projectApi.create).toHaveBeenCalledWith({
+      name: "New project",
+      defaultBoardName: "Roadmap",
+      description: "Detailed enough",
+    });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: projectKeys.all });
   });
 

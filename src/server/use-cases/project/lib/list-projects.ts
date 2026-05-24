@@ -1,5 +1,5 @@
 import { err, ok } from "@punpun-dev/ts-result";
-import { boardRepository, memberRepository, projectRepository } from "@/server/repositories";
+import { boardRepository, memberRepository, projectRepository, taskRepository } from "@/server/repositories";
 
 export class ListProjectsUseCase {
   static async execute(userId: string) {
@@ -16,7 +16,15 @@ export class ListProjectsUseCase {
     if (projectsResult.isErr()) return err(projectsResult.error);
 
     const projects = projectsResult.unwrap();
+    const memberCountsResult = await memberRepository.countByProjectIds(projectIds);
+    if (memberCountsResult.isErr()) return err(memberCountsResult.error);
+
+    const taskCountsResult = await taskRepository.countByProjectIds(projectIds);
+    if (taskCountsResult.isErr()) return err(taskCountsResult.error);
+
     const defaultBoardIds = new Map<string, string | null>();
+    const memberCounts = new Map(memberCountsResult.unwrap().map((row) => [row.projectId, row.count]));
+    const openTaskCounts = new Map(taskCountsResult.unwrap().map((row) => [row.projectId, row.count]));
 
     for (const project of projects) {
       const boardsResult = await boardRepository.findByProject(project.id);
@@ -30,6 +38,9 @@ export class ListProjectsUseCase {
         name: p.name,
         description: p.description,
         defaultBoardId: defaultBoardIds.get(p.id) ?? null,
+        memberCount: memberCounts.get(p.id) ?? 0,
+        openTaskCount: openTaskCounts.get(p.id) ?? 0,
+        status: "active" as const,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
       })),

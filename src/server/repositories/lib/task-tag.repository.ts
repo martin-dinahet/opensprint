@@ -63,6 +63,10 @@ export class TaskTagRepository {
   async detach(taskId: string, tagId: string) {
     return handle(() => db.delete(taskTag).where(and(eq(taskTag.taskId, taskId), eq(taskTag.tagId, tagId))));
   }
+
+  async detachAll(taskId: string) {
+    return handle(() => db.delete(taskTag).where(eq(taskTag.taskId, taskId)));
+  }
 }
 
 export const taskTagRepository = new TaskTagRepository();

@@ -2,12 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import z from "zod";
 import { useCreateProject } from "@/entities/project";
 import { handleClientResult, parseFormData } from "@/shared";
 
+const projectName = z
+  .string()
+  .trim()
+  .min(3)
+  .max(130)
+  .refine((value) => /[\p{L}\p{N}]/u.test(value), "Use at least one letter or number")
+  .refine((value) => !/[\p{Cc}\p{Cf}\p{Co}\p{Cs}]/u.test(value), "Remove unsupported characters")
+  .refine(
+    (value) => /^[\p{L}\p{N}\p{M}\s._'’&()+:/-]+$/u.test(value),
+    "Use letters, numbers, spaces, and basic punctuation",
+  );
+
 const createProjectSchema = z.object({
-  name: z.string().trim().min(3).max(130),
+  name: projectName,
+  defaultBoardName: z.string().trim().min(1, "Board name is required").max(130),
   description: z.preprocess(
     (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
     z.string().trim().min(3).max(800).optional(),
@@ -44,6 +58,7 @@ export function useCreateProjectForm({ onOpenChange }: Options) {
       result.match({
         ok: (project) => {
           onOpenChange(false);
+          toast.success(`Project created with board "${data.defaultBoardName}"`);
           router.push(
             project.defaultBoardId
               ? `/projects/${project.id}/boards/${project.defaultBoardId}`

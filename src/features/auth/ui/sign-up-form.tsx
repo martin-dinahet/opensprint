@@ -50,7 +50,7 @@ export const SignUpForm: FC = () => {
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="John Doe…"
                   defaultValue={submittedValues.name}
                   autoComplete="name"
                   required
@@ -70,7 +70,7 @@ export const SignUpForm: FC = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="you@example.com…"
                   defaultValue={submittedValues.email}
                   autoComplete="email"
                   required

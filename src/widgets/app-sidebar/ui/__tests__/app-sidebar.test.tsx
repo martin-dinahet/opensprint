@@ -76,4 +76,20 @@ describe("AppSidebar", () => {
 
     expect(mocks.push).toHaveBeenCalledWith("/account");
   });
+
+  it("opens project creation from the projects list", async () => {
+    renderWithClient(
+      <Wrapper>
+        <AppSidebar />
+      </Wrapper>,
+    );
+
+    const newProjectButtons = screen.getAllByRole("button", { name: "New Project" });
+    expect(newProjectButtons).toHaveLength(1);
+
+    fireEvent.click(newProjectButtons[0]);
+
+    expect(await screen.findByRole("heading", { name: "Create project" })).toBeInTheDocument();
+    expect(screen.getByLabelText("First board name")).toBeInTheDocument();
+  });
 });

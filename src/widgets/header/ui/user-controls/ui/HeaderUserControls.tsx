@@ -48,7 +48,7 @@ export const HeaderUserControls = () => {
           {signOut.error && <p className="px-1.5 py-1 text-destructive text-xs">{signOut.error}</p>}
           <DropdownMenuItem variant="destructive" onClick={signOut.action} disabled={signOut.pending}>
             <LogOutIcon />
-            {signOut.pending ? "Signing out..." : "Sign out"}
+            {signOut.pending ? "Signing out…" : "Sign Out"}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

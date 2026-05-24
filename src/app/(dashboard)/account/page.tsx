@@ -124,7 +124,7 @@ export default function Page() {
                     name="image"
                     value={image}
                     onChange={(event) => setImage(event.target.value)}
-                    placeholder="https://example.com/avatar.png"
+                    placeholder="https://example.com/avatar.png…"
                   />
                   <FieldDescription>Leave empty to use generated initials.</FieldDescription>
                   <FieldError>{fieldErrors?.image?.[0]}</FieldError>
@@ -176,7 +176,7 @@ export default function Page() {
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={signOut.action} disabled={signOut.pending}>
-              {signOut.pending ? "Signing out..." : "Sign out"}
+              {signOut.pending ? "Signing out…" : "Sign Out"}
             </Button>
           </CardContent>
         </Card>

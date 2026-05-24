@@ -14,6 +14,7 @@ export {
   useReorderTask,
   useReorderTaskItems,
   useTasks,
+  useTransferTask,
   useUpdateProjectTaskTag,
   useUpdateTask,
   useUpdateTaskItem,

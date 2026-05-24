@@ -26,6 +26,11 @@ export const MoveTaskInput = z.object({
   position: z.number().int().min(0).optional(),
 });
 
+export const TransferTaskInput = z.object({
+  columnId: z.string(),
+  position: z.number().int().min(0).optional(),
+});
+
 export const ReorderTaskInput = z.object({
   position: z.number().int().min(0),
 });
@@ -74,6 +79,7 @@ export type CreateTaskInput = z.infer<typeof CreateTaskInput>;
 export type UpdateTaskInput = z.infer<typeof UpdateTaskInput>;
 export type AssignTaskInput = z.infer<typeof AssignTaskInput>;
 export type MoveTaskInput = z.infer<typeof MoveTaskInput>;
+export type TransferTaskInput = z.infer<typeof TransferTaskInput>;
 export type ReorderTaskInput = z.infer<typeof ReorderTaskInput>;
 export type CreateTaskItemInput = z.infer<typeof CreateTaskItemInput>;
 export type UpdateTaskItemInput = z.infer<typeof UpdateTaskItemInput>;

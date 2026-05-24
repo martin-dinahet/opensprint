@@ -1,6 +1,13 @@
 "use client";
 
-import { IconAlertCircle, IconFileText, IconFolder, IconLoader2, IconPlus } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconFileText,
+  IconFolder,
+  IconLayoutKanban,
+  IconLoader2,
+  IconPlus,
+} from "@tabler/icons-react";
 import {
   Alert,
   AlertDescription,
@@ -25,6 +32,7 @@ type Props = {
 export function CreateProjectDialog({ onOpenChange, open }: Props) {
   const { action, fieldErrors, globalError, pending, reset } = useCreateProjectForm({ onOpenChange });
   const nameError = fieldErrors?.name?.[0];
+  const boardNameError = fieldErrors?.defaultBoardName?.[0];
   const descriptionError = fieldErrors?.description?.[0];
 
   return (
@@ -55,7 +63,7 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
                 <Input
                   id="projectName"
                   name="name"
-                  placeholder="Mobile app launch"
+                  placeholder="Mobile app launch…"
                   disabled={pending}
                   aria-invalid={!!nameError}
                   className={`pl-9 ${nameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
@@ -69,13 +77,34 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="defaultBoardName">First board name</Label>
+              <div className="relative">
+                <IconLayoutKanban className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="defaultBoardName"
+                  name="defaultBoardName"
+                  defaultValue="Board"
+                  placeholder="Board…"
+                  disabled={pending}
+                  aria-invalid={!!boardNameError}
+                  className={`pl-9 ${boardNameError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                />
+              </div>
+              {boardNameError && (
+                <p className="flex items-center gap-1.5 text-destructive text-sm">
+                  <IconAlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {boardNameError}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="projectDescription">Description</Label>
               <div className="relative">
                 <IconFileText className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
                 <Textarea
                   id="projectDescription"
                   name="description"
-                  placeholder="Roadmap, design, and release work"
+                  placeholder="Roadmap, design, and release work…"
                   disabled={pending}
                   aria-invalid={!!descriptionError}
                   className={`min-h-24 pl-9 ${
@@ -99,7 +128,7 @@ export function CreateProjectDialog({ onOpenChange, open }: Props) {
               {pending ? (
                 <>
                   <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Creating…
                 </>
               ) : (
                 <>

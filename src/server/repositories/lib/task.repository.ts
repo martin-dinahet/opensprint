@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, count, eq, inArray } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
-import { task } from "@/server/db/schema";
+import { board, column, task } from "@/server/db/schema";
 import type { CreateTaskInput, UpdateTaskInput } from "@/server/use-cases/task/dto";
 import type { NewTask, TaskUpdate } from "@/shared";
 
@@ -12,6 +12,22 @@ export class TaskRepository {
 
   async findByColumn(columnId: string) {
     return handle(() => db.select().from(task).where(eq(task.columnId, columnId)).orderBy(asc(task.position)));
+  }
+
+  async countByProjectIds(projectIds: string[]) {
+    if (projectIds.length === 0) {
+      return handle(() => Promise.resolve([]));
+    }
+
+    return handle(() =>
+      db
+        .select({ projectId: board.projectId, count: count() })
+        .from(task)
+        .innerJoin(column, eq(task.columnId, column.id))
+        .innerJoin(board, eq(column.boardId, board.id))
+        .where(inArray(board.projectId, projectIds))
+        .groupBy(board.projectId),
+    );
   }
 
   async create(data: CreateTaskInput & Pick<NewTask, "columnId" | "id" | "position">) {

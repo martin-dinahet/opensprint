@@ -45,6 +45,9 @@ const { apiMock, requestApiResultMock } = vi.hoisted(() => ({
         move: {
           $patch: vi.fn(),
         },
+        transfer: {
+          $patch: vi.fn(),
+        },
         reorder: {
           $patch: vi.fn(),
         },
@@ -106,6 +109,7 @@ describe("task API", () => {
     apiMock.columns[":columnId"].tasks[":taskId"].$delete.mockResolvedValue({ success: true });
     apiMock.tasks[":taskId"].assign.$patch.mockResolvedValue({ id: "task-1", assigneeId: null });
     apiMock.tasks[":taskId"].move.$patch.mockResolvedValue({ id: "task-1", columnId: "column-2", position: 1 });
+    apiMock.tasks[":taskId"].transfer.$patch.mockResolvedValue({ id: "task-1", columnId: "column-3", position: 0 });
     apiMock.tasks[":taskId"].reorder.$patch.mockResolvedValue({ id: "task-1", position: 2 });
     apiMock.tasks[":taskId"].items.$post.mockResolvedValue({ id: "item-1" });
     apiMock.tasks[":taskId"].items[":itemId"].$patch.mockResolvedValue({ id: "item-1" });
@@ -123,6 +127,7 @@ describe("task API", () => {
     await taskApi.delete("column-1", "task-1");
     await taskApi.assign("task-1", { assigneeId: null });
     await taskApi.move("task-1", { columnId: "column-2", position: 1 });
+    await taskApi.transfer("task-1", { columnId: "column-3" });
     await taskApi.reorder("task-1", { position: 2 });
     await taskApi.createItem("task-1", { title: "Check it" });
     await taskApi.updateItem("task-1", "item-1", { done: true });
@@ -153,6 +158,10 @@ describe("task API", () => {
     expect(apiMock.tasks[":taskId"].move.$patch).toHaveBeenCalledWith({
       param: { taskId: "task-1" },
       json: { columnId: "column-2", position: 1 },
+    });
+    expect(apiMock.tasks[":taskId"].transfer.$patch).toHaveBeenCalledWith({
+      param: { taskId: "task-1" },
+      json: { columnId: "column-3" },
     });
     expect(apiMock.tasks[":taskId"].reorder.$patch).toHaveBeenCalledWith({
       param: { taskId: "task-1" },

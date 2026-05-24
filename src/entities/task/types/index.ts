@@ -7,6 +7,7 @@ export type {
   MoveTaskInput,
   ReorderTaskInput,
   ReorderTaskItemsInput,
+  TransferTaskInput,
   UpdateProjectTaskTagInput,
   UpdateTaskInput,
   UpdateTaskItemInput,

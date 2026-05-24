@@ -163,13 +163,13 @@ const ColumnView = ({
 
             {tasks.length === 0 && (
               <div
-                className={`flex min-h-28 items-center justify-center rounded-md border-2 border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
+                className={`flex min-h-20 items-center justify-center rounded-md border border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
                   isHighlighted ? "border-primary/40 bg-primary/5 text-primary/60" : "border-border/50"
                 }`}
               >
                 <Button variant="ghost" size="sm" onClick={onAddTask}>
                   <IconPlus className="h-3.5 w-3.5" />
-                  Add first task
+                  Add Task
                 </Button>
               </div>
             )}

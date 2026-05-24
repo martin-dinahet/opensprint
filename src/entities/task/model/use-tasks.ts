@@ -4,6 +4,7 @@ import type {
   CreateTaskInput,
   MoveTaskInput,
   TaskOutput,
+  TransferTaskInput,
   UpdateProjectTaskTagInput,
   UpdateTaskInput,
 } from "@/entities/task";
@@ -115,6 +116,18 @@ export function useMoveTask() {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    },
+  });
+}
+
+export function useTransferTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, data }: { data: TransferTaskInput; taskId: string }) =>
+      unwrapClientResult(await taskApi.transfer(taskId, data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
 }

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { handle } from "@/lib/handle";
 import { db } from "@/server/db";
 import { member, user } from "@/server/db/schema";
@@ -24,6 +24,20 @@ export class MemberRepository {
 
   async findByUserId(userId: string) {
     return handle(() => db.select().from(member).where(eq(member.userId, userId)));
+  }
+
+  async countByProjectIds(projectIds: string[]) {
+    if (projectIds.length === 0) {
+      return handle(() => Promise.resolve([]));
+    }
+
+    return handle(() =>
+      db
+        .select({ projectId: member.organizationId, count: count() })
+        .from(member)
+        .where(inArray(member.organizationId, projectIds))
+        .groupBy(member.organizationId),
+    );
   }
 
   async create(data: Pick<NewMember, "id" | "organizationId" | "role" | "userId">) {

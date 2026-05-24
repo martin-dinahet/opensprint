@@ -40,11 +40,11 @@ describe("CreateColumnDialog", () => {
 
     render(<CreateColumnDialog boardId="board-1" open onOpenChange={vi.fn()} projectId="project-1" />);
 
-    fireEvent.submit(screen.getByRole("button", { name: "Creating..." }).closest("form") as HTMLFormElement);
+    fireEvent.submit(screen.getByRole("button", { name: "Creating…" }).closest("form") as HTMLFormElement);
 
     await waitFor(() => expect(formStateMock.action).toHaveBeenCalled());
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Creating..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Creating…" })).toBeDisabled();
   });
 
   it("resets local form state when the dialog closes", () => {

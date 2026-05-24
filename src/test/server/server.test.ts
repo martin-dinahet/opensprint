@@ -46,6 +46,7 @@ const { authMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, t
     MoveTaskUseCase: { execute: vi.fn() },
     ReorderTaskItemsUseCase: { execute: vi.fn() },
     ReorderTaskUseCase: { execute: vi.fn() },
+    TransferTaskUseCase: { execute: vi.fn() },
     UpdateProjectTaskTagUseCase: { execute: vi.fn() },
     UpdateTaskUseCase: { execute: vi.fn() },
     UpdateTaskItemUseCase: { execute: vi.fn() },
@@ -182,7 +183,7 @@ describe("server routes", () => {
 
     const client = createHonoTestClient(server);
     const createResponse = await client.api.projects.$post({
-      json: { name: "New project", description: "Detailed enough" },
+      json: { name: "New project", defaultBoardName: "Roadmap", description: "Detailed enough" },
     });
     const deleteResponse = await client.api.projects[":id"].$delete({ param: { id: "project-1" } });
 
@@ -190,6 +191,7 @@ describe("server routes", () => {
     expect(deleteResponse.status).toBe(200);
     expect(projectUseCasesMock.CreateProjectUseCase.execute).toHaveBeenCalledWith("user-1", {
       name: "New project",
+      defaultBoardName: "Roadmap",
       description: "Detailed enough",
     });
     expect(projectUseCasesMock.DeleteProjectUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
@@ -426,16 +428,28 @@ describe("server routes", () => {
 
   it("routes task movement requests", async () => {
     taskUseCasesMock.MoveTaskUseCase.execute.mockResolvedValue(ok({ id: "task-1", columnId: "column-2", position: 0 }));
+    taskUseCasesMock.TransferTaskUseCase.execute.mockResolvedValue(
+      ok({ id: "task-1", columnId: "column-3", position: 0 }),
+    );
 
     const client = createHonoTestClient(server);
     const response = await client.api.tasks[":taskId"].move.$patch({
       param: { taskId: "task-1" },
       json: { columnId: "column-2", position: 0 },
     });
+    const transferResponse = await client.api.tasks[":taskId"].transfer.$patch({
+      param: { taskId: "task-1" },
+      json: { columnId: "column-3", position: 0 },
+    });
 
     expect(response.status).toBe(200);
+    expect(transferResponse.status).toBe(200);
     expect(taskUseCasesMock.MoveTaskUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
       columnId: "column-2",
+      position: 0,
+    });
+    expect(taskUseCasesMock.TransferTaskUseCase.execute).toHaveBeenCalledWith("user-1", "task-1", {
+      columnId: "column-3",
       position: 0,
     });
   });

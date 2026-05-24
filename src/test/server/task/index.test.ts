@@ -49,6 +49,7 @@ const {
     createProjectTag: vi.fn(),
     deleteProjectTag: vi.fn(),
     detach: vi.fn(),
+    detachAll: vi.fn(),
     findProjectTagById: vi.fn(),
     findProjectTags: vi.fn(),
     findTagsByTasks: vi.fn(),
@@ -85,6 +86,7 @@ const {
   MoveTaskUseCase,
   ReorderTaskItemsUseCase,
   ReorderTaskUseCase,
+  TransferTaskUseCase,
   UpdateProjectTaskTagUseCase,
   UpdateTaskUseCase,
   UpdateTaskItemUseCase,
@@ -94,6 +96,8 @@ const now = new Date("2026-01-01T00:00:00.000Z");
 const board = { id: "board-1", projectId: "project-1", name: "Board", position: 0, createdAt: now, updatedAt: now };
 const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
 const targetColumn = { ...column, id: "column-2", position: 1 };
+const targetProjectBoard = { ...board, id: "board-2", projectId: "project-2" };
+const targetProjectColumn = { ...column, id: "column-3", boardId: "board-2", position: 0 };
 const project = { id: "project-1", name: "Launch", description: null, createdAt: now, updatedAt: now };
 const ownerMembership = {
   id: "member-1",
@@ -108,6 +112,11 @@ const assigneeMembership = {
   userId: "user-2",
   role: "member",
   createdAt: now,
+};
+const targetProjectMembership = {
+  ...ownerMembership,
+  id: "member-2",
+  organizationId: "project-2",
 };
 const task = {
   id: "task-1",
@@ -542,6 +551,85 @@ describe("task use cases", () => {
       expect(result.error.statusCode).toBe(500);
       expect(result.error.message).toContain("move failed");
     }
+  });
+
+  it("transfers a task to another project column and clears project-scoped fields", async () => {
+    taskRepositoryMock.findById.mockResolvedValue(ok([{ ...task, assigneeId: "assignee-member" }]));
+    columnRepositoryMock.findById.mockResolvedValueOnce(ok([column])).mockResolvedValueOnce(ok([targetProjectColumn]));
+    boardRepositoryMock.findById.mockResolvedValueOnce(ok([board])).mockResolvedValueOnce(ok([targetProjectBoard]));
+    memberRepositoryMock.findByUserAndProject
+      .mockResolvedValueOnce(ok([ownerMembership]))
+      .mockResolvedValueOnce(ok([targetProjectMembership]));
+    taskRepositoryMock.findByColumn
+      .mockResolvedValueOnce(ok([{ ...task, id: "task-2", columnId: "column-3", position: 0 }]))
+      .mockResolvedValueOnce(ok([task, { ...task, id: "task-3", position: 1 }]));
+    taskRepositoryMock.updateColumnAndPosition.mockResolvedValue(ok(undefined));
+    taskRepositoryMock.updateAssignee.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.detachAll.mockResolvedValue(ok(undefined));
+
+    const result = await TransferTaskUseCase.execute("user-1", "task-1", { columnId: "column-3" });
+
+    expect(result.isOk()).toBe(true);
+    expect(result.unwrap()).toEqual({ id: "task-1", columnId: "column-3", position: 1 });
+    expect(taskRepositoryMock.updateColumnAndPosition).toHaveBeenCalledWith("task-1", "column-3", 1);
+    expect(taskRepositoryMock.updateAssignee).toHaveBeenCalledWith("task-1", null);
+    expect(taskTagRepositoryMock.detachAll).toHaveBeenCalledWith("task-1");
+    expect(taskRepositoryMock.updatePosition).toHaveBeenCalledWith("task-2", 0);
+    expect(taskRepositoryMock.updatePosition).toHaveBeenCalledWith("task-1", 1);
+    expect(taskRepositoryMock.updatePosition).toHaveBeenCalledWith("task-3", 0);
+    expect(taskItemRepositoryMock.update).not.toHaveBeenCalled();
+    expect(taskItemRepositoryMock.delete).not.toHaveBeenCalled();
+  });
+
+  it("transfers a task to an explicit target position", async () => {
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    columnRepositoryMock.findById.mockResolvedValueOnce(ok([column])).mockResolvedValueOnce(ok([targetProjectColumn]));
+    boardRepositoryMock.findById.mockResolvedValueOnce(ok([board])).mockResolvedValueOnce(ok([targetProjectBoard]));
+    memberRepositoryMock.findByUserAndProject
+      .mockResolvedValueOnce(ok([ownerMembership]))
+      .mockResolvedValueOnce(ok([targetProjectMembership]));
+    taskRepositoryMock.findByColumn.mockResolvedValueOnce(ok([])).mockResolvedValueOnce(ok([task]));
+    taskRepositoryMock.updateColumnAndPosition.mockResolvedValue(ok(undefined));
+    taskRepositoryMock.updateAssignee.mockResolvedValue(ok(undefined));
+    taskTagRepositoryMock.detachAll.mockResolvedValue(ok(undefined));
+
+    const result = await TransferTaskUseCase.execute("user-1", "task-1", { columnId: "column-3", position: 0 });
+
+    expect(result.isOk()).toBe(true);
+    expect(taskRepositoryMock.updateColumnAndPosition).toHaveBeenCalledWith("task-1", "column-3", 0);
+  });
+
+  it("rejects transfer to an inaccessible project column", async () => {
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    columnRepositoryMock.findById.mockResolvedValueOnce(ok([column])).mockResolvedValueOnce(ok([targetProjectColumn]));
+    boardRepositoryMock.findById.mockResolvedValueOnce(ok([board])).mockResolvedValueOnce(ok([targetProjectBoard]));
+    memberRepositoryMock.findByUserAndProject
+      .mockResolvedValueOnce(ok([ownerMembership]))
+      .mockResolvedValueOnce(ok([]));
+
+    const result = await TransferTaskUseCase.execute("user-1", "task-1", { columnId: "column-3" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(403);
+    }
+    expect(taskRepositoryMock.updateColumnAndPosition).not.toHaveBeenCalled();
+    expect(taskTagRepositoryMock.detachAll).not.toHaveBeenCalled();
+  });
+
+  it("rejects transfer within the same project", async () => {
+    taskRepositoryMock.findById.mockResolvedValue(ok([task]));
+    columnRepositoryMock.findById.mockResolvedValueOnce(ok([column])).mockResolvedValueOnce(ok([targetColumn]));
+    boardRepositoryMock.findById.mockResolvedValue(ok([board]));
+    memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+
+    const result = await TransferTaskUseCase.execute("user-1", "task-1", { columnId: "column-2" });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.statusCode).toBe(409);
+    }
+    expect(taskRepositoryMock.updateColumnAndPosition).not.toHaveBeenCalled();
   });
 
   it("reorders a task for project members", async () => {

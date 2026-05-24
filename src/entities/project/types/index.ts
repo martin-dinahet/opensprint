@@ -10,6 +10,9 @@ export type ProjectListOutput = {
   name: Project["name"];
   description: Exclude<Project["description"], undefined>;
   defaultBoardId: string | null;
+  memberCount: number;
+  openTaskCount: number;
+  status: "active";
   createdAt: string;
   updatedAt: string;
 };

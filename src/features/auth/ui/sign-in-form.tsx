@@ -50,7 +50,7 @@ export const SignInForm: FC = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="you@example.com…"
                   defaultValue={submittedValues.email}
                   autoComplete="email"
                   required

@@ -73,7 +73,7 @@ describe("KanbanColumnView", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Add first task" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Task" })).toBeInTheDocument();
     expect(screen.queryByText("Drop tasks here")).not.toBeInTheDocument();
   });
 
@@ -92,7 +92,7 @@ describe("KanbanColumnView", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Add first task" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Task" }));
 
     expect(onAddTask).toHaveBeenCalledTimes(1);
   });

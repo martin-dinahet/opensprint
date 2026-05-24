@@ -12,6 +12,7 @@ import {
   useRemoveMember,
   useUpdateMember,
 } from "@/entities/member";
+import { useProject } from "@/entities/project";
 import { ProjectTabs } from "@/features/project-tabs";
 import {
   AlertDialog,
@@ -71,6 +72,7 @@ export default function Page({ params }: Props) {
   const addMember = useAddMember(projectId);
   const updateMember = useUpdateMember(projectId);
   const removeMember = useRemoveMember(projectId);
+  const { data: project } = useProject(projectId);
   const [addOpen, setAddOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<MemberWithUserOutput | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -80,9 +82,22 @@ export default function Page({ params }: Props) {
   const canChangeRoles = currentMember?.role === "owner";
   const header = useMemo(
     () => ({
-      actions: <ProjectTabs activeTab="members" projectId={projectId} />,
+      title: "Members",
+      description: "Manage project access, roles, and invitations.",
+      eyebrow: project?.name ?? "Project",
+      actions: (
+        <>
+          <ProjectTabs activeTab="members" projectId={projectId} />
+          {canManageMembers ? (
+            <Button size="sm" onClick={() => setAddOpen(true)}>
+              <UserPlusIcon />
+              Add member
+            </Button>
+          ) : null}
+        </>
+      ),
     }),
-    [projectId],
+    [canManageMembers, project?.name, projectId],
   );
 
   useDashboardHeader(header);
@@ -134,18 +149,6 @@ export default function Page({ params }: Props) {
     <>
       <main className="flex-1 p-6">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              Manage the people who can see this project, move tasks, and administer access.
-            </p>
-            {canManageMembers ? (
-              <Button size="sm" onClick={() => setAddOpen(true)}>
-                <UserPlusIcon />
-                Add member
-              </Button>
-            ) : null}
-          </div>
-
           {isLoading ? (
             <LoadingScreen />
           ) : (
@@ -236,7 +239,7 @@ export default function Page({ params }: Props) {
             <FieldGroup className="py-4">
               <Field data-invalid={!!fieldErrors?.email}>
                 <FieldLabel htmlFor="memberEmail">Email</FieldLabel>
-                <Input id="memberEmail" name="email" type="email" placeholder="teammate@example.com" />
+                <Input id="memberEmail" name="email" type="email" placeholder="teammate@example.com…" />
                 <FieldError>{fieldErrors?.email?.[0]}</FieldError>
               </Field>
               <Field data-invalid={!!fieldErrors?.role}>
@@ -269,7 +272,7 @@ export default function Page({ params }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={removeSelectedMember} disabled={removeMember.isPending}>
-              {removeMember.isPending ? "Removing..." : "Remove"}
+              {removeMember.isPending ? "Removing…" : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
