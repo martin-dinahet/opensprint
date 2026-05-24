@@ -32,7 +32,9 @@ describe("useCreateColumnForm", () => {
   it("creates a column and closes the dialog", async () => {
     createColumnMock.mutateAsync.mockResolvedValue({ id: "column-new", name: "Doing" });
     const onOpenChange = vi.fn();
-    const { result } = renderHook(() => useCreateColumnForm({ onOpenChange, projectId: "project-1" }));
+    const { result } = renderHook(() =>
+      useCreateColumnForm({ boardId: "board-1", onOpenChange, projectId: "project-1" }),
+    );
 
     act(() => {
       result.current.action(makeFormData({ name: "Doing" }));
@@ -42,13 +44,16 @@ describe("useCreateColumnForm", () => {
 
     expect(createColumnMock.mutateAsync).toHaveBeenCalledWith({
       projectId: "project-1",
+      boardId: "board-1",
       data: { name: "Doing" },
     });
     expect(result.current.globalError).toBeNull();
   });
 
   it("stores validation errors without submitting", async () => {
-    const { result } = renderHook(() => useCreateColumnForm({ onOpenChange: vi.fn(), projectId: "project-1" }));
+    const { result } = renderHook(() =>
+      useCreateColumnForm({ boardId: "board-1", onOpenChange: vi.fn(), projectId: "project-1" }),
+    );
 
     act(() => {
       result.current.action(makeFormData({ name: "" }));
@@ -59,14 +64,16 @@ describe("useCreateColumnForm", () => {
     expect(createColumnMock.mutateAsync).not.toHaveBeenCalled();
   });
 
-  it("requires a selected project before submitting", async () => {
-    const { result } = renderHook(() => useCreateColumnForm({ onOpenChange: vi.fn(), projectId: "" }));
+  it("requires a selected board before submitting", async () => {
+    const { result } = renderHook(() =>
+      useCreateColumnForm({ boardId: "", onOpenChange: vi.fn(), projectId: "project-1" }),
+    );
 
     act(() => {
       result.current.action(makeFormData({ name: "Doing" }));
     });
 
-    await waitFor(() => expect(result.current.globalError).toBe("Choose a project before creating a column."));
+    await waitFor(() => expect(result.current.globalError).toBe("Choose a board before creating a column."));
 
     expect(createColumnMock.mutateAsync).not.toHaveBeenCalled();
   });
@@ -74,7 +81,9 @@ describe("useCreateColumnForm", () => {
   it("shows mutation failures, exposes pending state, and resets local errors", async () => {
     createColumnMock.isPending = true;
     createColumnMock.mutateAsync.mockRejectedValue(new Error("Create failed"));
-    const { result } = renderHook(() => useCreateColumnForm({ onOpenChange: vi.fn(), projectId: "project-1" }));
+    const { result } = renderHook(() =>
+      useCreateColumnForm({ boardId: "board-1", onOpenChange: vi.fn(), projectId: "project-1" }),
+    );
 
     expect(result.current.pending).toBe(true);
 

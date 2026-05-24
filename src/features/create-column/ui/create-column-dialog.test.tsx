@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useCreateColumnForm } from "../model/use-create-column-form";
 import { CreateColumnDialog } from "./create-column-dialog";
 
 const { formStateMock } = vi.hoisted(() => ({
@@ -29,7 +28,7 @@ describe("CreateColumnDialog", () => {
     formStateMock.fieldErrors = { name: ["Column name is required"] };
     formStateMock.globalError = "Unable to create column";
 
-    render(<CreateColumnDialog open onOpenChange={vi.fn()} projectId="project-1" />);
+    render(<CreateColumnDialog boardId="board-1" open onOpenChange={vi.fn()} projectId="project-1" />);
 
     expect(screen.getByText("Unable to create column")).toBeInTheDocument();
     expect(screen.getByText("Column name is required")).toBeInTheDocument();
@@ -39,7 +38,7 @@ describe("CreateColumnDialog", () => {
   it("submits through the form action and disables controls while pending", async () => {
     formStateMock.pending = true;
 
-    render(<CreateColumnDialog open onOpenChange={vi.fn()} projectId="project-1" />);
+    render(<CreateColumnDialog boardId="board-1" open onOpenChange={vi.fn()} projectId="project-1" />);
 
     fireEvent.submit(screen.getByRole("button", { name: "Creating..." }).closest("form") as HTMLFormElement);
 
@@ -51,7 +50,7 @@ describe("CreateColumnDialog", () => {
   it("resets local form state when the dialog closes", () => {
     const onOpenChange = vi.fn();
 
-    render(<CreateColumnDialog open onOpenChange={onOpenChange} projectId="project-1" />);
+    render(<CreateColumnDialog boardId="board-1" open onOpenChange={onOpenChange} projectId="project-1" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 

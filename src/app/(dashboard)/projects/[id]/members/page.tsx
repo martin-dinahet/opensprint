@@ -13,9 +13,6 @@ import {
   useUpdateMember,
 } from "@/entities/member";
 import { ProjectTabs } from "@/features/project-tabs";
-import { handleClientResult } from "@/shared";
-import { authClient } from "@/shared";
-import { parseFormData } from "@/shared";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,16 +22,36 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  authClient,
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  handleClientResult,
+  Input,
+  LoadingScreen,
+  NativeSelect,
+  NativeSelectOption,
+  parseFormData,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/shared";
-import { Badge } from "@/shared";
-import { Button } from "@/shared";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared";
-import { Input } from "@/shared";
-import { LoadingScreen } from "@/shared";
-import { NativeSelect, NativeSelectOption } from "@/shared";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared";
 import { UserAvatar } from "@/widgets/app-sidebar";
 import { useDashboardHeader } from "@/widgets/header";
 

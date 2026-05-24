@@ -7,9 +7,7 @@ import { IconCalendar, IconChecks, IconFlag, IconGripVertical, IconTrash, IconUs
 import type { CSSProperties } from "react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
-import { cn } from "@/shared";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
-import { Button } from "@/shared";
+import { Avatar, AvatarFallback, AvatarImage, Button, cn } from "@/shared";
 
 type TaskPriority = "low" | "medium" | "high" | "urgent";
 

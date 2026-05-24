@@ -10,6 +10,6 @@ describe("ProjectCard", () => {
 
     const link = screen.getByRole("link", { name: /website launch/i });
 
-    expect(link).toHaveAttribute("href", "/projects/project-42");
+    expect(link).toHaveAttribute("href", "/projects/project-42/boards/board-1");
   });
 });

@@ -3,19 +3,19 @@
 import { useState, useTransition } from "react";
 import z from "zod";
 import { useCreateColumn } from "@/entities/column";
-import { handleClientResult } from "@/shared";
-import { parseFormData } from "@/shared";
+import { handleClientResult, parseFormData } from "@/shared";
 
 const createColumnSchema = z.object({
   name: z.string().trim().min(1).max(130),
 });
 
 type Options = {
+  boardId: string;
   onOpenChange: (open: boolean) => void;
   projectId: string;
 };
 
-export function useCreateColumnForm({ onOpenChange, projectId }: Options) {
+export function useCreateColumnForm({ boardId, onOpenChange, projectId }: Options) {
   const createColumn = useCreateColumn();
   const [pending, startTransition] = useTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
@@ -35,13 +35,13 @@ export function useCreateColumnForm({ onOpenChange, projectId }: Options) {
         setFieldErrors(fieldErrors);
         return;
       }
-      if (!projectId) {
-        setGlobalError("Choose a project before creating a column.");
+      if (!projectId || !boardId) {
+        setGlobalError("Choose a board before creating a column.");
         return;
       }
 
       const result = await handleClientResult(
-        () => createColumn.mutateAsync({ projectId, data }),
+        () => createColumn.mutateAsync({ boardId, projectId, data }),
         "Unable to create column",
       );
       result.match({

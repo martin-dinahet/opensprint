@@ -3,12 +3,23 @@
 import { IconAlertCircle, IconArrowRight, IconLock, IconMail, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
 import type { FC } from "react";
-import { Alert, AlertDescription } from "@/shared";
-import { Button, buttonVariants } from "@/shared";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared";
-import { Field, FieldError, FieldLabel } from "@/shared";
-import { Input } from "@/shared";
-import { Spinner } from "@/shared";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  buttonVariants,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Field,
+  FieldError,
+  FieldLabel,
+  Input,
+  Spinner,
+} from "@/shared";
 import { useSignUpForm } from "../model/use-sign-up-form";
 
 export const SignUpForm: FC = () => {

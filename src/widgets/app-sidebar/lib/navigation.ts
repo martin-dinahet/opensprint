@@ -15,9 +15,23 @@ export function getProjectId(pathname: string, params: RouteParams) {
   return pathname.match(/^\/projects\/([^/]+)/)?.[1] ?? "";
 }
 
-export function getProjectNavigationItems(projectId: string): ProjectNavigationItem[] {
+export function getBoardId(pathname: string, params: RouteParams) {
+  const paramId = params.boardId;
+  if (typeof paramId === "string") return paramId;
+
+  return pathname.match(/^\/projects\/[^/]+\/boards\/([^/]+)/)?.[1] ?? "";
+}
+
+export function getProjectNavigationItems(projectId: string, boardId?: string | null): ProjectNavigationItem[] {
+  const boardHref =
+    projectId && boardId
+      ? `/projects/${projectId}/boards/${boardId}`
+      : projectId
+        ? `/projects/${projectId}`
+        : "/dashboard";
+
   return [
-    { href: projectId ? `/projects/${projectId}` : "/dashboard", label: "Project", icon: KanbanSquareIcon },
+    { href: boardHref, label: "Project", icon: KanbanSquareIcon },
     { href: projectId ? `/projects/${projectId}/members` : "/dashboard", label: "Members", icon: UsersIcon },
   ];
 }

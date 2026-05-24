@@ -35,18 +35,32 @@ import {
   useUpdateTask,
   useUpdateTaskItem,
 } from "@/entities/task";
-import { handleClientResult } from "@/shared";
-import { cn } from "@/shared";
-import { Alert, AlertDescription } from "@/shared";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
-import { Badge } from "@/shared";
-import { Button } from "@/shared";
-import { Input } from "@/shared";
-import { Label } from "@/shared";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared";
-import { Separator } from "@/shared";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/shared";
-import { Textarea } from "@/shared";
+import {
+  Alert,
+  AlertDescription,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Button,
+  cn,
+  handleClientResult,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  Textarea,
+} from "@/shared";
 
 type DraftItem = {
   id: string;

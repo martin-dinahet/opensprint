@@ -1,12 +1,20 @@
 "use client";
 
 import { IconAlertCircle, IconFileText, IconFolder, IconLoader2, IconPlus } from "@tabler/icons-react";
-import { Alert, AlertDescription } from "@/shared";
-import { Button } from "@/shared";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
-import { Input } from "@/shared";
-import { Label } from "@/shared";
-import { Textarea } from "@/shared";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Textarea,
+} from "@/shared";
 import { useCreateProjectForm } from "../model/use-create-project-form";
 
 type Props = {

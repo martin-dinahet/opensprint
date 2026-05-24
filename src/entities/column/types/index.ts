@@ -8,13 +8,14 @@ import type { Column } from "@/shared";
 
 export type ColumnOutput = {
   id: Column["id"];
-  projectId: Column["projectId"];
+  projectId: string;
+  boardId: Column["boardId"];
   name: Column["name"];
   position: Column["position"];
   createdAt: string;
   updatedAt: string;
 };
 
-export type UpdateColumnOutput = Pick<ColumnOutput, "id" | "name" | "position" | "projectId"> & {
+export type UpdateColumnOutput = Pick<ColumnOutput, "boardId" | "id" | "name" | "position" | "projectId"> & {
   updatedAt: string;
 };

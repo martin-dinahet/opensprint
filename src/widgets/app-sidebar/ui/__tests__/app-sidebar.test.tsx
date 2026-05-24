@@ -1,8 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SidebarProvider } from "@/shared";
-import { TooltipProvider } from "@/shared";
+import { SidebarProvider, TooltipProvider } from "@/shared";
 import { makeProject } from "@/test/factories";
 import { renderWithClient } from "@/test/render";
 import { AppSidebar } from "@/widgets/app-sidebar";

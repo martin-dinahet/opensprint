@@ -4,8 +4,7 @@ import { IconPlus, IconStack } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { ProjectCard, useProjects } from "@/entities/project";
 import { CreateProjectDialog } from "@/features/create-project";
-import { Button } from "@/shared";
-import { LoadingScreen } from "@/shared";
+import { Button, LoadingScreen } from "@/shared";
 import { useDashboardHeader } from "@/widgets/header";
 
 export default function Page() {

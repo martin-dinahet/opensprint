@@ -12,7 +12,7 @@ vi.mock("@/entities/column", () => ({
   columnKeys: {
     all: ["columns"],
     lists: () => ["columns", "list"],
-    list: (projectId: string) => ["columns", "list", projectId],
+    list: (projectId: string, boardId: string) => ["columns", "list", projectId, boardId],
   },
   columnApi: {
     create: vi.fn(),
@@ -38,17 +38,17 @@ describe("column hooks", () => {
     vi.mocked(columnApi.list).mockResolvedValue(ok({ columns }));
     const queryClient = createTestQueryClient();
 
-    const { result } = renderHook(() => useColumns("project-1"), { wrapper: wrapper(queryClient) });
+    const { result } = renderHook(() => useColumns("project-1", "board-1"), { wrapper: wrapper(queryClient) });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toEqual(columns);
-    expect(columnApi.list).toHaveBeenCalledWith("project-1");
-    expect(queryClient.getQueryData(columnKeys.list("project-1"))).toEqual(columns);
+    expect(columnApi.list).toHaveBeenCalledWith("project-1", "board-1");
+    expect(queryClient.getQueryData(columnKeys.list("project-1", "board-1"))).toEqual(columns);
   });
 
   it("does not load columns without a project id", () => {
-    const { result } = renderHook(() => useColumns(""), { wrapper: wrapper() });
+    const { result } = renderHook(() => useColumns("", ""), { wrapper: wrapper() });
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(columnApi.list).not.toHaveBeenCalled();
@@ -62,20 +62,25 @@ describe("column hooks", () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
     const createHook = renderHook(() => useCreateColumn(), { wrapper: wrapper(queryClient) });
-    createHook.result.current.mutate({ projectId: "project-1", data: { name: "Doing" } });
+    createHook.result.current.mutate({ projectId: "project-1", boardId: "board-1", data: { name: "Doing" } });
     await waitFor(() => expect(createHook.result.current.isSuccess).toBe(true));
 
     const updateHook = renderHook(() => useUpdateColumn(), { wrapper: wrapper(queryClient) });
-    updateHook.result.current.mutate({ projectId: "project-1", columnId: "column-1", data: { name: "Done" } });
+    updateHook.result.current.mutate({
+      projectId: "project-1",
+      boardId: "board-1",
+      columnId: "column-1",
+      data: { name: "Done" },
+    });
     await waitFor(() => expect(updateHook.result.current.isSuccess).toBe(true));
 
     const deleteHook = renderHook(() => useDeleteColumn(), { wrapper: wrapper(queryClient) });
-    deleteHook.result.current.mutate({ projectId: "project-1", columnId: "column-1" });
+    deleteHook.result.current.mutate({ projectId: "project-1", boardId: "board-1", columnId: "column-1" });
     await waitFor(() => expect(deleteHook.result.current.isSuccess).toBe(true));
 
-    expect(columnApi.create).toHaveBeenCalledWith("project-1", { name: "Doing" });
-    expect(columnApi.update).toHaveBeenCalledWith("project-1", "column-1", { name: "Done" });
-    expect(columnApi.delete).toHaveBeenCalledWith("project-1", "column-1");
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: columnKeys.list("project-1") });
+    expect(columnApi.create).toHaveBeenCalledWith("project-1", "board-1", { name: "Doing" });
+    expect(columnApi.update).toHaveBeenCalledWith("project-1", "board-1", "column-1", { name: "Done" });
+    expect(columnApi.delete).toHaveBeenCalledWith("project-1", "board-1", "column-1");
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: columnKeys.list("project-1", "board-1") });
   });
 });

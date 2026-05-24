@@ -1,11 +1,11 @@
 import type {
   CreateProjectInput,
+  CreateProjectOutput,
   ProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
 } from "@/entities/project";
-import { api } from "@/shared";
-import { requestApiResult } from "@/shared";
+import { api, requestApiResult } from "@/shared";
 
 const BASE_KEY = "projects";
 
@@ -36,10 +36,7 @@ export const projectApi = {
   },
 
   create: async (data: CreateProjectInput) => {
-    return requestApiResult<{ id: string; name: string; description: string | null }>(
-      () => api.projects.$post({ json: data }),
-      "Failed to create project",
-    );
+    return requestApiResult<CreateProjectOutput>(() => api.projects.$post({ json: data }), "Failed to create project");
   },
 
   update: async (id: string, data: UpdateProjectInput) => {

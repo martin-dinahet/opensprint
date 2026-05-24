@@ -5,14 +5,17 @@ import { cn } from "@/shared";
 
 type Props = {
   activeTab: "board" | "members";
+  boardId?: string | null;
   projectId: string;
 };
 
-export function ProjectTabs({ activeTab, projectId }: Props) {
+export function ProjectTabs({ activeTab, boardId, projectId }: Props) {
+  const boardHref = boardId ? `/projects/${projectId}/boards/${boardId}` : `/projects/${projectId}`;
+
   return (
     <div className="flex items-center gap-1">
       <Link
-        href={`/projects/${projectId}`}
+        href={boardHref}
         className={cn(
           "relative inline-flex items-center gap-1.5 px-2.5 py-1 text-sm font-medium transition-colors",
           activeTab === "board"

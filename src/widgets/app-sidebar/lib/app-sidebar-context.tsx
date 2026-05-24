@@ -6,7 +6,7 @@ import type { ProjectListOutput } from "@/entities/project";
 import { useProjects } from "@/entities/project";
 import { useSignOut } from "@/features/auth";
 import { authClient } from "@/shared";
-import { getProjectId } from "./navigation";
+import { getBoardId, getProjectId } from "./navigation";
 
 type SidebarUser = {
   email?: string | null;
@@ -22,6 +22,7 @@ type AppSidebarContextValue = {
   openCreateProject: () => void;
   pathname: string;
   projectId: string;
+  boardId: string;
   projects: ProjectListOutput[];
   setCreateProjectOpen: (open: boolean) => void;
   signOut: () => void;
@@ -44,6 +45,7 @@ export function AppSidebarProvider({ children }: Props) {
   const { data: projects = [], isLoading } = useProjects();
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const projectId = getProjectId(pathname, params);
+  const boardId = getBoardId(pathname, params);
   const activeProject = useMemo(() => projects.find((project) => project.id === projectId), [projectId, projects]);
   const openCreateProject = useCallback(() => setCreateProjectOpen(true), []);
   const onNavigateAccount = useCallback(() => router.push("/account"), [router]);
@@ -56,6 +58,7 @@ export function AppSidebarProvider({ children }: Props) {
       onNavigateAccount,
       openCreateProject,
       pathname,
+      boardId,
       projectId,
       projects,
       setCreateProjectOpen,
@@ -65,6 +68,7 @@ export function AppSidebarProvider({ children }: Props) {
     }),
     [
       activeProject,
+      boardId,
       createProjectOpen,
       isLoading,
       onNavigateAccount,

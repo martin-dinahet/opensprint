@@ -17,9 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/shared";
-import { Button } from "@/shared";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared";
 import { kanbanCollisionDetection, useProjectKanban } from "../lib";
 
 type RootProps = {
@@ -95,7 +98,11 @@ const ColumnView = ({
   onAddTask,
   onDeleteColumn,
   tasks,
-}: ColumnProps & { children?: ReactNode; onAddTask: () => void; onDeleteColumn: () => void }) => {
+}: ColumnProps & {
+  children?: ReactNode;
+  onAddTask: () => void;
+  onDeleteColumn: () => void;
+}) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: { type: "column", column },

@@ -17,6 +17,7 @@ type ProjectKanbanContextValue = {
   openCreateColumn: () => void;
   openCreateTask: (columnId: string) => void;
   openTask: (task: TaskOutput) => void;
+  boardId: string;
   projectId: string;
   removeColumn: (columnId: string) => void;
   removeTask: (columnId: string, taskId: string) => void;
@@ -29,12 +30,13 @@ type ProjectKanbanContextValue = {
 const ProjectKanbanContext = createContext<ProjectKanbanContextValue | null>(null);
 
 type Props = {
+  boardId: string;
   children: ReactNode;
   projectId: string;
 };
 
-export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
-  const { data: columns = [], isLoading: columnsLoading } = useColumns(projectId);
+export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) => {
+  const { data: columns = [], isLoading: columnsLoading } = useColumns(projectId, boardId);
   const { data: members = [] } = useMembers(projectId);
   const deleteColumn = useDeleteColumn();
   const deleteTask = useDeleteTask();
@@ -68,8 +70,9 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
         setCreateTaskOpenState(true);
       },
       openTask: setSelectedTask,
+      boardId,
       projectId,
-      removeColumn: (columnId) => deleteColumn.mutate({ projectId, columnId }),
+      removeColumn: (columnId) => deleteColumn.mutate({ boardId, projectId, columnId }),
       removeTask: (columnId, taskId) => deleteTask.mutate({ columnId, taskId }),
       setCreateColumnOpen,
       setCreateTaskOpen,
@@ -78,6 +81,7 @@ export const ProjectKanbanProvider = ({ children, projectId }: Props) => {
     }),
     [
       activeColumnId,
+      boardId,
       columns,
       columnsLoading,
       createColumnOpen,

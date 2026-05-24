@@ -3,10 +3,18 @@
 import { IconCalendar, IconFlag, IconUser } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared";
-import { Badge } from "@/shared";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared";
-import { Separator } from "@/shared";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  Separator,
+} from "@/shared";
 
 type Props = {
   members: MemberWithUserOutput[];

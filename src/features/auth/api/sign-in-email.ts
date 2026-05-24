@@ -1,6 +1,5 @@
 import { err, ok } from "@punpun-dev/ts-result";
-import { handleClientResult } from "@/shared";
-import { authClient } from "@/shared";
+import { authClient, handleClientResult } from "@/shared";
 
 export type AuthFormError = {
   message: string;

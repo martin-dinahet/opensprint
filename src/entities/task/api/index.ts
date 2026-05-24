@@ -15,8 +15,7 @@ import type {
   UpdateTaskItemInput,
   UpdateTaskOutput,
 } from "@/entities/task";
-import { api } from "@/shared";
-import { requestApiResult } from "@/shared";
+import { api, requestApiResult } from "@/shared";
 
 const BASE_KEY = "tasks";
 

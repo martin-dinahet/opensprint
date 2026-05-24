@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import z from "zod";
 import { useCreateProject } from "@/entities/project";
-import { handleClientResult } from "@/shared";
-import { parseFormData } from "@/shared";
+import { handleClientResult, parseFormData } from "@/shared";
 
 const createProjectSchema = z.object({
   name: z.string().trim().min(3).max(130),
@@ -45,7 +44,11 @@ export function useCreateProjectForm({ onOpenChange }: Options) {
       result.match({
         ok: (project) => {
           onOpenChange(false);
-          router.push(`/projects/${project.id}`);
+          router.push(
+            project.defaultBoardId
+              ? `/projects/${project.id}/boards/${project.defaultBoardId}`
+              : `/projects/${project.id}`,
+          );
         },
         err: (error) => setGlobalError(error.message),
       });

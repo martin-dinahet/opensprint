@@ -94,7 +94,7 @@ describe("ProjectKanbanProvider", () => {
 
   it("provides project kanban state and actions", () => {
     render(
-      <ProjectKanbanProvider projectId="project-1">
+      <ProjectKanbanProvider boardId="board-1" projectId="project-1">
         <Consumer />
       </ProjectKanbanProvider>,
     );
@@ -115,7 +115,11 @@ describe("ProjectKanbanProvider", () => {
     expect(screen.getByTestId("selected-task")).toHaveTextContent("task-1");
 
     fireEvent.click(screen.getByRole("button", { name: "remove column" }));
-    expect(deleteColumnMock.mutate).toHaveBeenCalledWith({ projectId: "project-1", columnId: "column-1" });
+    expect(deleteColumnMock.mutate).toHaveBeenCalledWith({
+      boardId: "board-1",
+      projectId: "project-1",
+      columnId: "column-1",
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "remove task" }));
     expect(deleteTaskMock.mutate).toHaveBeenCalledWith({ columnId: "column-1", taskId: "task-1" });

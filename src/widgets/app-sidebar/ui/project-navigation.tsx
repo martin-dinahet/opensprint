@@ -1,9 +1,17 @@
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared";
-import { Icon } from "@/shared";
-import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  Icon,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/shared";
 import {
   collapsedTextClass,
   getProjectNavigationItems,
@@ -15,8 +23,8 @@ import {
 } from "../lib";
 
 export function ProjectNavigation() {
-  const { activeProject, pathname, projectId } = useAppSidebar();
-  const projectItems = getProjectNavigationItems(projectId);
+  const { activeProject, boardId, pathname, projectId } = useAppSidebar();
+  const projectItems = getProjectNavigationItems(projectId, boardId || activeProject?.defaultBoardId);
   const [open, setOpen] = useState(true);
   const SectionIcon = open ? ChevronDownIcon : ChevronRightIcon;
 

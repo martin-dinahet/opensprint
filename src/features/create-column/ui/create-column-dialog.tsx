@@ -1,19 +1,32 @@
 import { IconAlertCircle, IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
-import { Alert, AlertDescription } from "@/shared";
-import { Button } from "@/shared";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared";
-import { Input } from "@/shared";
-import { Label } from "@/shared";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+} from "@/shared";
 import { useCreateColumnForm } from "../model/use-create-column-form";
 
 type Props = {
+  boardId: string;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   projectId: string;
 };
 
-export function CreateColumnDialog({ onOpenChange, open, projectId }: Props) {
-  const { action, fieldErrors, globalError, pending, reset } = useCreateColumnForm({ onOpenChange, projectId });
+export function CreateColumnDialog({ boardId, onOpenChange, open, projectId }: Props) {
+  const { action, fieldErrors, globalError, pending, reset } = useCreateColumnForm({
+    boardId,
+    onOpenChange,
+    projectId,
+  });
   const nameError = fieldErrors?.name?.[0];
 
   return (

@@ -1,9 +1,11 @@
 import { ChevronDownIcon, ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared";
-import { Icon } from "@/shared";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  Icon,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -41,19 +43,25 @@ export function ProjectList() {
               {isProjectsLoading
                 ? projectSkeletonKeys.map((key) => <SidebarMenuSkeleton key={key} showIcon />)
                 : projects.length
-                  ? projects.slice(0, projectListLimit).map((project) => (
-                      <SidebarMenuItem key={project.id}>
-                        <SidebarMenuButton
-                          tooltip={project.name}
-                          isActive={project.id === projectId}
-                          className={sidebarNavButtonClass}
-                          render={<Link href={`/projects/${project.id}`} />}
-                        >
-                          <Icon icon={FolderKanbanIcon} />
-                          <span className={collapsedTextClass}>{project.name}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))
+                  ? projects.slice(0, projectListLimit).map((project) => {
+                      const href = project.defaultBoardId
+                        ? `/projects/${project.id}/boards/${project.defaultBoardId}`
+                        : `/projects/${project.id}`;
+
+                      return (
+                        <SidebarMenuItem key={project.id}>
+                          <SidebarMenuButton
+                            tooltip={project.name}
+                            isActive={project.id === projectId}
+                            className={sidebarNavButtonClass}
+                            render={<Link href={href} />}
+                          >
+                            <Icon icon={FolderKanbanIcon} />
+                            <span className={collapsedTextClass}>{project.name}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })
                   : null}
             </SidebarMenu>
           </SidebarGroupContent>

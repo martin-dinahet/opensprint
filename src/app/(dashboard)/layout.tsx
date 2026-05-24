@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { authClient } from "@/shared";
-import { LoadingScreen } from "@/shared";
+import { authClient, LoadingScreen } from "@/shared";
 import { DashboardHeaderProvider, HeaderWidget } from "@/widgets/header";
 
 type Props = {

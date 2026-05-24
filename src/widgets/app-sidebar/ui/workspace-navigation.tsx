@@ -1,7 +1,6 @@
 import { LayoutDashboardIcon } from "lucide-react";
 import Link from "next/link";
-import { Icon } from "@/shared";
-import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared";
+import { Icon, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/shared";
 import { collapsedTextClass, sidebarNavButtonClass, sidebarSectionClass, useAppSidebar } from "../lib";
 
 export function WorkspaceNavigation() {
