@@ -1,9 +1,12 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError, UnauthorizedError } from "@/server/lib";
-import { columnRepository } from "@/server/repositories";
-import { memberRepository } from "@/server/repositories";
-import { projectRepository } from "@/server/repositories";
-import { taskRepository } from "@/server/repositories";
+import {
+  boardRepository,
+  columnRepository,
+  memberRepository,
+  projectRepository,
+  taskRepository,
+} from "@/server/repositories";
 
 export class DeleteProjectUseCase {
   static async execute(userId: string, projectId: string) {
@@ -27,32 +30,37 @@ export class DeleteProjectUseCase {
       return err(new UnauthorizedError("Not authorized"));
     }
 
-    const columnsResult = await columnRepository.findByProject(projectId);
-    if (columnsResult.isErr()) return err(columnsResult.error);
+    const boardsResult = await boardRepository.findByProject(projectId);
+    if (boardsResult.isErr()) return err(boardsResult.error);
 
-    for (const column of columnsResult.unwrap() ?? []) {
-      const deleteTasksResult = await taskRepository.deleteByColumn(column.id);
-      if (deleteTasksResult.isErr()) {
-        return err(
-          new AppError(
-            "project-tasks-delete-failed",
-            `Unable to delete project tasks: ${deleteTasksResult.error.message}`,
-            500,
-          ),
-        );
+    for (const board of boardsResult.unwrap() ?? []) {
+      const columnsResult = await columnRepository.findByBoard(board.id);
+      if (columnsResult.isErr()) return err(columnsResult.error);
+
+      for (const column of columnsResult.unwrap() ?? []) {
+        const deleteTasksResult = await taskRepository.deleteByColumn(column.id);
+        if (deleteTasksResult.isErr()) {
+          return err(
+            new AppError(
+              "project-tasks-delete-failed",
+              `Unable to delete project tasks: ${deleteTasksResult.error.message}`,
+              500,
+            ),
+          );
+        }
       }
-    }
 
-    for (const column of columnsResult.unwrap() ?? []) {
-      const deleteColumnResult = await columnRepository.delete(column.id);
-      if (deleteColumnResult.isErr()) {
-        return err(
-          new AppError(
-            "project-columns-delete-failed",
-            `Unable to delete project columns: ${deleteColumnResult.error.message}`,
-            500,
-          ),
-        );
+      for (const column of columnsResult.unwrap() ?? []) {
+        const deleteColumnResult = await columnRepository.delete(column.id);
+        if (deleteColumnResult.isErr()) {
+          return err(
+            new AppError(
+              "project-columns-delete-failed",
+              `Unable to delete project columns: ${deleteColumnResult.error.message}`,
+              500,
+            ),
+          );
+        }
       }
     }
 

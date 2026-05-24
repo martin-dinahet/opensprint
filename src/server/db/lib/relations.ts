@@ -1,16 +1,19 @@
 import { relations } from "drizzle-orm";
 import { account } from "../schemas/auth/account-schema";
+import { invitation } from "../schemas/auth/invitation-schema";
 import { session } from "../schemas/auth/session-schema";
 import { user } from "../schemas/auth/user-schema";
+import { board } from "../schemas/business/board-schema";
 import { column } from "../schemas/business/column-schema";
 import { member } from "../schemas/business/member-schema";
-import { project } from "../schemas/business/project-schema";
+import { organization } from "../schemas/business/project-schema";
 import { projectTaskTag, task, taskItem, taskTag } from "../schemas/business/task-schema";
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   memberships: many(member),
+  sentInvitations: many(invitation),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -27,16 +30,17 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const projectRelations = relations(project, ({ many }) => ({
+export const projectRelations = relations(organization, ({ many }) => ({
   members: many(member),
-  columns: many(column),
+  boards: many(board),
   taskTags: many(projectTaskTag),
+  invitations: many(invitation),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
-  project: one(project, {
-    fields: [member.projectId],
-    references: [project.id],
+  project: one(organization, {
+    fields: [member.organizationId],
+    references: [organization.id],
   }),
   user: one(user, {
     fields: [member.userId],
@@ -45,10 +49,29 @@ export const memberRelations = relations(member, ({ one, many }) => ({
   tasks: many(task),
 }));
 
+export const invitationRelations = relations(invitation, ({ one }) => ({
+  project: one(organization, {
+    fields: [invitation.organizationId],
+    references: [organization.id],
+  }),
+  inviter: one(user, {
+    fields: [invitation.inviterId],
+    references: [user.id],
+  }),
+}));
+
+export const boardRelations = relations(board, ({ one, many }) => ({
+  project: one(organization, {
+    fields: [board.projectId],
+    references: [organization.id],
+  }),
+  columns: many(column),
+}));
+
 export const columnRelations = relations(column, ({ one, many }) => ({
-  project: one(project, {
-    fields: [column.projectId],
-    references: [project.id],
+  board: one(board, {
+    fields: [column.boardId],
+    references: [board.id],
   }),
   tasks: many(task),
 }));
@@ -74,9 +97,9 @@ export const taskItemRelations = relations(taskItem, ({ one }) => ({
 }));
 
 export const projectTaskTagRelations = relations(projectTaskTag, ({ one, many }) => ({
-  project: one(project, {
+  project: one(organization, {
     fields: [projectTaskTag.projectId],
-    references: [project.id],
+    references: [organization.id],
   }),
   taskLinks: many(taskTag),
 }));

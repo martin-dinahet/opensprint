@@ -1,4 +1,5 @@
 export {
+  boardRepository,
   columnRepository,
   memberRepository,
   projectRepository,

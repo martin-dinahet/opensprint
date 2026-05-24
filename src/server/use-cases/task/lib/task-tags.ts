@@ -103,7 +103,7 @@ export class AttachTaskTagUseCase {
     const tagResult = await taskTagRepository.findProjectTagById(input.tagId);
     if (tagResult.isErr()) return err(tagResult.error);
     const tags = tagResult.unwrap();
-    if (!tags || tags.length === 0 || tags[0].projectId !== accessResult.unwrap().column.projectId) {
+    if (!tags || tags.length === 0 || tags[0].projectId !== accessResult.unwrap().projectId) {
       return err(new NotFoundError("Task tag"));
     }
 
@@ -126,7 +126,7 @@ export class DetachTaskTagUseCase {
     const tagResult = await taskTagRepository.findProjectTagById(tagId);
     if (tagResult.isErr()) return err(tagResult.error);
     const tags = tagResult.unwrap();
-    if (!tags || tags.length === 0 || tags[0].projectId !== accessResult.unwrap().column.projectId) {
+    if (!tags || tags.length === 0 || tags[0].projectId !== accessResult.unwrap().projectId) {
       return err(new NotFoundError("Task tag"));
     }
 

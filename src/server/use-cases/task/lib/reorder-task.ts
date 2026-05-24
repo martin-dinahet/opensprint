@@ -1,8 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError } from "@/server/lib";
 import { taskRepository } from "@/server/repositories";
-import { assertColumnAccess } from "./column-access";
 import type { ReorderTaskInput } from "../dto";
+import { assertColumnAccess } from "./column-access";
 import { insertTaskAtPosition, normalizeTaskPositions } from "./task-position";
 
 export class ReorderTaskUseCase {

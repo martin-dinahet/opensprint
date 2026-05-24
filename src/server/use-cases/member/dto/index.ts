@@ -14,7 +14,8 @@ export const MemberOutput = z.object({
   userId: z.string(),
   projectId: z.string(),
   role: z.enum(["owner", "admin", "member"]),
-  joinedAt: z.date(),
+  createdAt: z.date(),
+  joinedAt: z.date().optional(),
 });
 
 export const MemberWithUserOutput = MemberOutput.extend({

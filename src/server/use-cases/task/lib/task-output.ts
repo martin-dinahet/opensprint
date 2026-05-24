@@ -1,7 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import type { AppError } from "@/server/lib";
-import { taskItemRepository } from "@/server/repositories";
-import { taskTagRepository } from "@/server/repositories";
+import { taskItemRepository, taskTagRepository } from "@/server/repositories";
 import type { ProjectTaskTag, Task, TaskItem } from "@/shared";
 
 type TaskTagRow = ProjectTaskTag & { taskId: string };

@@ -20,6 +20,9 @@ export class DeleteTaskUseCase {
     if (!task || task.length === 0) {
       return err(new NotFoundError("Task"));
     }
+    if (task[0].columnId !== columnId) {
+      return err(new NotFoundError("Task"));
+    }
 
     const deleteResult = await taskRepository.delete(taskId);
 

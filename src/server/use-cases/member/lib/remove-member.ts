@@ -1,7 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/server/lib";
-import { memberRepository } from "@/server/repositories";
-import { taskRepository } from "@/server/repositories";
+import { memberRepository, taskRepository } from "@/server/repositories";
 
 export class RemoveMemberUseCase {
   static async execute(userId: string, projectId: string, memberId: string) {
@@ -22,6 +21,10 @@ export class RemoveMemberUseCase {
 
     const targetMember = targetMemberResult.unwrap();
     if (!targetMember || targetMember.length === 0) {
+      return err(new NotFoundError("Member"));
+    }
+
+    if (targetMember[0].organizationId !== projectId) {
       return err(new NotFoundError("Member"));
     }
 

@@ -1,8 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError } from "@/server/lib";
 import { taskRepository } from "@/server/repositories";
-import { assertColumnAccess } from "./column-access";
 import type { UpdateTaskInput } from "../dto";
+import { assertColumnAccess } from "./column-access";
 import { buildTaskOutput } from "./task-output";
 
 export class UpdateTaskUseCase {
@@ -15,6 +15,9 @@ export class UpdateTaskUseCase {
 
     const task = taskResult.unwrap();
     if (!task || task.length === 0) {
+      return err(new NotFoundError("Task"));
+    }
+    if (task[0].columnId !== columnId) {
       return err(new NotFoundError("Task"));
     }
 

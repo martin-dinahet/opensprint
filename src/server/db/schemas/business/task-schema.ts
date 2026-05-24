@@ -1,7 +1,7 @@
 import { boolean, index, integer, pgEnum, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { column } from "./column-schema";
 import { member } from "./member-schema";
-import { project } from "./project-schema";
+import { organization } from "./project-schema";
 
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
 
@@ -76,7 +76,7 @@ export const projectTaskTag = pgTable(
     id: text("id").primaryKey(),
     projectId: text("project_id")
       .notNull()
-      .references(() => project.id, { onDelete: "cascade" }),
+      .references(() => organization.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     color: text("color").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),

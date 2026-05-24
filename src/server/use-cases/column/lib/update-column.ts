@@ -2,18 +2,18 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError } from "@/server/lib";
 import { columnRepository } from "@/server/repositories";
 import type { UpdateColumnInput } from "../dto";
-import { assertProjectAccess } from "./project-access";
+import { assertBoardAccess } from "./project-access";
 
 export class UpdateColumnUseCase {
-  static async execute(userId: string, projectId: string, columnId: string, input: UpdateColumnInput) {
-    const accessResult = await assertProjectAccess(userId, projectId);
+  static async execute(userId: string, projectId: string, boardId: string, columnId: string, input: UpdateColumnInput) {
+    const accessResult = await assertBoardAccess(userId, projectId, boardId);
     if (accessResult.isErr()) return err(accessResult.error);
 
     const columnResult = await columnRepository.findById(columnId);
     if (columnResult.isErr()) return err(columnResult.error);
 
     const column = columnResult.unwrap();
-    if (!column || column.length === 0 || column[0].projectId !== projectId) return err(new NotFoundError("Column"));
+    if (!column || column.length === 0 || column[0].boardId !== boardId) return err(new NotFoundError("Column"));
 
     const updateResult = await columnRepository.update(columnId, input);
     if (updateResult.isErr()) {
@@ -30,7 +30,8 @@ export class UpdateColumnUseCase {
 
     return ok({
       id: updatedColumn[0].id,
-      projectId: updatedColumn[0].projectId,
+      projectId,
+      boardId: updatedColumn[0].boardId,
       name: updatedColumn[0].name,
       position: updatedColumn[0].position,
       updatedAt: updatedColumn[0].updatedAt,

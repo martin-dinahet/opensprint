@@ -1,36 +1,48 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { columnRepositoryMock, memberRepositoryMock, nanoidMock, projectRepositoryMock, taskRepositoryMock } =
-  vi.hoisted(() => ({
-    columnRepositoryMock: {
-      delete: vi.fn(),
-      findByProject: vi.fn(),
-    },
-    memberRepositoryMock: {
-      create: vi.fn(),
-      deleteByProject: vi.fn(),
-      findByUserAndProject: vi.fn(),
-      findByUserId: vi.fn(),
-    },
-    nanoidMock: vi.fn(),
-    projectRepositoryMock: {
-      create: vi.fn(),
-      delete: vi.fn(),
-      findById: vi.fn(),
-      findByIds: vi.fn(),
-      update: vi.fn(),
-    },
-    taskRepositoryMock: {
-      deleteByColumn: vi.fn(),
-    },
-  }));
+const {
+  boardRepositoryMock,
+  columnRepositoryMock,
+  memberRepositoryMock,
+  nanoidMock,
+  projectRepositoryMock,
+  taskRepositoryMock,
+} = vi.hoisted(() => ({
+  boardRepositoryMock: {
+    create: vi.fn(),
+    findByProject: vi.fn(),
+  },
+  columnRepositoryMock: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    findByBoard: vi.fn(),
+  },
+  memberRepositoryMock: {
+    create: vi.fn(),
+    deleteByProject: vi.fn(),
+    findByUserAndProject: vi.fn(),
+    findByUserId: vi.fn(),
+  },
+  nanoidMock: vi.fn(),
+  projectRepositoryMock: {
+    create: vi.fn(),
+    delete: vi.fn(),
+    findById: vi.fn(),
+    findByIds: vi.fn(),
+    update: vi.fn(),
+  },
+  taskRepositoryMock: {
+    deleteByColumn: vi.fn(),
+  },
+}));
 
 vi.mock("nanoid", () => ({
   nanoid: nanoidMock,
 }));
 
 vi.mock("@/server/repositories", () => ({
+  boardRepository: boardRepositoryMock,
   memberRepository: memberRepositoryMock,
   columnRepository: columnRepositoryMock,
   projectRepository: projectRepositoryMock,
@@ -48,7 +60,8 @@ const project = {
   createdAt: now,
   updatedAt: now,
 };
-const ownerMembership = { id: "member-1", projectId: "project-1", userId: "user-1", role: "owner" };
+const board = { id: "board-1", projectId: "project-1", name: "Board", position: 0, createdAt: now, updatedAt: now };
+const ownerMembership = { id: "member-1", organizationId: "project-1", userId: "user-1", role: "owner" };
 
 describe("project use cases", () => {
   beforeEach(() => {
@@ -59,11 +72,12 @@ describe("project use cases", () => {
   it("lists projects for the user's memberships", async () => {
     memberRepositoryMock.findByUserId.mockResolvedValue(ok([ownerMembership]));
     projectRepositoryMock.findByIds.mockResolvedValue(ok([project]));
+    boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
 
     const result = await ListProjectsUseCase.execute("user-1");
 
     expect(result.isOk()).toBe(true);
-    expect(result.unwrap()).toEqual([project]);
+    expect(result.unwrap()).toEqual([{ ...project, defaultBoardId: "board-1" }]);
     expect(projectRepositoryMock.findByIds).toHaveBeenCalledWith(["project-1"]);
   });
 
@@ -78,9 +92,17 @@ describe("project use cases", () => {
   });
 
   it("creates a project and owner membership", async () => {
-    nanoidMock.mockReturnValueOnce("project-new").mockReturnValueOnce("member-new");
+    nanoidMock
+      .mockReturnValueOnce("project-new")
+      .mockReturnValueOnce("member-new")
+      .mockReturnValueOnce("board-new")
+      .mockReturnValueOnce("column-todo")
+      .mockReturnValueOnce("column-progress")
+      .mockReturnValueOnce("column-done");
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
+    boardRepositoryMock.create.mockResolvedValue(ok(undefined));
+    columnRepositoryMock.create.mockResolvedValue(ok(undefined));
 
     const result = await CreateProjectUseCase.execute("user-1", {
       name: "New Project",
@@ -91,18 +113,44 @@ describe("project use cases", () => {
     expect(projectRepositoryMock.create).toHaveBeenCalledWith({
       id: "project-new",
       name: "New Project",
+      slug: "new-project-project-",
       description: "Useful description",
     });
     expect(memberRepositoryMock.create).toHaveBeenCalledWith({
       id: "member-new",
-      projectId: "project-new",
+      organizationId: "project-new",
       userId: "user-1",
       role: "owner",
+    });
+    expect(boardRepositoryMock.create).toHaveBeenCalledWith({
+      id: "board-new",
+      projectId: "project-new",
+      name: "Board",
+      position: 0,
+    });
+    expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(1, {
+      id: "column-todo",
+      boardId: "board-new",
+      name: "Todo",
+      position: 0,
+    });
+    expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(2, {
+      id: "column-progress",
+      boardId: "board-new",
+      name: "In Progress",
+      position: 1,
+    });
+    expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(3, {
+      id: "column-done",
+      boardId: "board-new",
+      name: "Done",
+      position: 2,
     });
     expect(result.unwrap()).toEqual({
       id: "project-new",
       name: "New Project",
       description: "Useful description",
+      defaultBoardId: "board-new",
     });
   });
 
@@ -136,11 +184,12 @@ describe("project use cases", () => {
   it("gets a project only when the user is a member", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
+    boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
 
     const result = await GetProjectUseCase.execute("user-1", "project-1");
 
     expect(result.isOk()).toBe(true);
-    expect(result.unwrap()).toEqual(project);
+    expect(result.unwrap()).toEqual({ ...project, defaultBoardId: "board-1" });
   });
 
   it("returns not found when a project does not exist", async () => {
@@ -227,7 +276,8 @@ describe("project use cases", () => {
   it("deletes projects for owners", async () => {
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
-    columnRepositoryMock.findByProject.mockResolvedValue(ok([{ id: "column-1" }]));
+    boardRepositoryMock.findByProject.mockResolvedValue(ok([board]));
+    columnRepositoryMock.findByBoard.mockResolvedValue(ok([{ id: "column-1" }]));
     taskRepositoryMock.deleteByColumn.mockResolvedValue(ok(undefined));
     columnRepositoryMock.delete.mockResolvedValue(ok(undefined));
     memberRepositoryMock.deleteByProject.mockResolvedValue(ok(undefined));
@@ -253,7 +303,7 @@ describe("project use cases", () => {
     if (result.isErr()) {
       expect(result.error.statusCode).toBe(403);
     }
-    expect(columnRepositoryMock.findByProject).not.toHaveBeenCalled();
+    expect(boardRepositoryMock.findByProject).not.toHaveBeenCalled();
     expect(memberRepositoryMock.deleteByProject).not.toHaveBeenCalled();
   });
 });

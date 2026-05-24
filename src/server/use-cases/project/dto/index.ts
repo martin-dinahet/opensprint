@@ -14,6 +14,7 @@ export const ProjectOutput = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  defaultBoardId: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -22,6 +23,7 @@ export const ProjectListOutput = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
+  defaultBoardId: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

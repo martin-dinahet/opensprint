@@ -1,26 +1,23 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { nanoid } from "nanoid";
 import { AppError, NotFoundError } from "@/server/lib";
-import { memberRepository } from "@/server/repositories";
-import { taskRepository } from "@/server/repositories";
-import { taskItemRepository } from "@/server/repositories";
-import { taskTagRepository } from "@/server/repositories";
-import { assertColumnAccess } from "./column-access";
+import { memberRepository, taskItemRepository, taskRepository, taskTagRepository } from "@/server/repositories";
 import type { CreateTaskInput } from "../dto";
+import { assertColumnAccess } from "./column-access";
 import { buildTaskOutput } from "./task-output";
 
 export class CreateTaskUseCase {
   static async execute(userId: string, columnId: string, input: CreateTaskInput) {
     const accessResult = await assertColumnAccess(userId, columnId);
     if (accessResult.isErr()) return err(accessResult.error);
-    const { column } = accessResult.unwrap();
+    const { projectId } = accessResult.unwrap();
 
     if (input.assigneeId) {
       const assigneeResult = await memberRepository.findById(input.assigneeId);
       if (assigneeResult.isErr()) return err(assigneeResult.error);
 
       const assignee = assigneeResult.unwrap();
-      if (!assignee || assignee.length === 0 || assignee[0].projectId !== column.projectId) {
+      if (!assignee || assignee.length === 0 || assignee[0].organizationId !== projectId) {
         return err(new NotFoundError("Assignee"));
       }
     }
@@ -31,7 +28,7 @@ export class CreateTaskUseCase {
       if (tagResult.isErr()) return err(tagResult.error);
 
       const tags = tagResult.unwrap();
-      if (!tags || tags.length === 0 || tags[0].projectId !== column.projectId) {
+      if (!tags || tags.length === 0 || tags[0].projectId !== projectId) {
         return err(new NotFoundError("Task tag"));
       }
     }

@@ -3,14 +3,14 @@ import { nanoid } from "nanoid";
 import { AppError } from "@/server/lib";
 import { columnRepository } from "@/server/repositories";
 import type { CreateColumnInput } from "../dto";
-import { assertProjectAccess } from "./project-access";
+import { assertBoardAccess } from "./project-access";
 
 export class CreateColumnUseCase {
-  static async execute(userId: string, projectId: string, input: CreateColumnInput) {
-    const accessResult = await assertProjectAccess(userId, projectId);
+  static async execute(userId: string, projectId: string, boardId: string, input: CreateColumnInput) {
+    const accessResult = await assertBoardAccess(userId, projectId, boardId);
     if (accessResult.isErr()) return err(accessResult.error);
 
-    const existingColumnsResult = await columnRepository.findByProject(projectId);
+    const existingColumnsResult = await columnRepository.findByBoard(boardId);
     if (existingColumnsResult.isErr()) {
       return err(
         new AppError("columns-fetch-failed", `Unable to create column: ${existingColumnsResult.error.message}`, 500),
@@ -19,7 +19,7 @@ export class CreateColumnUseCase {
 
     const columnId = nanoid();
     const position = existingColumnsResult.unwrap()?.length || 0;
-    const createResult = await columnRepository.create({ id: columnId, projectId, name: input.name, position });
+    const createResult = await columnRepository.create({ id: columnId, boardId, name: input.name, position });
     if (createResult.isErr()) {
       return err(new AppError("column-create-failed", `Unable to create column: ${createResult.error.message}`, 500));
     }
@@ -34,7 +34,8 @@ export class CreateColumnUseCase {
 
     return ok({
       id: newColumn[0].id,
-      projectId: newColumn[0].projectId,
+      projectId,
+      boardId: newColumn[0].boardId,
       name: newColumn[0].name,
       position: newColumn[0].position,
       createdAt: newColumn[0].createdAt,

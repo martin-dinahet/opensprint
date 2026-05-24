@@ -1,7 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { NotFoundError, UnauthorizedError } from "@/server/lib";
-import { memberRepository } from "@/server/repositories";
-import { projectRepository } from "@/server/repositories";
+import { boardRepository, memberRepository, projectRepository } from "@/server/repositories";
 
 export class GetProjectUseCase {
   static async execute(userId: string, projectId: string) {
@@ -21,10 +20,14 @@ export class GetProjectUseCase {
       return err(new UnauthorizedError("Not a member of this project"));
     }
 
+    const boardsResult = await boardRepository.findByProject(projectId);
+    if (boardsResult.isErr()) return err(boardsResult.error);
+
     return ok({
       id: project[0].id,
       name: project[0].name,
       description: project[0].description,
+      defaultBoardId: boardsResult.unwrap()?.[0]?.id ?? null,
       createdAt: project[0].createdAt,
       updatedAt: project[0].updatedAt,
     });

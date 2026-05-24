@@ -16,6 +16,7 @@ export const ReorderColumnsInput = z.object({
 export const ColumnOutput = z.object({
   id: z.string(),
   projectId: z.string(),
+  boardId: z.string(),
   name: z.string(),
   position: z.number(),
   createdAt: z.date(),

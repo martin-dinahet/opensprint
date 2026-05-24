@@ -1,7 +1,6 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError, UnauthorizedError } from "@/server/lib";
-import { memberRepository } from "@/server/repositories";
-import { projectRepository } from "@/server/repositories";
+import { memberRepository, projectRepository } from "@/server/repositories";
 
 export class UpdateProjectUseCase {
   static async execute(userId: string, projectId: string, input: { name?: string; description?: string }) {

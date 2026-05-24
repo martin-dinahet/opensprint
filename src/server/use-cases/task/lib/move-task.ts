@@ -1,8 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError } from "@/server/lib";
 import { taskRepository } from "@/server/repositories";
-import { assertColumnAccess } from "./column-access";
 import type { MoveTaskInput } from "../dto";
+import { assertColumnAccess } from "./column-access";
 import { normalizeTaskPositions } from "./task-position";
 
 export class MoveTaskUseCase {
@@ -15,8 +15,14 @@ export class MoveTaskUseCase {
       return err(new NotFoundError("Task"));
     }
 
+    const sourceAccessResult = await assertColumnAccess(userId, task[0].columnId);
+    if (sourceAccessResult.isErr()) return err(sourceAccessResult.error);
+
     const targetAccessResult = await assertColumnAccess(userId, input.columnId);
     if (targetAccessResult.isErr()) return err(targetAccessResult.error);
+    if (sourceAccessResult.unwrap().projectId !== targetAccessResult.unwrap().projectId) {
+      return err(new NotFoundError("Column"));
+    }
 
     const existingTasksResult = await taskRepository.findByColumn(input.columnId);
     if (existingTasksResult.isErr()) return err(existingTasksResult.error);

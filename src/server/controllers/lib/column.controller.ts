@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { guard } from "@/server/lib";
-import { validate } from "@/server/lib";
+import { guard, validate } from "@/server/lib";
 import type { ServerVariables } from "@/server/types";
 import {
   CreateColumnUseCase,
@@ -12,55 +11,60 @@ import {
 import { CreateColumnInput, ReorderColumnsInput, UpdateColumnInput } from "@/server/use-cases/column/dto";
 
 export const columnController = new Hono<ServerVariables>()
-  .get("/:projectId/columns", guard(), async (c) => {
-    const projectId = c.req.param("projectId");
+  .get("/:id/boards/:boardId/columns", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
-    const result = await ListColumnsUseCase.execute(currentUser.id, projectId);
+    const result = await ListColumnsUseCase.execute(currentUser.id, projectId, boardId);
 
     return result.match({
       ok: (columns) => c.json({ columns }),
       err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
     });
   })
-  .post("/:projectId/columns", guard(), validate("json", CreateColumnInput), async (c) => {
-    const projectId = c.req.param("projectId");
+  .post("/:id/boards/:boardId/columns", guard(), validate("json", CreateColumnInput), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
     const body = c.req.valid("json");
-    const result = await CreateColumnUseCase.execute(currentUser.id, projectId, body);
+    const result = await CreateColumnUseCase.execute(currentUser.id, projectId, boardId, body);
 
     return result.match({
       ok: (column) => c.json(column),
       err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
     });
   })
-  .patch("/:projectId/columns/reorder", guard(), validate("json", ReorderColumnsInput), async (c) => {
-    const projectId = c.req.param("projectId");
+  .patch("/:id/boards/:boardId/columns/reorder", guard(), validate("json", ReorderColumnsInput), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
     const currentUser = c.get("user");
     const body = c.req.valid("json");
-    const result = await ReorderColumnsUseCase.execute(currentUser.id, projectId, body.columnIds);
+    const result = await ReorderColumnsUseCase.execute(currentUser.id, projectId, boardId, body.columnIds);
 
     return result.match({
       ok: (response) => c.json(response),
       err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
     });
   })
-  .patch("/:projectId/columns/:columnId", guard(), validate("json", UpdateColumnInput), async (c) => {
-    const projectId = c.req.param("projectId");
+  .patch("/:id/boards/:boardId/columns/:columnId", guard(), validate("json", UpdateColumnInput), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
     const columnId = c.req.param("columnId");
     const currentUser = c.get("user");
     const body = c.req.valid("json");
-    const result = await UpdateColumnUseCase.execute(currentUser.id, projectId, columnId, body);
+    const result = await UpdateColumnUseCase.execute(currentUser.id, projectId, boardId, columnId, body);
 
     return result.match({
       ok: (column) => c.json(column),
       err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
     });
   })
-  .delete("/:projectId/columns/:columnId", guard(), async (c) => {
-    const projectId = c.req.param("projectId");
+  .delete("/:id/boards/:boardId/columns/:columnId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
     const columnId = c.req.param("columnId");
     const currentUser = c.get("user");
-    const result = await DeleteColumnUseCase.execute(currentUser.id, projectId, columnId);
+    const result = await DeleteColumnUseCase.execute(currentUser.id, projectId, boardId, columnId);
 
     return result.match({
       ok: (response) => c.json(response),

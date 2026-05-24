@@ -1,12 +1,11 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, ForbiddenError, NotFoundError } from "@/server/lib";
-import { columnRepository } from "@/server/repositories";
-import { taskRepository } from "@/server/repositories";
-import { assertProjectAccess } from "./project-access";
+import { columnRepository, taskRepository } from "@/server/repositories";
+import { assertBoardAccess } from "./project-access";
 
 export class DeleteColumnUseCase {
-  static async execute(userId: string, projectId: string, columnId: string) {
-    const accessResult = await assertProjectAccess(userId, projectId);
+  static async execute(userId: string, projectId: string, boardId: string, columnId: string) {
+    const accessResult = await assertBoardAccess(userId, projectId, boardId);
     if (accessResult.isErr()) return err(accessResult.error);
 
     const { membership } = accessResult.unwrap();
@@ -16,7 +15,7 @@ export class DeleteColumnUseCase {
     if (columnResult.isErr()) return err(columnResult.error);
 
     const column = columnResult.unwrap();
-    if (!column || column.length === 0 || column[0].projectId !== projectId) return err(new NotFoundError("Column"));
+    if (!column || column.length === 0 || column[0].boardId !== boardId) return err(new NotFoundError("Column"));
 
     const deleteTasksResult = await taskRepository.deleteByColumn(columnId);
     if (deleteTasksResult.isErr()) {

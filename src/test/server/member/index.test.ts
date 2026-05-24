@@ -7,6 +7,7 @@ const { memberRepositoryMock, nanoidMock, taskRepositoryMock } = vi.hoisted(() =
     delete: vi.fn(),
     findById: vi.fn(),
     findByProject: vi.fn(),
+    findByProjectWithUsers: vi.fn(),
     findByUserAndProject: vi.fn(),
     findUserByEmail: vi.fn(),
     findUsers: vi.fn(),
@@ -31,14 +32,20 @@ const { AddMemberUseCase, ListMembersUseCase, RemoveMemberUseCase, UpdateMemberU
   "@/server/use-cases/member"
 );
 
-const joinedAt = new Date("2026-01-01T00:00:00.000Z");
-const ownerMembership = { id: "owner-member", projectId: "project-1", userId: "owner-user", role: "owner", joinedAt };
+const createdAt = new Date("2026-01-01T00:00:00.000Z");
+const ownerMembership = {
+  id: "owner-member",
+  organizationId: "project-1",
+  userId: "owner-user",
+  role: "owner",
+  createdAt,
+};
 const regularMembership = {
   id: "regular-member",
-  projectId: "project-1",
+  organizationId: "project-1",
   userId: "regular-user",
   role: "member",
-  joinedAt,
+  createdAt,
 };
 const regularUser = { id: "regular-user", name: "Regular User", email: "regular@example.com", image: null };
 
@@ -51,8 +58,9 @@ describe("member use cases", () => {
   });
 
   it("lists project members with user details", async () => {
-    memberRepositoryMock.findByProject.mockResolvedValue(ok([regularMembership]));
-    memberRepositoryMock.findUsers.mockResolvedValue(ok([regularUser]));
+    memberRepositoryMock.findByProjectWithUsers.mockResolvedValue(
+      ok([{ member: regularMembership, user: regularUser }]),
+    );
 
     const result = await ListMembersUseCase.execute("owner-user", "project-1");
 
@@ -63,14 +71,15 @@ describe("member use cases", () => {
         userId: "regular-user",
         projectId: "project-1",
         role: "member",
-        joinedAt,
+        createdAt,
+        joinedAt: createdAt,
         user: regularUser,
       },
     ]);
   });
 
   it("wraps member listing failures", async () => {
-    memberRepositoryMock.findByProject.mockResolvedValue(err(new Error("read failed")));
+    memberRepositoryMock.findByProjectWithUsers.mockResolvedValue(err(new Error("read failed")));
 
     const result = await ListMembersUseCase.execute("owner-user", "project-1");
 
@@ -90,7 +99,7 @@ describe("member use cases", () => {
     if (result.isErr()) {
       expect(result.error.statusCode).toBe(403);
     }
-    expect(memberRepositoryMock.findByProject).not.toHaveBeenCalled();
+    expect(memberRepositoryMock.findByProjectWithUsers).not.toHaveBeenCalled();
   });
 
   it("adds a member when requested by an owner or admin", async () => {
@@ -108,7 +117,7 @@ describe("member use cases", () => {
     expect(result.isOk()).toBe(true);
     expect(memberRepositoryMock.create).toHaveBeenCalledWith({
       id: "member-new",
-      projectId: "project-1",
+      organizationId: "project-1",
       userId: "regular-user",
       role: "admin",
     });

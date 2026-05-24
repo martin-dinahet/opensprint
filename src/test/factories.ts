@@ -20,6 +20,7 @@ export function makeProject(overrides: Partial<ProjectListOutput> = {}): Project
     id: "project-1",
     name: "Launch",
     description: "Launch project",
+    defaultBoardId: "board-1",
     createdAt: timestamp,
     updatedAt: timestamp,
     ...overrides,
@@ -44,6 +45,7 @@ export function makeMember(overrides: Partial<MemberWithUserOutput> = {}): Membe
     projectId: "project-1",
     userId: "user-1",
     role: "owner",
+    createdAt: timestamp,
     joinedAt: timestamp,
     user: makeUser(),
     ...overrides,
@@ -54,6 +56,7 @@ export function makeColumn(overrides: Partial<ColumnOutput> = {}): ColumnOutput 
   return {
     id: "column-1",
     projectId: "project-1",
+    boardId: "board-1",
     name: "Todo",
     position: 0,
     createdAt: timestamp,

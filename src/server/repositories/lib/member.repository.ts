@@ -10,12 +10,12 @@ export class MemberRepository {
       db
         .select()
         .from(member)
-        .where(and(eq(member.userId, userId), eq(member.projectId, projectId))),
+        .where(and(eq(member.userId, userId), eq(member.organizationId, projectId))),
     );
   }
 
   async findByProject(projectId: string) {
-    return handle(() => db.select().from(member).where(eq(member.projectId, projectId)));
+    return handle(() => db.select().from(member).where(eq(member.organizationId, projectId)));
   }
 
   async findById(id: string) {
@@ -26,11 +26,11 @@ export class MemberRepository {
     return handle(() => db.select().from(member).where(eq(member.userId, userId)));
   }
 
-  async create(data: Pick<NewMember, "id" | "projectId" | "role" | "userId">) {
+  async create(data: Pick<NewMember, "id" | "organizationId" | "role" | "userId">) {
     return handle(() =>
       db.insert(member).values({
         id: data.id,
-        projectId: data.projectId,
+        organizationId: data.organizationId,
         userId: data.userId,
         role: data.role,
       }),
@@ -46,7 +46,7 @@ export class MemberRepository {
   }
 
   async deleteByProject(projectId: string) {
-    return handle(() => db.delete(member).where(eq(member.projectId, projectId)));
+    return handle(() => db.delete(member).where(eq(member.organizationId, projectId)));
   }
 
   async findUserByEmail(email: string) {
@@ -55,6 +55,16 @@ export class MemberRepository {
 
   async findUsers() {
     return handle(() => db.select().from(user));
+  }
+
+  async findByProjectWithUsers(projectId: string) {
+    return handle(() =>
+      db
+        .select({ member, user })
+        .from(member)
+        .innerJoin(user, eq(member.userId, user.id))
+        .where(eq(member.organizationId, projectId)),
+    );
   }
 }
 

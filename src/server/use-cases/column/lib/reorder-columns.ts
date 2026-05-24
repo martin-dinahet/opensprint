@@ -1,14 +1,14 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError } from "@/server/lib";
 import { columnRepository } from "@/server/repositories";
-import { assertProjectAccess } from "./project-access";
+import { assertBoardAccess } from "./project-access";
 
 export class ReorderColumnsUseCase {
-  static async execute(userId: string, projectId: string, columnIds: string[]) {
-    const accessResult = await assertProjectAccess(userId, projectId);
+  static async execute(userId: string, projectId: string, boardId: string, columnIds: string[]) {
+    const accessResult = await assertBoardAccess(userId, projectId, boardId);
     if (accessResult.isErr()) return err(accessResult.error);
 
-    const columnsResult = await columnRepository.findByProject(projectId);
+    const columnsResult = await columnRepository.findByBoard(boardId);
     if (columnsResult.isErr()) return err(columnsResult.error);
 
     const validColumnIds = new Set(columnsResult.unwrap()?.map((column) => column.id) || []);

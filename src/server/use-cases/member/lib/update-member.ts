@@ -25,6 +25,10 @@ export class UpdateMemberUseCase {
       return err(new NotFoundError("Member"));
     }
 
+    if (targetMember[0].organizationId !== projectId) {
+      return err(new NotFoundError("Member"));
+    }
+
     if (targetMember[0].role === "owner") {
       return err(new ForbiddenError("Cannot change owner's role"));
     }
@@ -38,9 +42,10 @@ export class UpdateMemberUseCase {
     return ok({
       id: targetMember[0].id,
       userId: targetMember[0].userId,
-      projectId: targetMember[0].projectId,
+      projectId: targetMember[0].organizationId,
       role: input.role,
-      joinedAt: targetMember[0].joinedAt,
+      createdAt: targetMember[0].createdAt,
+      joinedAt: targetMember[0].createdAt,
     });
   }
 }

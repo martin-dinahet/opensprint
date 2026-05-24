@@ -9,15 +9,15 @@ export class ColumnRepository {
     return handle(() => db.select().from(column).where(eq(column.id, id)));
   }
 
-  async findByProject(projectId: string) {
-    return handle(() => db.select().from(column).where(eq(column.projectId, projectId)).orderBy(asc(column.position)));
+  async findByBoard(boardId: string) {
+    return handle(() => db.select().from(column).where(eq(column.boardId, boardId)).orderBy(asc(column.position)));
   }
 
-  async create(data: Pick<NewColumn, "id" | "name" | "position" | "projectId">) {
+  async create(data: Pick<NewColumn, "boardId" | "id" | "name" | "position">) {
     return handle(() =>
       db.insert(column).values({
         id: data.id,
-        projectId: data.projectId,
+        boardId: data.boardId,
         name: data.name,
         position: data.position,
       }),

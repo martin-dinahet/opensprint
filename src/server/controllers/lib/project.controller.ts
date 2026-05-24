@@ -1,7 +1,14 @@
 import { Hono } from "hono";
-import { guard } from "@/server/lib";
-import { validate } from "@/server/lib";
+import { guard, validate } from "@/server/lib";
 import type { ServerVariables } from "@/server/types";
+import {
+  CreateBoardUseCase,
+  DeleteBoardUseCase,
+  GetBoardUseCase,
+  ListBoardsUseCase,
+  UpdateBoardUseCase,
+} from "@/server/use-cases/board";
+import { CreateBoardInput, UpdateBoardInput } from "@/server/use-cases/board/dto";
 import {
   AddMemberUseCase,
   ListMembersUseCase,
@@ -27,6 +34,8 @@ import { CreateProjectTaskTagInput, UpdateProjectTaskTagInput } from "@/server/u
 
 const CreateProjectSchema = CreateProjectInput;
 const UpdateProjectSchema = UpdateProjectInput;
+const CreateBoardSchema = CreateBoardInput;
+const UpdateBoardSchema = UpdateBoardInput;
 const AddMemberSchema = AddMemberInput;
 const UpdateMemberSchema = UpdateMemberInput;
 const CreateProjectTaskTagSchema = CreateProjectTaskTagInput;
@@ -86,6 +95,71 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
 
     const result = await DeleteProjectUseCase.execute(currentUser.id, projectId);
+
+    return result.match({
+      ok: (response) => c.json(response),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .get("/:id/boards", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+
+    const result = await ListBoardsUseCase.execute(currentUser.id, projectId);
+
+    return result.match({
+      ok: (boards) => c.json({ boards }),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .post("/:id/boards", guard(), validate("json", CreateBoardSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    const result = await CreateBoardUseCase.execute(currentUser.id, projectId, body);
+
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .get("/:id/boards/:boardId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
+    const currentUser = c.get("user");
+
+    const result = await GetBoardUseCase.execute(currentUser.id, projectId, boardId);
+
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .patch("/:id/boards/:boardId", guard(), validate("json", UpdateBoardSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    const result = await UpdateBoardUseCase.execute(currentUser.id, projectId, boardId, body);
+
+    return result.match({
+      ok: (board) => c.json(board),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .delete("/:id/boards/:boardId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const boardId = c.req.param("boardId");
+    const currentUser = c.get("user");
+
+    const result = await DeleteBoardUseCase.execute(currentUser.id, projectId, boardId);
 
     return result.match({
       ok: (response) => c.json(response),

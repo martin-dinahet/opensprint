@@ -1,9 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError, UnauthorizedError } from "@/server/lib";
-import { memberRepository } from "@/server/repositories";
-import { taskRepository } from "@/server/repositories";
-import { assertColumnAccess } from "./column-access";
+import { memberRepository, taskRepository } from "@/server/repositories";
 import type { AssignTaskInput } from "../dto";
+import { assertColumnAccess } from "./column-access";
 
 export class AssignTaskUseCase {
   static async execute(userId: string, taskId: string, input: AssignTaskInput) {
@@ -17,7 +16,7 @@ export class AssignTaskUseCase {
 
     const accessResult = await assertColumnAccess(userId, task[0].columnId);
     if (accessResult.isErr()) return err(accessResult.error);
-    const { column, membership } = accessResult.unwrap();
+    const { membership, projectId } = accessResult.unwrap();
 
     if (membership.role === "member") {
       return err(new UnauthorizedError("Not authorized"));
@@ -28,7 +27,7 @@ export class AssignTaskUseCase {
       if (assigneeResult.isErr()) return err(assigneeResult.error);
 
       const assignee = assigneeResult.unwrap();
-      if (!assignee || assignee.length === 0 || assignee[0].projectId !== column.projectId) {
+      if (!assignee || assignee.length === 0 || assignee[0].organizationId !== projectId) {
         return err(new NotFoundError("Assignee"));
       }
     }

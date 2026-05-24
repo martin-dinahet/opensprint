@@ -37,7 +37,7 @@ export class AddMemberUseCase {
 
     const addMemberResult = await memberRepository.create({
       id: memberId,
-      projectId,
+      organizationId: projectId,
       userId: targetUser[0].id,
       role: input.role,
     });
@@ -51,7 +51,7 @@ export class AddMemberUseCase {
       userId: targetUser[0].id,
       projectId,
       role: input.role,
-      joinedAt: new Date(),
+      createdAt: new Date(),
     });
   }
 }

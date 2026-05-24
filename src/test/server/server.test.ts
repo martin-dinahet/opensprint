@@ -176,7 +176,7 @@ describe("server routes", () => {
 
   it("routes project creation and deletion requests", async () => {
     projectUseCasesMock.CreateProjectUseCase.execute.mockResolvedValue(
-      ok({ id: "project-new", name: "New project", description: null }),
+      ok({ id: "project-new", name: "New project", description: null, defaultBoardId: "board-new" }),
     );
     projectUseCasesMock.DeleteProjectUseCase.execute.mockResolvedValue(ok({ success: true }));
 
@@ -199,11 +199,13 @@ describe("server routes", () => {
     columnUseCasesMock.ListColumnsUseCase.execute.mockResolvedValue(ok([makeColumn()]));
 
     const client = createHonoTestClient(server);
-    const response = await client.api.projects[":projectId"].columns.$get({ param: { projectId: "project-1" } });
+    const response = await client.api.projects[":id"].boards[":boardId"].columns.$get({
+      param: { id: "project-1", boardId: "board-1" },
+    });
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ columns: [makeColumn()] });
-    expect(columnUseCasesMock.ListColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
+    expect(columnUseCasesMock.ListColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "board-1");
   });
 
   it("routes column create, update, and delete requests", async () => {
@@ -214,38 +216,49 @@ describe("server routes", () => {
     columnUseCasesMock.DeleteColumnUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
-    await client.api.projects[":projectId"].columns.$post({
-      param: { projectId: "project-1" },
+    await client.api.projects[":id"].boards[":boardId"].columns.$post({
+      param: { id: "project-1", boardId: "board-1" },
       json: { name: "Doing" },
     });
-    await client.api.projects[":projectId"].columns[":columnId"].$patch({
-      param: { projectId: "project-1", columnId: "column-1" },
+    await client.api.projects[":id"].boards[":boardId"].columns[":columnId"].$patch({
+      param: { id: "project-1", boardId: "board-1", columnId: "column-1" },
       json: { name: "Done" },
     });
-    await client.api.projects[":projectId"].columns[":columnId"].$delete({
-      param: { projectId: "project-1", columnId: "column-1" },
+    await client.api.projects[":id"].boards[":boardId"].columns[":columnId"].$delete({
+      param: { id: "project-1", boardId: "board-1", columnId: "column-1" },
     });
 
-    expect(columnUseCasesMock.CreateColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
+    expect(columnUseCasesMock.CreateColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "board-1", {
       name: "Doing",
     });
-    expect(columnUseCasesMock.UpdateColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "column-1", {
-      name: "Done",
-    });
-    expect(columnUseCasesMock.DeleteColumnUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "column-1");
+    expect(columnUseCasesMock.UpdateColumnUseCase.execute).toHaveBeenCalledWith(
+      "user-1",
+      "project-1",
+      "board-1",
+      "column-1",
+      {
+        name: "Done",
+      },
+    );
+    expect(columnUseCasesMock.DeleteColumnUseCase.execute).toHaveBeenCalledWith(
+      "user-1",
+      "project-1",
+      "board-1",
+      "column-1",
+    );
   });
 
   it("routes column reorder requests", async () => {
     columnUseCasesMock.ReorderColumnsUseCase.execute.mockResolvedValue(ok({ success: true }));
 
     const client = createHonoTestClient(server);
-    const response = await client.api.projects[":projectId"].columns.reorder.$patch({
-      param: { projectId: "project-1" },
+    const response = await client.api.projects[":id"].boards[":boardId"].columns.reorder.$patch({
+      param: { id: "project-1", boardId: "board-1" },
       json: { columnIds: ["column-2", "column-1"] },
     });
 
     expect(response.status).toBe(200);
-    expect(columnUseCasesMock.ReorderColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", [
+    expect(columnUseCasesMock.ReorderColumnsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "board-1", [
       "column-2",
       "column-1",
     ]);

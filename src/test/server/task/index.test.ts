@@ -2,6 +2,7 @@ import { err, ok } from "@punpun-dev/ts-result";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  boardRepositoryMock,
   columnRepositoryMock,
   memberRepositoryMock,
   nanoidMock,
@@ -10,6 +11,9 @@ const {
   taskRepositoryMock,
   taskTagRepositoryMock,
 } = vi.hoisted(() => ({
+  boardRepositoryMock: {
+    findById: vi.fn(),
+  },
   columnRepositoryMock: {
     findById: vi.fn(),
   },
@@ -57,6 +61,7 @@ vi.mock("nanoid", () => ({
 }));
 
 vi.mock("@/server/repositories", () => ({
+  boardRepository: boardRepositoryMock,
   columnRepository: columnRepositoryMock,
   memberRepository: memberRepositoryMock,
   projectRepository: projectRepositoryMock,
@@ -86,16 +91,23 @@ const {
 } = await import("@/server/use-cases/task");
 
 const now = new Date("2026-01-01T00:00:00.000Z");
-const column = { id: "column-1", projectId: "project-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
+const board = { id: "board-1", projectId: "project-1", name: "Board", position: 0, createdAt: now, updatedAt: now };
+const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
 const targetColumn = { ...column, id: "column-2", position: 1 };
 const project = { id: "project-1", name: "Launch", description: null, createdAt: now, updatedAt: now };
-const ownerMembership = { id: "member-1", projectId: "project-1", userId: "user-1", role: "owner", joinedAt: now };
+const ownerMembership = {
+  id: "member-1",
+  organizationId: "project-1",
+  userId: "user-1",
+  role: "owner",
+  createdAt: now,
+};
 const assigneeMembership = {
   id: "assignee-member",
-  projectId: "project-1",
+  organizationId: "project-1",
   userId: "user-2",
   role: "member",
-  joinedAt: now,
+  createdAt: now,
 };
 const task = {
   id: "task-1",
@@ -132,6 +144,7 @@ describe("task use cases", () => {
     vi.clearAllMocks();
     nanoidMock.mockReturnValue("task-new");
     columnRepositoryMock.findById.mockResolvedValue(ok([column]));
+    boardRepositoryMock.findById.mockResolvedValue(ok([board]));
     projectRepositoryMock.findById.mockResolvedValue(ok([project]));
     memberRepositoryMock.findByUserAndProject.mockResolvedValue(ok([ownerMembership]));
     taskRepositoryMock.updatePosition.mockResolvedValue(ok(undefined));
@@ -272,7 +285,7 @@ describe("task use cases", () => {
   });
 
   it("rejects task creation when the assignee is outside the project", async () => {
-    memberRepositoryMock.findById.mockResolvedValue(ok([{ ...assigneeMembership, projectId: "other-project" }]));
+    memberRepositoryMock.findById.mockResolvedValue(ok([{ ...assigneeMembership, organizationId: "other-project" }]));
 
     const result = await CreateTaskUseCase.execute("user-1", "column-1", {
       title: "Review PR",

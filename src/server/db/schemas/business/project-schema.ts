@@ -1,29 +1,23 @@
 import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-export const project = pgTable(
-  "project",
+export const organization = pgTable(
+  "organization",
   {
-    // ID
-    id: text("id") //
-      .primaryKey(),
-    // NAME
-    name: text("name") //
-      .notNull(),
-    // DESCRIPTION
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    logo: text("logo"),
+    metadata: text("metadata"),
     description: text("description"),
-    // CREATED_AT
-    createdAt: timestamp("created_at") //
-      .defaultNow()
-      .notNull(),
-    // UPDATED_AT
-    updatedAt: timestamp("updated_at") //
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("project_name_idx").on(table.name)],
+  (table) => [index("organization_name_idx").on(table.name), index("organization_slug_idx").on(table.slug)],
 );
 
-export type Project = typeof project.$inferSelect;
-export type NewProject = typeof project.$inferInsert;
-export type ProjectUpdate = Partial<Omit<NewProject, "createdAt" | "id" | "updatedAt">>;
+export type Project = typeof organization.$inferSelect;
+export type NewProject = typeof organization.$inferInsert;
+export type ProjectUpdate = Partial<Omit<NewProject, "createdAt" | "id" | "metadata" | "slug" | "updatedAt">>;
