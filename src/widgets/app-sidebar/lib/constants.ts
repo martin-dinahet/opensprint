@@ -3,18 +3,18 @@ import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 export const collapsedTextClass = "group-data-[collapsible=icon]:hidden";
 
 export const sidebarNavButtonClass =
-  "h-8 rounded-md px-2.5 font-normal text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground";
+  "h-8 rounded-none border border-transparent px-2 font-medium text-sidebar-foreground/75 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-active:border-sidebar-border data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground group-data-[collapsible=icon]:mx-auto";
 
 export const sidebarSubNavButtonClass =
-  "h-7 rounded-md px-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground";
+  "h-7 rounded-none border border-transparent px-2 text-sidebar-foreground/70 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-active:border-sidebar-border data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground";
 
-export const sidebarSectionClass = "px-2 py-0.5 group-data-[collapsible=icon]:px-2";
+export const sidebarSectionClass = "px-0 py-0 group-data-[collapsible=icon]:px-0";
 
 export const sidebarSectionTriggerClass =
-  "h-7 rounded-md px-2 text-sidebar-foreground/55 text-xs font-medium hover:bg-sidebar-accent/45 hover:text-sidebar-foreground group-data-[collapsible=icon]:hidden";
+  "h-8 rounded-none border border-sidebar-border bg-sidebar px-2 font-black text-[0.68rem] text-sidebar-foreground uppercase hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden";
 
 export const sidebarSectionLabelClass =
-  "px-2 pb-1 text-[0.68rem] font-medium text-sidebar-foreground/45 group-data-[collapsible=icon]:hidden";
+  "px-2 pb-1 font-black text-[0.68rem] text-sidebar-foreground/55 uppercase group-data-[collapsible=icon]:hidden";
 
 export const projectListLimit = 10;
 

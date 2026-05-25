@@ -34,11 +34,11 @@ export function ProjectList() {
         <CollapsibleTrigger
           className={`group/section flex w-full items-center justify-between ${sidebarSectionTriggerClass}`}
         >
-          Projects
+          Workspace
           <Icon icon={SectionIcon} className="size-3.5" />
         </CollapsibleTrigger>
-        <CollapsibleContent className="min-h-0 flex-1">
-          <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <CollapsibleContent className="min-h-0 flex-1 border-sidebar-border border-x border-b group-data-[collapsible=icon]:border-0">
+          <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto p-1 group-data-[collapsible=icon]:p-0">
             <SidebarMenu className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -48,7 +48,7 @@ export function ProjectList() {
                   onClick={openCreateProject}
                 >
                   <Icon icon={PlusIcon} />
-                  <span className={collapsedTextClass}>New Project</span>
+                  <span className={`${collapsedTextClass} uppercase`}>New Project</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {isProjectsLoading
