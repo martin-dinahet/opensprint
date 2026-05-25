@@ -9,6 +9,10 @@ vi.mock("../model", () => ({
   useDashboardHeaderState: vi.fn(),
 }));
 
+vi.mock("@/features/invitation-notifications", () => ({
+  InvitationNotificationBell: () => <button type="button">Notifications</button>,
+}));
+
 function Wrapper({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>

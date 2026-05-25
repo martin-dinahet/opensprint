@@ -1,13 +1,18 @@
 "use client";
 
-import { Loader2Icon, MoreHorizontalIcon, PlusIcon, Trash2Icon, UserPlusIcon } from "lucide-react";
+import { Loader2Icon, MailPlusIcon, MoreHorizontalIcon, Trash2Icon, UserPlusIcon, XIcon } from "lucide-react";
 import { use, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import {
+  type InvitationOutput,
+  useCancelInvitation,
+  useCreateInvitation,
+  useProjectInvitations,
+} from "@/entities/invitation";
+import {
   type MemberRole,
   type MemberWithUserOutput,
-  useAddMember,
   useMembers,
   useRemoveMember,
   useUpdateMember,
@@ -69,29 +74,31 @@ export default function Page({ params }: Props) {
   const { id: projectId } = use(params);
   const session = authClient.useSession();
   const { data: members = [], isLoading } = useMembers(projectId);
-  const addMember = useAddMember(projectId);
   const updateMember = useUpdateMember(projectId);
   const removeMember = useRemoveMember(projectId);
   const { data: project } = useProject(projectId);
-  const [addOpen, setAddOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<MemberWithUserOutput | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [pending, startTransition] = useTransition();
   const currentMember = members.find((member) => member.userId === session.data?.user.id);
   const canManageMembers = currentMember?.role === "owner" || currentMember?.role === "admin";
   const canChangeRoles = currentMember?.role === "owner";
+  const createInvitation = useCreateInvitation(projectId);
+  const cancelInvitation = useCancelInvitation(projectId);
+  const { data: invitations = [], isLoading: invitationsLoading } = useProjectInvitations(projectId, canManageMembers);
   const header = useMemo(
     () => ({
       title: "Access table",
-      description: "Manage roles, permissions, and removal risk for this project.",
+      description: "Manage roles, invitations, and removal risk for this project.",
       eyebrow: project?.name ?? "Project",
       actions: (
         <>
           <ProjectTabs activeTab="members" projectId={projectId} />
           {canManageMembers ? (
-            <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Button size="sm" onClick={() => setInviteOpen(true)}>
               <UserPlusIcon />
-              Add member
+              Invite member
             </Button>
           ) : null}
         </>
@@ -111,11 +118,14 @@ export default function Page({ params }: Props) {
         return;
       }
 
-      const result = await handleClientResult(() => addMember.mutateAsync(parsed.data), "Unable to add member");
+      const result = await handleClientResult(
+        () => createInvitation.mutateAsync(parsed.data),
+        "Unable to send invitation",
+      );
       result.match({
         ok: () => {
-          toast.success("Member added");
-          setAddOpen(false);
+          toast.success("Invitation sent");
+          setInviteOpen(false);
         },
         err: (error) => toast.error(error.message),
       });
@@ -145,10 +155,21 @@ export default function Page({ params }: Props) {
     });
   };
 
+  const cancelSelectedInvitation = async (invitation: InvitationOutput) => {
+    const result = await handleClientResult(
+      () => cancelInvitation.mutateAsync(invitation.id),
+      "Unable to cancel invitation",
+    );
+    result.match({
+      ok: () => toast.success("Invitation canceled"),
+      err: (error) => toast.error(error.message),
+    });
+  };
+
   return (
     <>
       <main className="flex-1 p-4 sm:p-6">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6">
           {isLoading ? (
             <LoadingScreen />
           ) : (
@@ -220,21 +241,92 @@ export default function Page({ params }: Props) {
               </Table>
             </div>
           )}
+          {canManageMembers ? (
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-semibold text-sm">Pending invitations</h2>
+                  <p className="text-muted-foreground text-xs">Invites awaiting a response from existing users.</p>
+                </div>
+                <Badge variant="outline">{invitations.length}</Badge>
+              </div>
+              <div className="overflow-hidden border-2 bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead>Expires</TableHead>
+                      <TableHead className="w-12" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invitationsLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                          Loading invitations…
+                        </TableCell>
+                      </TableRow>
+                    ) : invitations.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                          No pending invitations
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      invitations.map((invitation) => (
+                        <TableRow key={invitation.id}>
+                          <TableCell>
+                            <div className="flex min-w-0 items-center gap-3">
+                              <MailPlusIcon className="shrink-0 text-muted-foreground" />
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">{invitation.email}</p>
+                                <p className="truncate text-muted-foreground text-xs">
+                                  Invited by {invitation.inviter.name || invitation.inviter.email}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <RoleBadge role={invitation.role} />
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(invitation.createdAt)}</TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(invitation.expiresAt)}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => cancelSelectedInvitation(invitation)}
+                              disabled={cancelInvitation.isPending}
+                            >
+                              <XIcon />
+                              <span className="sr-only">Cancel invitation</span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
 
       <Dialog
-        open={addOpen}
+        open={inviteOpen}
         onOpenChange={(open) => {
           if (!open) setFieldErrors(null);
-          setAddOpen(open);
+          setInviteOpen(open);
         }}
       >
         <DialogContent>
           <form action={inviteMember}>
             <DialogHeader>
-              <DialogTitle>Add member</DialogTitle>
-              <DialogDescription>Add an existing OpenSprint user to this project.</DialogDescription>
+              <DialogTitle>Invite member</DialogTitle>
+              <DialogDescription>Send an invitation to an existing OpenSprint user.</DialogDescription>
             </DialogHeader>
             <FieldGroup className="py-4">
               <Field data-invalid={!!fieldErrors?.email}>
@@ -252,9 +344,9 @@ export default function Page({ params }: Props) {
               </Field>
             </FieldGroup>
             <DialogFooter>
-              <Button type="submit" disabled={pending || addMember.isPending}>
-                {pending || addMember.isPending ? <Loader2Icon className="animate-spin" /> : <PlusIcon />}
-                Add member
+              <Button type="submit" disabled={pending || createInvitation.isPending}>
+                {pending || createInvitation.isPending ? <Loader2Icon className="animate-spin" /> : <UserPlusIcon />}
+                Send invite
               </Button>
             </DialogFooter>
           </form>
@@ -284,4 +376,8 @@ export default function Page({ params }: Props) {
 function RoleBadge({ role }: { role: MemberRole }) {
   const variant = role === "owner" ? "default" : role === "admin" ? "secondary" : "outline";
   return <Badge variant={variant}>{role}</Badge>;
+}
+
+function formatDate(date: string | Date) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(date));
 }

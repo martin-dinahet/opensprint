@@ -4,7 +4,14 @@ import { AppError } from "@/server/lib";
 import { createHonoTestClient } from "@/test/backend";
 import { makeColumn, makeProject, makeTask, makeUser } from "@/test/factories";
 
-const { authMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, taskUseCasesMock } = vi.hoisted(() => ({
+const {
+  authMock,
+  columnUseCasesMock,
+  invitationUseCasesMock,
+  memberUseCasesMock,
+  projectUseCasesMock,
+  taskUseCasesMock,
+} = vi.hoisted(() => ({
   authMock: {
     api: {
       getSession: vi.fn(),
@@ -30,6 +37,14 @@ const { authMock, columnUseCasesMock, memberUseCasesMock, projectUseCasesMock, t
     ListMembersUseCase: { execute: vi.fn() },
     RemoveMemberUseCase: { execute: vi.fn() },
     UpdateMemberUseCase: { execute: vi.fn() },
+  },
+  invitationUseCasesMock: {
+    AcceptInvitationUseCase: { execute: vi.fn() },
+    CancelInvitationUseCase: { execute: vi.fn() },
+    CreateInvitationUseCase: { execute: vi.fn() },
+    DeclineInvitationUseCase: { execute: vi.fn() },
+    ListProjectInvitationsUseCase: { execute: vi.fn() },
+    ListUserInvitationsUseCase: { execute: vi.fn() },
   },
   taskUseCasesMock: {
     AssignTaskUseCase: { execute: vi.fn() },
@@ -79,6 +94,7 @@ vi.mock("@/server/lib", async () => {
 vi.mock("@/server/use-cases/project", () => projectUseCasesMock);
 vi.mock("@/server/use-cases/column", () => columnUseCasesMock);
 vi.mock("@/server/use-cases/member", () => memberUseCasesMock);
+vi.mock("@/server/use-cases/invitation", () => invitationUseCasesMock);
 vi.mock("@/server/use-cases/task", () => taskUseCasesMock);
 
 const { server } = await import("@/server");
@@ -318,6 +334,68 @@ describe("server routes", () => {
       role: "admin",
     });
     expect(memberUseCasesMock.RemoveMemberUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", "member-1");
+  });
+
+  it("routes project invitation list, create, and cancel requests", async () => {
+    invitationUseCasesMock.ListProjectInvitationsUseCase.execute.mockResolvedValue(ok([]));
+    invitationUseCasesMock.CreateInvitationUseCase.execute.mockResolvedValue(
+      ok({
+        id: "invitation-1",
+        projectId: "project-1",
+        email: "invitee@example.com",
+        role: "member",
+        status: "pending",
+        expiresAt: new Date("2026-01-08T00:00:00.000Z"),
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      }),
+    );
+    invitationUseCasesMock.CancelInvitationUseCase.execute.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.projects[":id"].invitations.$get({ param: { id: "project-1" } });
+    await client.api.projects[":id"].invitations.$post({
+      param: { id: "project-1" },
+      json: { email: "invitee@example.com", role: "member" },
+    });
+    await client.api.projects[":id"].invitations[":invitationId"].$delete({
+      param: { id: "project-1", invitationId: "invitation-1" },
+    });
+
+    expect(invitationUseCasesMock.ListProjectInvitationsUseCase.execute).toHaveBeenCalledWith("user-1", "project-1");
+    expect(invitationUseCasesMock.CreateInvitationUseCase.execute).toHaveBeenCalledWith("user-1", "project-1", {
+      email: "invitee@example.com",
+      role: "member",
+    });
+    expect(invitationUseCasesMock.CancelInvitationUseCase.execute).toHaveBeenCalledWith(
+      "user-1",
+      "project-1",
+      "invitation-1",
+    );
+  });
+
+  it("routes current user invitation responses", async () => {
+    invitationUseCasesMock.ListUserInvitationsUseCase.execute.mockResolvedValue(ok([]));
+    invitationUseCasesMock.AcceptInvitationUseCase.execute.mockResolvedValue(
+      ok({ id: "member-1", projectId: "project-1", userId: "user-1", role: "member" }),
+    );
+    invitationUseCasesMock.DeclineInvitationUseCase.execute.mockResolvedValue(ok({ success: true }));
+
+    const client = createHonoTestClient(server);
+    await client.api.invitations.$get();
+    await client.api.invitations[":invitationId"].accept.$post({ param: { invitationId: "invitation-1" } });
+    await client.api.invitations[":invitationId"].decline.$post({ param: { invitationId: "invitation-1" } });
+
+    expect(invitationUseCasesMock.ListUserInvitationsUseCase.execute).toHaveBeenCalledWith("test@example.com");
+    expect(invitationUseCasesMock.AcceptInvitationUseCase.execute).toHaveBeenCalledWith(
+      "user-1",
+      "test@example.com",
+      "invitation-1",
+    );
+    expect(invitationUseCasesMock.DeclineInvitationUseCase.execute).toHaveBeenCalledWith(
+      "user-1",
+      "test@example.com",
+      "invitation-1",
+    );
   });
 
   it("routes project task tag list, create, update, and delete requests", async () => {

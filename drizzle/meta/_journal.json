@@ -50,6 +50,13 @@
       "when": 1779664648150,
       "tag": "0006_awesome_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779707445181,
+      "tag": "0007_shocking_blob",
+      "breakpoints": true
     }
   ]
 }

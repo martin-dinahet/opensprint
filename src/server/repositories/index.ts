@@ -1,6 +1,7 @@
 export {
   boardRepository,
   columnRepository,
+  invitationRepository,
   memberRepository,
   projectRepository,
   taskItemRepository,

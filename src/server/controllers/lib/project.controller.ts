@@ -17,6 +17,12 @@ import {
 } from "@/server/use-cases/member";
 import { AddMemberInput, UpdateMemberInput } from "@/server/use-cases/member/dto";
 import {
+  CancelInvitationUseCase,
+  CreateInvitationUseCase,
+  ListProjectInvitationsUseCase,
+} from "@/server/use-cases/invitation";
+import { CreateInvitationInput } from "@/server/use-cases/invitation/dto";
+import {
   CreateProjectUseCase,
   DeleteProjectUseCase,
   GetProjectUseCase,
@@ -37,6 +43,7 @@ const UpdateProjectSchema = UpdateProjectInput;
 const CreateBoardSchema = CreateBoardInput;
 const UpdateBoardSchema = UpdateBoardInput;
 const AddMemberSchema = AddMemberInput;
+const CreateInvitationSchema = CreateInvitationInput;
 const UpdateMemberSchema = UpdateMemberInput;
 const CreateProjectTaskTagSchema = CreateProjectTaskTagInput;
 const UpdateProjectTaskTagSchema = UpdateProjectTaskTagInput;
@@ -213,6 +220,44 @@ export const projectController = new Hono<ServerVariables>() //
     const currentUser = c.get("user");
 
     const result = await RemoveMemberUseCase.execute(currentUser.id, projectId, memberId);
+
+    return result.match({
+      ok: (response) => c.json(response),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .get("/:id/invitations", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+
+    const result = await ListProjectInvitationsUseCase.execute(currentUser.id, projectId);
+
+    return result.match({
+      ok: (invitations) => c.json({ invitations }),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .post("/:id/invitations", guard(), validate("json", CreateInvitationSchema), async (c) => {
+    const projectId = c.req.param("id");
+    const currentUser = c.get("user");
+    const body = c.req.valid("json");
+
+    const result = await CreateInvitationUseCase.execute(currentUser.id, projectId, body);
+
+    return result.match({
+      ok: (invitation) => c.json(invitation),
+      err: (error) => c.json({ success: false, errors: { root: error.message } }, { status: error.statusCode }),
+    });
+  })
+
+  .delete("/:id/invitations/:invitationId", guard(), async (c) => {
+    const projectId = c.req.param("id");
+    const invitationId = c.req.param("invitationId");
+    const currentUser = c.get("user");
+
+    const result = await CancelInvitationUseCase.execute(currentUser.id, projectId, invitationId);
 
     return result.match({
       ok: (response) => c.json(response),

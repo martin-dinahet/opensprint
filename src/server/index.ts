@@ -4,6 +4,7 @@ import {
   authController,
   columnController,
   healthController,
+  invitationController,
   projectController,
   taskController,
   taskManagementController,
@@ -20,6 +21,7 @@ const app = new Hono<ServerVariables>()
   .basePath("/api")
   .route("/health", healthController)
   .route("/auth", authController)
+  .route("/invitations", invitationController)
   .route("/projects", projectController)
   .route("/projects", columnController)
   .route("/columns", taskController)

@@ -1,5 +1,6 @@
 export { boardRepository } from "./board.repository";
 export { columnRepository } from "./column.repository";
+export { invitationRepository } from "./invitation.repository";
 export { memberRepository } from "./member.repository";
 export { projectRepository } from "./project.repository";
 export { taskRepository } from "./task.repository";

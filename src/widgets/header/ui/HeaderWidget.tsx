@@ -1,6 +1,7 @@
 "use client";
 
 import type { FC } from "react";
+import { InvitationNotificationBell } from "@/features/invitation-notifications";
 import { SidebarTrigger } from "@/shared";
 import { useDashboardHeaderState } from "../model";
 
@@ -22,7 +23,10 @@ export const HeaderWidget: FC = () => {
           ) : null}
         </div>
       </div>
-      <div className="flex h-8 min-w-0 shrink-0 items-center gap-2 overflow-x-auto">{actions}</div>
+      <div className="flex h-8 min-w-0 shrink-0 items-center gap-2 overflow-x-auto">
+        <InvitationNotificationBell />
+        {actions}
+      </div>
     </header>
   );
 };
