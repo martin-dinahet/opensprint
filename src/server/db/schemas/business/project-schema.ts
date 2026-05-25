@@ -1,4 +1,6 @@
-import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const projectStatusEnum = pgEnum("project_status", ["active", "paused", "archived"]);
 
 export const organization = pgTable(
   "organization",
@@ -9,6 +11,7 @@ export const organization = pgTable(
     logo: text("logo"),
     metadata: text("metadata"),
     description: text("description"),
+    status: projectStatusEnum("status").default("active").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

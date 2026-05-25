@@ -15,6 +15,8 @@ export type TaskWithDetails = {
   dueDate: Date | null;
   id: string;
   items: TaskItem[];
+  kind: Task["kind"];
+  estimate: number | null;
   position: number;
   priority: Task["priority"];
   tags: ProjectTaskTag[];
@@ -49,6 +51,8 @@ export const buildTaskOutputs = async (tasks: Task[]) => {
       title: task.title,
       description: task.description,
       priority: task.priority,
+      kind: task.kind,
+      estimate: task.estimate,
       position: task.position,
       dueDate: task.dueDate ? serializeDate(task.dueDate) : null,
       createdAt: serializeDate(task.createdAt),

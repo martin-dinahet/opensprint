@@ -26,10 +26,11 @@ export const SignInForm: FC = () => {
   const { action, fieldErrors, globalError, pending, submittedValues } = useSignInForm();
 
   return (
-    <div>
-      <Card className="w-xs">
+    <div className="w-full max-w-sm">
+      <div className="mb-4 border-2 bg-card px-3 py-2 font-black text-xs uppercase">OpenSprint access</div>
+      <Card className="w-full border-2 shadow-none">
         <CardHeader className="space-y-1">
-          <CardTitle className="font-semibold text-2xl tracking-tight">Sign in</CardTitle>
+          <CardTitle className="font-black text-2xl tracking-tight uppercase">Sign in</CardTitle>
           <CardDescription>Enter your email and password to access your account.</CardDescription>
         </CardHeader>
 

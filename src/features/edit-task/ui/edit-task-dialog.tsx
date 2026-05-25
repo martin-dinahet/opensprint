@@ -27,13 +27,17 @@ export const EditTaskDialog = ({ members, onOpenChange, open, task }: Props) => 
     action,
     assigneeId,
     description,
+    estimate,
     fieldErrors,
     globalError,
+    kind,
     pending,
     priority,
     reset,
     setAssigneeId,
     setDescription,
+    setEstimate,
+    setKind,
     setPriority,
     setTitle,
     title,
@@ -65,10 +69,14 @@ export const EditTaskDialog = ({ members, onOpenChange, open, task }: Props) => 
               description={description}
               disabled={pending}
               errors={fieldErrors}
+              estimate={estimate}
+              kind={kind}
               members={members}
               priority={priority}
               setAssigneeId={setAssigneeId}
               setDescription={setDescription}
+              setEstimate={setEstimate}
+              setKind={setKind}
               setPriority={setPriority}
               setTitle={setTitle}
               title={title}

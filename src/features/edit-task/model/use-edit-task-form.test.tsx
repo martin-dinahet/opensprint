@@ -41,6 +41,8 @@ describe("useEditTaskForm", () => {
     const task = makeTask({
       assigneeId: "member-1",
       description: "Existing notes",
+      estimate: 8,
+      kind: "feature",
       priority: "high",
       title: "Edit me",
     });
@@ -48,6 +50,8 @@ describe("useEditTaskForm", () => {
 
     expect(result.current.title).toBe("Edit me");
     expect(result.current.description).toBe("Existing notes");
+    expect(result.current.estimate).toBe(8);
+    expect(result.current.kind).toBe("feature");
     expect(result.current.priority).toBe("high");
     expect(result.current.assigneeId).toBe("member-1");
   });
@@ -64,6 +68,8 @@ describe("useEditTaskForm", () => {
         makeFormData({
           assigneeId: "member-1",
           description: "Updated notes",
+          estimate: "3",
+          kind: "bug",
           priority: "urgent",
           title: "Updated task",
         }),
@@ -76,6 +82,8 @@ describe("useEditTaskForm", () => {
       columnId: "column-1",
       data: {
         description: "Updated notes",
+        estimate: 3,
+        kind: "bug",
         priority: "urgent",
         title: "Updated task",
       },
@@ -94,6 +102,8 @@ describe("useEditTaskForm", () => {
         makeFormData({
           assigneeId: "member-1",
           description: "",
+          estimate: "",
+          kind: "task",
           priority: "medium",
           title: "Same assignee",
         }),
@@ -107,6 +117,8 @@ describe("useEditTaskForm", () => {
       columnId: "column-1",
       data: {
         description: undefined,
+        estimate: null,
+        kind: "task",
         priority: "medium",
         title: "Same assignee",
       },

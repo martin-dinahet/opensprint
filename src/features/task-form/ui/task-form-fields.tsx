@@ -1,8 +1,16 @@
 "use client";
 
-import { IconCalendar, IconFileText, IconFlag, IconTextCaption, IconUser } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconFileText,
+  IconFlag,
+  IconHash,
+  IconTextCaption,
+  IconUser,
+  IconVersions,
+} from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
-import type { TaskPriority } from "@/entities/task";
+import type { TaskKind, TaskPriority } from "@/entities/task";
 import {
   Field,
   FieldDescription,
@@ -26,10 +34,14 @@ type Props = {
   disabled: boolean;
   dueDate?: string;
   errors?: Record<string, string[]> | null;
+  estimate?: number | null;
+  kind: TaskKind;
   members: MemberWithUserOutput[];
   priority: TaskPriority;
   setAssigneeId: (assigneeId: string | null) => void;
   setDescription?: (description: string) => void;
+  setEstimate?: (estimate: number | null) => void;
+  setKind: (kind: TaskKind) => void;
   setPriority: (priority: TaskPriority) => void;
   setTitle?: (title: string) => void;
   title?: string;
@@ -42,6 +54,13 @@ const priorityItems = {
   urgent: "Urgent",
 };
 
+const kindItems = {
+  bug: "Bug",
+  chore: "Chore",
+  feature: "Feature",
+  task: "Task",
+};
+
 const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 export const TaskFormFields = ({
@@ -50,10 +69,14 @@ export const TaskFormFields = ({
   disabled,
   dueDate,
   errors,
+  estimate,
+  kind,
   members,
   priority,
   setAssigneeId,
   setDescription,
+  setEstimate,
+  setKind,
   setPriority,
   setTitle,
   title,
@@ -110,6 +133,28 @@ export const TaskFormFields = ({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field>
+          <FieldLabel htmlFor="taskKind">Kind</FieldLabel>
+          <input name="kind" type="hidden" value={kind} />
+          <Select
+            items={kindItems}
+            value={kind}
+            onValueChange={(value) => setKind(value as TaskKind)}
+            disabled={disabled}
+          >
+            <SelectTrigger id="taskKind" className="w-full">
+              <IconVersions />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="task">Task</SelectItem>
+              <SelectItem value="feature">Feature</SelectItem>
+              <SelectItem value="bug">Bug</SelectItem>
+              <SelectItem value="chore">Chore</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field>
           <FieldLabel htmlFor="taskPriority">Priority</FieldLabel>
           <input name="priority" type="hidden" value={priority} />
           <Select
@@ -153,6 +198,28 @@ export const TaskFormFields = ({
               ))}
             </SelectContent>
           </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="taskEstimate">Estimate</FieldLabel>
+          <InputGroup>
+            <InputGroupAddon>
+              <IconHash />
+            </InputGroupAddon>
+            <InputGroupInput
+              id="taskEstimate"
+              name="estimate"
+              type="number"
+              min={1}
+              max={99}
+              disabled={disabled}
+              value={estimate ?? ""}
+              onChange={
+                setEstimate ? (event) => setEstimate(event.target.value ? Number(event.target.value) : null) : undefined
+              }
+              placeholder="Points"
+            />
+          </InputGroup>
         </Field>
 
         <Field>

@@ -52,7 +52,16 @@ const now = new Date("2026-01-01T00:00:00.000Z");
 const project = { id: "project-1", name: "Launch", description: null, createdAt: now, updatedAt: now };
 const board = { id: "board-1", projectId: "project-1", name: "Board", position: 0, createdAt: now, updatedAt: now };
 const membership = { id: "member-1", organizationId: "project-1", userId: "user-1", role: "owner", createdAt: now };
-const column = { id: "column-1", boardId: "board-1", name: "Todo", position: 0, createdAt: now, updatedAt: now };
+const column = {
+  id: "column-1",
+  boardId: "board-1",
+  name: "Todo",
+  kind: "backlog",
+  wipLimit: null,
+  position: 0,
+  createdAt: now,
+  updatedAt: now,
+};
 
 describe("column use cases", () => {
   beforeEach(() => {
@@ -96,6 +105,8 @@ describe("column use cases", () => {
       id: "column-new",
       boardId: "board-1",
       name: "Doing",
+      kind: "custom",
+      wipLimit: null,
       position: 1,
     });
     expect(result.unwrap()).toMatchObject({ id: "column-new", name: "Doing", position: 1 });

@@ -19,6 +19,8 @@ export class ListColumnsUseCase {
         projectId,
         boardId: column.boardId,
         name: column.name,
+        kind: column.kind,
+        wipLimit: column.wipLimit,
         position: column.position,
         createdAt: column.createdAt,
         updatedAt: column.updatedAt,

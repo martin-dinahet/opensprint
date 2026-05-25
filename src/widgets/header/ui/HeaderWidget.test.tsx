@@ -9,10 +9,6 @@ vi.mock("../model", () => ({
   useDashboardHeaderState: vi.fn(),
 }));
 
-vi.mock("./breadcrumbs", () => ({
-  HeaderBreadcrumbs: () => <nav>Breadcrumbs</nav>,
-}));
-
 function Wrapper({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>
@@ -27,14 +23,14 @@ describe("HeaderWidget", () => {
     vi.mocked(useDashboardHeaderState).mockReturnValue({});
   });
 
-  it("renders default header controls and breadcrumbs", () => {
+  it("renders fixed default header controls", () => {
     render(<HeaderWidget />, { wrapper: Wrapper });
 
     expect(screen.getByRole("button", { name: "Toggle Sidebar" })).toBeInTheDocument();
-    expect(screen.getByText("Breadcrumbs")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "OpenSprint" })).toBeInTheDocument();
   });
 
-  it("renders configured title, description, eyebrow, and actions", () => {
+  it("renders configured title, context, and actions without breadcrumbs", () => {
     vi.mocked(useDashboardHeaderState).mockReturnValue({
       actions: <button type="button">Create</button>,
       description: "Current sprint work",
@@ -45,9 +41,19 @@ describe("HeaderWidget", () => {
     render(<HeaderWidget />, { wrapper: Wrapper });
 
     expect(screen.getByRole("heading", { name: "Sprint board" })).toBeInTheDocument();
-    expect(screen.getByText("Current sprint work")).toBeInTheDocument();
     expect(screen.getByText("Planning")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
-    expect(screen.queryByText("Breadcrumbs")).not.toBeInTheDocument();
+    expect(screen.queryByText("Current sprint work")).not.toBeInTheDocument();
+  });
+
+  it("uses the description as context when there is no eyebrow", () => {
+    vi.mocked(useDashboardHeaderState).mockReturnValue({
+      description: "Current sprint work",
+      title: "Sprint board",
+    });
+
+    render(<HeaderWidget />, { wrapper: Wrapper });
+
+    expect(screen.getByText("Current sprint work")).toBeInTheDocument();
   });
 });

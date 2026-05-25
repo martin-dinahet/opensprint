@@ -7,6 +7,12 @@ import { handleClientResult, parseFormData } from "@/shared";
 
 const createColumnSchema = z.object({
   name: z.string().trim().min(1).max(130),
+  kind: z.enum(["backlog", "active", "review", "done", "custom"]).default("custom"),
+  wipLimit: z.preprocess((value) => {
+    if (value === undefined || value === null) return null;
+    if (typeof value === "string" && value.trim() === "") return null;
+    return Number(value);
+  }, z.number().int().positive().nullable()),
 });
 
 type Options = {

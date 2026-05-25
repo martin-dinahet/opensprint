@@ -21,6 +21,7 @@ export const CreateProjectInput = z.object({
 export const UpdateProjectInput = z.object({
   name: projectName.optional(),
   description: z.string().min(3).max(800).optional(),
+  status: z.enum(["active", "paused", "archived"]).optional(),
 });
 
 export const ProjectOutput = z.object({
@@ -30,7 +31,7 @@ export const ProjectOutput = z.object({
   defaultBoardId: z.string().nullable(),
   memberCount: z.number().int().nonnegative(),
   openTaskCount: z.number().int().nonnegative(),
-  status: z.enum(["active"]),
+  status: z.enum(["active", "paused", "archived"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -42,7 +43,7 @@ export const ProjectListOutput = z.object({
   defaultBoardId: z.string().nullable(),
   memberCount: z.number().int().nonnegative(),
   openTaskCount: z.number().int().nonnegative(),
-  status: z.enum(["active"]),
+  status: z.enum(["active", "paused", "archived"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

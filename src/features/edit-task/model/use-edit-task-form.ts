@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import z from "zod";
-import { type TaskOutput, type TaskPriority, useAssignTask, useUpdateTask } from "@/entities/task";
+import { type TaskKind, type TaskOutput, type TaskPriority, useAssignTask, useUpdateTask } from "@/entities/task";
 import { handleClientResult, parseFormData } from "@/shared";
 
 const editTaskSchema = z.object({
@@ -12,6 +12,12 @@ const editTaskSchema = z.object({
     z.string().trim().max(2000).optional(),
   ),
   priority: z.enum(["low", "medium", "high", "urgent"]),
+  kind: z.enum(["task", "bug", "feature", "chore"]),
+  estimate: z.preprocess((value) => {
+    if (value === undefined || value === null) return null;
+    if (typeof value === "string" && value.trim() === "") return null;
+    return Number(value);
+  }, z.number().int().positive().max(99).nullable()),
   assigneeId: z.preprocess(
     (value) => (typeof value === "string" && value.trim() === "" ? null : value),
     z.string().nullable(),
@@ -32,12 +38,16 @@ export const useEditTaskForm = ({ onOpenChange, task }: Options) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [kind, setKind] = useState<TaskKind>("task");
+  const [estimate, setEstimate] = useState<number | null>(null);
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
 
   useEffect(() => {
     setTitle(task?.title ?? "");
     setDescription(task?.description ?? "");
     setPriority(task?.priority ?? "medium");
+    setKind(task?.kind ?? "task");
+    setEstimate(task?.estimate ?? null);
     setAssigneeId(task?.assigneeId ?? null);
     setFieldErrors(null);
     setGlobalError(null);
@@ -65,6 +75,8 @@ export const useEditTaskForm = ({ onOpenChange, task }: Options) => {
           columnId: task.columnId,
           data: {
             description: data.description,
+            estimate: data.estimate,
+            kind: data.kind,
             priority: data.priority,
             title: data.title,
           },
@@ -87,13 +99,17 @@ export const useEditTaskForm = ({ onOpenChange, task }: Options) => {
     action,
     assigneeId,
     description,
+    estimate,
     fieldErrors,
     globalError,
+    kind,
     pending: pending || updateTask.isPending || assignTask.isPending,
     priority,
     reset,
     setAssigneeId,
     setDescription,
+    setEstimate,
+    setKind,
     setPriority,
     setTitle,
     title,

@@ -1,4 +1,4 @@
-import { IconAlertCircle, IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
+import { IconAlertCircle, IconHash, IconLayoutColumns, IconLoader2, IconPlus } from "@tabler/icons-react";
 import {
   Alert,
   AlertDescription,
@@ -10,7 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/shared";
 import { useCreateColumnForm } from "../model/use-create-column-form";
 
@@ -19,6 +27,14 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   projectId: string;
+};
+
+const columnKindItems = {
+  active: "Active",
+  backlog: "Backlog",
+  custom: "Custom",
+  done: "Done",
+  review: "Review",
 };
 
 export function CreateColumnDialog({ boardId, onOpenChange, open, projectId }: Props) {
@@ -69,6 +85,32 @@ export function CreateColumnDialog({ boardId, onOpenChange, open, projectId }: P
                   {nameError}
                 </p>
               )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="columnKind">Workflow kind</Label>
+                <Select items={columnKindItems} defaultValue="custom" name="kind">
+                  <SelectTrigger id="columnKind" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="backlog">Backlog</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="done">Done</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="columnWipLimit">WIP limit</Label>
+                <InputGroup>
+                  <InputGroupAddon>
+                    <IconHash />
+                  </InputGroupAddon>
+                  <InputGroupInput id="columnWipLimit" name="wipLimit" type="number" min={1} placeholder="None" />
+                </InputGroup>
+              </div>
             </div>
           </div>
           <DialogFooter>

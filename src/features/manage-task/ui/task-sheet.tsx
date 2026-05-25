@@ -9,10 +9,12 @@ import {
   IconCheck,
   IconFlag,
   IconListCheck,
+  IconHash,
   IconPlus,
   IconTag,
   IconTrash,
   IconUser,
+  IconVersions,
   IconX,
 } from "@tabler/icons-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
@@ -24,6 +26,7 @@ import { useProjects } from "@/entities/project";
 import {
   type ProjectTaskTagOutput,
   type TaskItemOutput,
+  type TaskKind,
   type TaskOutput,
   type TaskPriority,
   useAssignTask,
@@ -91,6 +94,13 @@ const priorityItems = {
   urgent: "Urgent",
 };
 
+const kindItems = {
+  bug: "Bug",
+  chore: "Chore",
+  feature: "Feature",
+  task: "Task",
+};
+
 const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 const toDateInputValue = (value: string | null) => {
@@ -132,6 +142,8 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [kind, setKind] = useState<TaskKind>("task");
+  const [estimate, setEstimate] = useState<number | null>(null);
   const [assigneeId, setAssigneeId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState("");
   const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
@@ -147,6 +159,8 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
     setTitle(task?.title ?? "");
     setDescription(task?.description ?? "");
     setPriority(task?.priority ?? "medium");
+    setKind(task?.kind ?? "task");
+    setEstimate(task?.estimate ?? null);
     setAssigneeId(task?.assigneeId ?? null);
     setDueDate(toDateInputValue(task?.dueDate ?? null));
     setDraftItems([]);
@@ -199,10 +213,12 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
               assigneeId: assigneeId ?? undefined,
               description: description.trim() ? description : undefined,
               dueDate: dueDate || undefined,
+              estimate,
               items: draftItems
                 .map((item) => item.title.trim())
                 .filter(Boolean)
                 .map((title) => ({ title })),
+              kind,
               priority,
               tagIds: [...selectedTagIds],
               title: title.trim(),
@@ -235,6 +251,8 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
             data: {
               description: description.trim() ? description : null,
               dueDate: dueDate || null,
+              estimate,
+              kind,
               priority,
               title: title.trim(),
             },
@@ -500,7 +518,25 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
                 <Input id="task-sheet-title" value={title} onChange={(event) => setTitle(event.target.value)} />
               </section>
 
-              <section className="grid gap-3 rounded-md border bg-muted/10 p-3 sm:grid-cols-3">
+              <section className="grid gap-3 rounded-md border bg-muted/10 p-3 sm:grid-cols-5">
+                <div className="space-y-2">
+                  <Label htmlFor="task-sheet-kind" className="text-xs">
+                    Kind
+                  </Label>
+                  <Select items={kindItems} value={kind} onValueChange={(value) => setKind(value as TaskKind)}>
+                    <SelectTrigger id="task-sheet-kind" className="h-9 w-full">
+                      <IconVersions />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="task">Task</SelectItem>
+                      <SelectItem value="feature">Feature</SelectItem>
+                      <SelectItem value="bug">Bug</SelectItem>
+                      <SelectItem value="chore">Chore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="task-sheet-priority" className="text-xs">
                     Priority
@@ -521,6 +557,24 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
                       <SelectItem value="urgent">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="task-sheet-estimate" className="text-xs">
+                    Estimate
+                  </Label>
+                  <div className="relative">
+                    <IconHash className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                    <Input
+                      id="task-sheet-estimate"
+                      className="h-9 pl-8"
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={estimate ?? ""}
+                      onChange={(event) => setEstimate(event.target.value ? Number(event.target.value) : null)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

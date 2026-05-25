@@ -36,6 +36,8 @@ describe("useCreateTaskForm", () => {
 
     act(() => {
       result.current.setPriority("urgent");
+      result.current.setKind("bug");
+      result.current.setEstimate(5);
       result.current.setAssigneeId("member-1");
     });
 
@@ -44,6 +46,8 @@ describe("useCreateTaskForm", () => {
         makeFormData({
           assigneeId: "member-1",
           description: "Useful task notes",
+          estimate: "5",
+          kind: "bug",
           priority: "urgent",
           title: "Ship coverage",
         }),
@@ -57,11 +61,15 @@ describe("useCreateTaskForm", () => {
       data: {
         assigneeId: "member-1",
         description: "Useful task notes",
+        estimate: 5,
+        kind: "bug",
         priority: "urgent",
         title: "Ship coverage",
       },
     });
     expect(result.current.priority).toBe("medium");
+    expect(result.current.kind).toBe("task");
+    expect(result.current.estimate).toBeNull();
     expect(result.current.assigneeId).toBeNull();
     expect(result.current.globalError).toBeNull();
   });

@@ -13,12 +13,16 @@ export class ColumnRepository {
     return handle(() => db.select().from(column).where(eq(column.boardId, boardId)).orderBy(asc(column.position)));
   }
 
-  async create(data: Pick<NewColumn, "boardId" | "id" | "name" | "position">) {
+  async create(
+    data: Pick<NewColumn, "boardId" | "id" | "name" | "position"> & Partial<Pick<NewColumn, "kind" | "wipLimit">>,
+  ) {
     return handle(() =>
       db.insert(column).values({
         id: data.id,
         boardId: data.boardId,
         name: data.name,
+        kind: data.kind ?? "custom",
+        wipLimit: data.wipLimit ?? null,
         position: data.position,
       }),
     );

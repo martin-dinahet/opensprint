@@ -82,8 +82,8 @@ export default function Page({ params }: Props) {
   const canChangeRoles = currentMember?.role === "owner";
   const header = useMemo(
     () => ({
-      title: "Members",
-      description: "Manage project access, roles, and invitations.",
+      title: "Access table",
+      description: "Manage roles, permissions, and removal risk for this project.",
       eyebrow: project?.name ?? "Project",
       actions: (
         <>
@@ -147,12 +147,12 @@ export default function Page({ params }: Props) {
 
   return (
     <>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 sm:p-6">
         <div className="mx-auto max-w-5xl">
           {isLoading ? (
             <LoadingScreen />
           ) : (
-            <div className="overflow-hidden rounded-lg border bg-card">
+            <div className="overflow-hidden border-2 bg-card">
               <Table>
                 <TableHeader>
                   <TableRow>

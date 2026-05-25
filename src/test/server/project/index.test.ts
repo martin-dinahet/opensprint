@@ -59,6 +59,7 @@ const project = {
   id: "project-1",
   name: "Launch",
   description: "Launch project",
+  status: "active",
   createdAt: now,
   updatedAt: now,
 };
@@ -106,6 +107,7 @@ describe("project use cases", () => {
       .mockReturnValueOnce("board-new")
       .mockReturnValueOnce("column-todo")
       .mockReturnValueOnce("column-progress")
+      .mockReturnValueOnce("column-review")
       .mockReturnValueOnce("column-done");
     projectRepositoryMock.create.mockResolvedValue(ok(undefined));
     memberRepositoryMock.create.mockResolvedValue(ok(undefined));
@@ -140,20 +142,34 @@ describe("project use cases", () => {
     expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(1, {
       id: "column-todo",
       boardId: "board-new",
-      name: "Todo",
+      name: "Backlog",
+      kind: "backlog",
+      wipLimit: null,
       position: 0,
     });
     expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(2, {
       id: "column-progress",
       boardId: "board-new",
-      name: "In Progress",
+      name: "Active",
+      kind: "active",
+      wipLimit: 5,
       position: 1,
     });
     expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(3, {
+      id: "column-review",
+      boardId: "board-new",
+      name: "Review",
+      kind: "review",
+      wipLimit: 3,
+      position: 2,
+    });
+    expect(columnRepositoryMock.create).toHaveBeenNthCalledWith(4, {
       id: "column-done",
       boardId: "board-new",
       name: "Done",
-      position: 2,
+      kind: "done",
+      wipLimit: null,
+      position: 3,
     });
     expect(result.unwrap()).toEqual({
       id: "project-new",

@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -42,6 +43,8 @@ import { Kanban, KanbanColumn, ProjectKanbanProvider, useProjectKanban } from "@
 type Props = {
   params: Promise<{ boardId: string; id: string }>;
 };
+
+const emptyBoards: BoardOutput[] = [];
 
 export default function BoardPage({ params }: Props) {
   const { boardId, id: projectId } = use(params);
@@ -71,9 +74,20 @@ const ProjectKanbanContent = () => {
   } = useProjectKanban();
   const { data: project } = useProject(projectId);
   const { data: board } = useBoard(projectId, boardId);
-  const { data: boards = [] } = useBoards(projectId);
+  const { data: boards = emptyBoards } = useBoards(projectId);
   const taskLists = useProjectTaskLists(columns);
   const currentSelectedTask = taskLists.flat().find((task) => task.id === selectedTask?.id) ?? selectedTask;
+  const boardStats = useMemo(() => {
+    const tasks = taskLists.flat();
+    return {
+      assigned: tasks.filter((task) => task.assigneeId).length,
+      blocked: columns.filter(
+        (column) => column.wipLimit && (taskLists[columns.indexOf(column)]?.length ?? 0) > column.wipLimit,
+      ).length,
+      columns: columns.length,
+      tasks: tasks.length,
+    };
+  }, [columns, taskLists]);
   const header = useMemo(
     () => ({
       title: board?.name ?? "Board",
@@ -106,21 +120,29 @@ const ProjectKanbanContent = () => {
         {isLoading ? (
           <LoadingScreen label="Loading board…" variant="shell" />
         ) : (
-          <div className="flex flex-1 overflow-x-auto overflow-y-hidden">
-            <Kanban.Columns>
-              {columns.map((column) => (
-                <KanbanColumn column={column} key={column.id} />
-              ))}
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="grid border-b-2 bg-card sm:grid-cols-4">
+              <BoardMetric label="Columns" value={boardStats.columns} />
+              <BoardMetric label="Open tasks" value={boardStats.tasks} />
+              <BoardMetric label="Assigned" value={boardStats.assigned} />
+              <BoardMetric label="WIP alerts" value={boardStats.blocked} />
+            </div>
+            <div className="flex flex-1 overflow-x-auto overflow-y-hidden">
+              <Kanban.Columns>
+                {columns.map((column) => (
+                  <KanbanColumn column={column} key={column.id} />
+                ))}
 
-              <Button
-                className="h-10 w-80 shrink-0 border border-dashed border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
-                onClick={openCreateColumn}
-                variant="ghost"
-              >
-                <IconPlus className="mr-2 h-4 w-4" />
-                Add Column
-              </Button>
-            </Kanban.Columns>
+                <Button
+                  className="h-10 w-80 shrink-0 border border-dashed border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
+                  onClick={openCreateColumn}
+                  variant="ghost"
+                >
+                  <IconPlus className="mr-2 h-4 w-4" />
+                  Add Column
+                </Button>
+              </Kanban.Columns>
+            </div>
           </div>
         )}
       </main>
@@ -152,6 +174,15 @@ const ProjectKanbanContent = () => {
     </Kanban.Root>
   );
 };
+
+function BoardMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border-b p-3 sm:border-r sm:border-b-0 sm:last:border-r-0">
+      <p className="text-muted-foreground text-[0.68rem] uppercase">{label}</p>
+      <p className="font-black text-2xl tabular-nums">{value}</p>
+    </div>
+  );
+}
 
 const createBoardSchema = z.object({
   name: z.string().trim().min(1, "Board name is required").max(130),
@@ -255,14 +286,16 @@ function BoardActions({
         <DropdownMenuContent align="end" className="w-56">
           {boards.length > 1 ? (
             <>
-              <DropdownMenuLabel>Switch Board</DropdownMenuLabel>
-              {boards.map((board) => (
-                <DropdownMenuItem key={board.id} render={<Link href={`/projects/${projectId}/boards/${board.id}`} />}>
-                  <IconLayoutKanban />
-                  <span className="min-w-0 flex-1 truncate">{board.name}</span>
-                  {board.id === activeBoardId ? <span className="text-muted-foreground text-xs">Current</span> : null}
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Switch Board</DropdownMenuLabel>
+                {boards.map((board) => (
+                  <DropdownMenuItem key={board.id} render={<Link href={`/projects/${projectId}/boards/${board.id}`} />}>
+                    <IconLayoutKanban />
+                    <span className="min-w-0 flex-1 truncate">{board.name}</span>
+                    {board.id === activeBoardId ? <span className="text-muted-foreground text-xs">Current</span> : null}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
             </>
           ) : null}

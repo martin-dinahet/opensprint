@@ -6,17 +6,15 @@ import { AppSidebarProvider, useAppSidebar } from "../lib";
 import { AccountMenu } from "./account-menu";
 import { ProjectList } from "./project-list";
 import { SidebarBrand } from "./sidebar-brand";
-import { WorkspaceNavigation } from "./workspace-navigation";
 
 function AppSidebarLayout() {
   const { createProjectOpen, setCreateProjectOpen } = useAppSidebar();
 
   return (
     <>
-      <Sidebar collapsible="icon" variant="sidebar">
+      <Sidebar collapsible="icon" variant="sidebar" className="border-r-2">
         <SidebarBrand />
-        <SidebarContent className="gap-1 px-1 py-2">
-          <WorkspaceNavigation />
+        <SidebarContent className="gap-2 px-2 py-2">
           <ProjectList />
         </SidebarContent>
         <AccountMenu />

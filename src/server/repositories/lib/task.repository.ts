@@ -39,6 +39,8 @@ export class TaskRepository {
         title: data.title,
         description: data.description || null,
         priority: data.priority || "medium",
+        kind: data.kind || "task",
+        estimate: data.estimate ?? null,
         position: data.position,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
       }),
@@ -50,6 +52,8 @@ export class TaskRepository {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.kind !== undefined) updateData.kind = data.kind;
+    if (data.estimate !== undefined) updateData.estimate = data.estimate;
     if (data.dueDate !== undefined) {
       updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
     }

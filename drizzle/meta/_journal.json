@@ -43,6 +43,13 @@
       "when": 1779537637440,
       "tag": "0005_flat_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779664648150,
+      "tag": "0006_awesome_loki",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { IconCalendar, IconFlag, IconUser } from "@tabler/icons-react";
+import { IconCalendar, IconFlag, IconHash, IconUser, IconVersions } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
 import type { TaskOutput } from "@/entities/task";
 import {
@@ -46,7 +46,16 @@ export const TaskDetailDialog = ({ members, onOpenChange, open, task }: Props) =
 
         {task ? (
           <div className="flex min-h-0 flex-col gap-5 overflow-y-auto pr-1">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
+              <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">
+                <IconVersions className="size-4 text-muted-foreground" />
+                <div className="min-w-0">
+                  <p className="text-muted-foreground text-xs">Kind</p>
+                  <Badge variant="secondary" className="mt-1 capitalize">
+                    {task.kind}
+                  </Badge>
+                </div>
+              </div>
               <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">
                 <IconFlag className="size-4 text-muted-foreground" />
                 <div className="min-w-0">
@@ -69,6 +78,13 @@ export const TaskDetailDialog = ({ members, onOpenChange, open, task }: Props) =
                     ) : null}
                     <span className="truncate text-sm">{assigneeLabel}</span>
                   </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">
+                <IconHash className="size-4 text-muted-foreground" />
+                <div className="min-w-0">
+                  <p className="text-muted-foreground text-xs">Estimate</p>
+                  <p className="mt-1 truncate text-sm">{task.estimate ? `${task.estimate} points` : "Unestimated"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">

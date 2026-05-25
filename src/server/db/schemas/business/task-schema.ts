@@ -4,6 +4,7 @@ import { member } from "./member-schema";
 import { organization } from "./project-schema";
 
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high", "urgent"]);
+export const taskKindEnum = pgEnum("task_kind", ["task", "bug", "feature", "chore"]);
 
 export const task = pgTable(
   "task",
@@ -28,6 +29,12 @@ export const task = pgTable(
     priority:
       taskPriorityEnum("priority") //
         .notNull(),
+    // KIND
+    kind: taskKindEnum("kind") //
+      .default("task")
+      .notNull(),
+    // ESTIMATE
+    estimate: integer("estimate"),
     // POSITION
     position:
       integer("position") //

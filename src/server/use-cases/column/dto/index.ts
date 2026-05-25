@@ -2,10 +2,14 @@ import z from "zod";
 
 export const CreateColumnInput = z.object({
   name: z.string().min(1).max(130),
+  kind: z.enum(["backlog", "active", "review", "done", "custom"]).optional(),
+  wipLimit: z.number().int().positive().nullable().optional(),
 });
 
 export const UpdateColumnInput = z.object({
   name: z.string().min(1).max(130).optional(),
+  kind: z.enum(["backlog", "active", "review", "done", "custom"]).optional(),
+  wipLimit: z.number().int().positive().nullable().optional(),
   position: z.number().int().min(0).optional(),
 });
 
@@ -18,6 +22,8 @@ export const ColumnOutput = z.object({
   projectId: z.string(),
   boardId: z.string(),
   name: z.string(),
+  kind: z.enum(["backlog", "active", "review", "done", "custom"]),
+  wipLimit: z.number().int().positive().nullable(),
   position: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),

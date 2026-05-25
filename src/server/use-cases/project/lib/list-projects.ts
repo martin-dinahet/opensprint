@@ -40,7 +40,7 @@ export class ListProjectsUseCase {
         defaultBoardId: defaultBoardIds.get(p.id) ?? null,
         memberCount: memberCounts.get(p.id) ?? 0,
         openTaskCount: openTaskCounts.get(p.id) ?? 0,
-        status: "active" as const,
+        status: p.status,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
       })),

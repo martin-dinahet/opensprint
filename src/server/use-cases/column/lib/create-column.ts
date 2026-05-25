@@ -19,7 +19,14 @@ export class CreateColumnUseCase {
 
     const columnId = nanoid();
     const position = existingColumnsResult.unwrap()?.length || 0;
-    const createResult = await columnRepository.create({ id: columnId, boardId, name: input.name, position });
+    const createResult = await columnRepository.create({
+      id: columnId,
+      boardId,
+      name: input.name,
+      kind: input.kind ?? "custom",
+      wipLimit: input.wipLimit ?? null,
+      position,
+    });
     if (createResult.isErr()) {
       return err(new AppError("column-create-failed", `Unable to create column: ${createResult.error.message}`, 500));
     }
@@ -37,6 +44,8 @@ export class CreateColumnUseCase {
       projectId,
       boardId: newColumn[0].boardId,
       name: newColumn[0].name,
+      kind: newColumn[0].kind,
+      wipLimit: newColumn[0].wipLimit,
       position: newColumn[0].position,
       createdAt: newColumn[0].createdAt,
       updatedAt: newColumn[0].updatedAt,

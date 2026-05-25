@@ -50,6 +50,8 @@ export class CreateTaskUseCase {
       title: input.title,
       description: input.description,
       priority: input.priority,
+      kind: input.kind,
+      estimate: input.estimate,
       assigneeId: input.assigneeId,
       dueDate: input.dueDate,
       position,

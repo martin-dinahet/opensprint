@@ -2,7 +2,7 @@
 
 import { DndContext, DragOverlay, MeasuringStrategy, useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconGauge, IconPlus, IconTrash } from "@tabler/icons-react";
 import { type ReactNode, useState, useTransition } from "react";
 import type { ColumnOutput } from "@/entities/column";
 import type { TaskOutput } from "@/entities/task";
@@ -80,7 +80,7 @@ const Root = ({ children }: RootProps) => {
 };
 
 const Columns = ({ children }: ColumnsProps) => {
-  return <div className="flex flex-1 gap-4 p-4">{children}</div>;
+  return <div className="flex flex-1 gap-3 p-3">{children}</div>;
 };
 
 const Column = ({ column, isHovered, tasks }: ColumnProps) => {
@@ -120,18 +120,35 @@ const ColumnView = ({
   const isHighlighted = isOver || isHovered;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const wipExceeded = !!column.wipLimit && tasks.length > column.wipLimit;
 
   return (
     <div
-      className={`group/column flex h-full w-96 shrink-0 flex-col rounded-lg border bg-muted/40 transition-colors duration-150 ${
-        isHighlighted ? "border-primary/40 bg-primary/5 ring-1 ring-primary/30" : ""
+      className={`group/column flex h-full w-88 shrink-0 flex-col border-2 bg-card transition-colors duration-150 ${
+        isHighlighted ? "bg-accent/35 ring-2 ring-ring" : ""
       }`}
     >
-      <div className="flex shrink-0 items-center justify-between border-b px-3 py-2">
-        <h3 className="flex min-w-0 items-center gap-1.5 text-sm" aria-label={column.name}>
-          <span className="truncate font-semibold">{column.name}</span>
-          <span className="shrink-0 text-muted-foreground text-xs tabular-nums">· {tasks.length}</span>
-        </h3>
+      <div className="shrink-0 border-b-2 px-3 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="flex min-w-0 flex-col gap-1 text-sm" aria-label={column.name}>
+            <span className="truncate font-black uppercase">{column.name}</span>
+            <span className="flex items-center gap-2 text-muted-foreground text-[0.68rem] uppercase">
+              <span>{column.kind}</span>
+              <span className={wipExceeded ? "font-semibold text-destructive" : ""}>
+                {tasks.length}
+                {column.wipLimit ? `/${column.wipLimit}` : ""} tasks
+              </span>
+            </span>
+          </h3>
+          {column.wipLimit ? (
+            <span
+              className={`inline-flex items-center gap-1 border px-1.5 py-0.5 text-[0.68rem] ${wipExceeded ? "bg-destructive text-white" : "bg-background"}`}
+            >
+              <IconGauge className="h-3 w-3" />
+              WIP
+            </span>
+          ) : null}
+        </div>
         <span className="flex items-center gap-1 text-xs text-muted-foreground opacity-0 transition-opacity group-focus-within/column:opacity-100 group-hover/column:opacity-100">
           <Button variant="default" size="icon" className="h-6 w-6" onClick={onAddTask}>
             <IconPlus className="h-3 w-3" />
@@ -156,15 +173,15 @@ const ColumnView = ({
         </span>
       </div>
 
-      <div ref={setNodeRef} className="min-h-[120px] flex-1 overflow-y-auto p-2">
+      <div ref={setNodeRef} className="min-h-[120px] flex-1 overflow-y-auto bg-muted/25 p-2">
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {children ?? tasks.map((task) => <TaskCard key={task.id} columnId={column.id} task={task} />)}
 
             {tasks.length === 0 && (
               <div
-                className={`flex min-h-20 items-center justify-center rounded-md border border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
-                  isHighlighted ? "border-primary/40 bg-primary/5 text-primary/60" : "border-border/50"
+                className={`flex min-h-20 items-center justify-center border border-dashed px-3 text-center text-muted-foreground text-xs transition-colors ${
+                  isHighlighted ? "bg-accent/40 text-foreground" : "border-border/70"
                 }`}
               >
                 <Button variant="ghost" size="sm" onClick={onAddTask}>

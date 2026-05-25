@@ -36,7 +36,7 @@ export class GetProjectUseCase {
       defaultBoardId: boardsResult.unwrap()?.[0]?.id ?? null,
       memberCount: memberCountsResult.unwrap()[0]?.count ?? 0,
       openTaskCount: taskCountsResult.unwrap()[0]?.count ?? 0,
-      status: "active" as const,
+      status: project[0].status,
       createdAt: project[0].createdAt,
       updatedAt: project[0].updatedAt,
     });

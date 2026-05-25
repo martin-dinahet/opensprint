@@ -22,8 +22,21 @@ type Props = {
 };
 
 export const CreateTaskDialog = ({ columnId, members, onOpenChange, open }: Props) => {
-  const { action, assigneeId, fieldErrors, globalError, pending, priority, reset, setAssigneeId, setPriority } =
-    useCreateTaskForm({ columnId, onOpenChange });
+  const {
+    action,
+    assigneeId,
+    estimate,
+    fieldErrors,
+    globalError,
+    kind,
+    pending,
+    priority,
+    reset,
+    setAssigneeId,
+    setEstimate,
+    setKind,
+    setPriority,
+  } = useCreateTaskForm({ columnId, onOpenChange });
 
   return (
     <Dialog
@@ -50,9 +63,13 @@ export const CreateTaskDialog = ({ columnId, members, onOpenChange, open }: Prop
               assigneeId={assigneeId}
               disabled={pending}
               errors={fieldErrors}
+              estimate={estimate}
+              kind={kind}
               members={members}
               priority={priority}
               setAssigneeId={setAssigneeId}
+              setEstimate={setEstimate}
+              setKind={setKind}
               setPriority={setPriority}
             />
           </div>

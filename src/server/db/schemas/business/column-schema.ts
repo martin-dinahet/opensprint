@@ -1,5 +1,7 @@
-import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { board } from "./board-schema";
+
+export const columnKindEnum = pgEnum("column_kind", ["backlog", "active", "review", "done", "custom"]);
 
 export const column = pgTable(
   "column",
@@ -9,6 +11,8 @@ export const column = pgTable(
       .notNull()
       .references(() => board.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    kind: columnKindEnum("kind").default("custom").notNull(),
+    wipLimit: integer("wip_limit"),
     position: integer("position").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")

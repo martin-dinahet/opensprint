@@ -53,7 +53,7 @@ describe("KanbanColumnView", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Doing" })).toBeInTheDocument();
-    expect(screen.getByText("· 2")).toBeInTheDocument();
+    expect(screen.getByText("2 tasks")).toBeInTheDocument();
     expect(screen.getByText("First task")).toBeInTheDocument();
     expect(screen.getByText("urgent")).toBeInTheDocument();
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();

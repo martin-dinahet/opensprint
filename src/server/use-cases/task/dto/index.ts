@@ -4,6 +4,8 @@ export const CreateTaskInput = z.object({
   title: z.string().min(1).max(300),
   description: z.string().max(2000).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  kind: z.enum(["task", "bug", "feature", "chore"]).optional(),
+  estimate: z.number().int().positive().max(99).nullable().optional(),
   assigneeId: z.string().optional(),
   dueDate: z.string().optional(),
   items: z.array(z.object({ title: z.string().trim().min(1).max(300) })).optional(),
@@ -14,6 +16,8 @@ export const UpdateTaskInput = z.object({
   title: z.string().min(1).max(300).optional(),
   description: z.string().max(2000).nullable().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  kind: z.enum(["task", "bug", "feature", "chore"]).optional(),
+  estimate: z.number().int().positive().max(99).nullable().optional(),
   dueDate: z.string().nullable().optional(),
 });
 
@@ -69,6 +73,8 @@ export const TaskOutput = z.object({
   title: z.string(),
   description: z.string().nullable(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
+  kind: z.enum(["task", "bug", "feature", "chore"]),
+  estimate: z.number().int().positive().max(99).nullable(),
   position: z.number(),
   dueDate: z.date().nullable(),
   createdAt: z.date(),

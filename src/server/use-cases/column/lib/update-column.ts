@@ -33,6 +33,8 @@ export class UpdateColumnUseCase {
       projectId,
       boardId: updatedColumn[0].boardId,
       name: updatedColumn[0].name,
+      kind: updatedColumn[0].kind,
+      wipLimit: updatedColumn[0].wipLimit,
       position: updatedColumn[0].position,
       updatedAt: updatedColumn[0].updatedAt,
     });

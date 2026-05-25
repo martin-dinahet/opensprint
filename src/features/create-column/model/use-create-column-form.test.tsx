@@ -45,7 +45,7 @@ describe("useCreateColumnForm", () => {
     expect(createColumnMock.mutateAsync).toHaveBeenCalledWith({
       projectId: "project-1",
       boardId: "board-1",
-      data: { name: "Doing" },
+      data: { kind: "custom", name: "Doing", wipLimit: null },
     });
     expect(result.current.globalError).toBeNull();
   });

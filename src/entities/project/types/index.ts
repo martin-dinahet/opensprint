@@ -12,7 +12,7 @@ export type ProjectListOutput = {
   defaultBoardId: string | null;
   memberCount: number;
   openTaskCount: number;
-  status: "active";
+  status: "active" | "paused" | "archived";
   createdAt: string;
   updatedAt: string;
 };
@@ -21,6 +21,6 @@ export type ProjectOutput = ProjectListOutput;
 
 export type CreateProjectOutput = Pick<ProjectListOutput, "defaultBoardId" | "description" | "id" | "name">;
 
-export type UpdateProjectOutput = Pick<ProjectListOutput, "description" | "id" | "name"> & {
+export type UpdateProjectOutput = Pick<ProjectListOutput, "description" | "id" | "name" | "status"> & {
   updatedAt: string;
 };

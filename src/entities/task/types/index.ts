@@ -16,6 +16,7 @@ export type {
 import type { ProjectTaskTag, Task, TaskItem } from "@/shared";
 
 export type TaskPriority = Task["priority"];
+export type TaskKind = Task["kind"];
 
 export type TaskItemOutput = {
   id: TaskItem["id"];
@@ -43,6 +44,8 @@ export type TaskOutput = {
   title: Task["title"];
   description: Exclude<Task["description"], undefined>;
   priority: TaskPriority;
+  kind: TaskKind;
+  estimate: Task["estimate"];
   position: Task["position"];
   dueDate: string | null;
   createdAt: string;

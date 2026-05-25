@@ -51,7 +51,10 @@ export default function Page() {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const user = session.data?.user;
-  const header = useMemo(() => ({ title: "Account", eyebrow: "Settings" }), []);
+  const header = useMemo(
+    () => ({ title: "Account console", description: "Profile, appearance, and current session controls." }),
+    [],
+  );
 
   useDashboardHeader(header);
 
@@ -93,11 +96,11 @@ export default function Page() {
   };
 
   return (
-    <main className="flex-1 p-6">
+    <main className="flex-1 p-4 sm:p-6">
       <div className="mx-auto grid max-w-4xl gap-4">
-        <Card>
+        <Card className="border-2 shadow-none">
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle className="font-black uppercase">Profile</CardTitle>
             <CardDescription>Update the identity shown around projects and task assignments.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -147,9 +150,9 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-none">
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="font-black uppercase">Appearance</CardTitle>
             <CardDescription>Choose how OpenSprint should look on this device.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -169,9 +172,9 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 shadow-none">
           <CardHeader>
-            <CardTitle>Session</CardTitle>
+            <CardTitle className="font-black uppercase">Session</CardTitle>
             <CardDescription>End your current OpenSprint session on this browser.</CardDescription>
           </CardHeader>
           <CardContent>

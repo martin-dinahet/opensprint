@@ -1,9 +1,10 @@
 import { err, ok } from "@punpun-dev/ts-result";
 import { AppError, NotFoundError, UnauthorizedError } from "@/server/lib";
 import { memberRepository, projectRepository } from "@/server/repositories";
+import type { UpdateProjectInput } from "../dto";
 
 export class UpdateProjectUseCase {
-  static async execute(userId: string, projectId: string, input: { name?: string; description?: string }) {
+  static async execute(userId: string, projectId: string, input: UpdateProjectInput) {
     const projectResult = await projectRepository.findById(projectId);
     if (projectResult.isErr()) return err(projectResult.error);
 
@@ -27,6 +28,7 @@ export class UpdateProjectUseCase {
     const updateResult = await projectRepository.update(projectId, {
       name: input.name,
       description: input.description,
+      status: input.status,
     });
 
     if (updateResult.isErr()) {
@@ -46,6 +48,7 @@ export class UpdateProjectUseCase {
       id: updated.id,
       name: updated.name,
       description: updated.description,
+      status: updated.status,
       updatedAt: updated.updatedAt,
     });
   }

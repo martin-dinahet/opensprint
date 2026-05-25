@@ -17,13 +17,14 @@ export class ProjectRepository {
     return handle(() => db.select().from(organization).where(inArray(organization.id, ids)));
   }
 
-  async create(data: Pick<NewProject, "description" | "id" | "name" | "slug">) {
+  async create(data: Pick<NewProject, "description" | "id" | "name" | "slug"> & Partial<Pick<NewProject, "status">>) {
     return handle(() =>
       db.insert(organization).values({
         id: data.id,
         name: data.name,
         slug: data.slug,
         description: data.description,
+        status: data.status ?? "active",
       }),
     );
   }
