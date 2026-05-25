@@ -2,6 +2,7 @@
 
 import { IconCalendar, IconFlag, IconHash, IconUser, IconVersions } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
+import { getMemberLabel } from "@/entities/member/lib";
 import type { TaskOutput } from "@/entities/task";
 import {
   Avatar,
@@ -22,8 +23,6 @@ type Props = {
   open: boolean;
   task: TaskOutput | null;
 };
-
-const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 const formatDate = (value: string | null) => {
   if (!value) return "No due date";

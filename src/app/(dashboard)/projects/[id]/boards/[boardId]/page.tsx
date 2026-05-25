@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDotsVertical, IconEdit, IconLayoutKanban, IconPlus } from "@tabler/icons-react";
+import { IconChevronDown, IconDotsVertical, IconEdit, IconLayoutKanban, IconPlus } from "@tabler/icons-react";
 import { useQueries } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,9 +15,15 @@ import { TaskSheet } from "@/features/manage-task";
 import { ProjectTabs } from "@/features/project-tabs";
 import {
   Button,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
   Dialog,
-  DialogDescription,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,7 +32,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Field,
   FieldError,
@@ -34,6 +39,11 @@ import {
   FieldLabel,
   Input,
   LoadingScreen,
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
   parseFormData,
   unwrapClientResult,
 } from "@/shared";
@@ -278,35 +288,29 @@ function BoardActions({
 
   return (
     <>
+      <BoardSwitcher
+        activeBoardId={activeBoardId}
+        activeBoardName={activeBoardName}
+        boards={boards}
+        onAddBoard={() => setAddOpen(true)}
+        projectId={projectId}
+      />
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+        <DropdownMenuTrigger render={<Button aria-label="Board actions" variant="outline" size="icon-sm" />}>
           <IconDotsVertical />
-          Actions
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          {boards.length > 1 ? (
-            <>
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Switch Board</DropdownMenuLabel>
-                {boards.map((board) => (
-                  <DropdownMenuItem key={board.id} render={<Link href={`/projects/${projectId}/boards/${board.id}`} />}>
-                    <IconLayoutKanban />
-                    <span className="min-w-0 flex-1 truncate">{board.name}</span>
-                    {board.id === activeBoardId ? <span className="text-muted-foreground text-xs">Current</span> : null}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </>
-          ) : null}
-          <DropdownMenuItem onClick={() => setRenameOpen(true)}>
-            <IconEdit />
-            Rename Board
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setAddOpen(true)}>
-            <IconPlus />
-            Add Board
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel>Board actions</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => setRenameOpen(true)}>
+              <IconEdit />
+              Rename Board
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAddOpen(true)}>
+              <IconPlus />
+              Add Board
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -382,6 +386,85 @@ function BoardActions({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function BoardSwitcher({
+  activeBoardId,
+  activeBoardName,
+  boards,
+  onAddBoard,
+  projectId,
+}: {
+  activeBoardId: string;
+  activeBoardName: string;
+  boards: BoardOutput[];
+  onAddBoard: () => void;
+  projectId: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const boardCount = boards.length || 1;
+
+  const switchBoard = (boardId: string) => {
+    setOpen(false);
+    if (boardId !== activeBoardId) {
+      router.push(`/projects/${projectId}/boards/${boardId}`);
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button className="max-w-[13rem] justify-start gap-2 px-2 sm:max-w-[18rem]" size="sm" variant="outline" />
+        }
+      >
+        <IconLayoutKanban className="size-3.5 text-muted-foreground" />
+        <span className="min-w-0 truncate">{activeBoardName}</span>
+        <span className="ml-auto rounded-sm bg-muted px-1.5 py-0.5 text-[0.65rem] text-muted-foreground tabular-nums">
+          {boardCount}
+        </span>
+        <IconChevronDown className="size-3.5 text-muted-foreground" />
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[min(22rem,calc(100vw-1.5rem))] gap-2 p-2">
+        <PopoverHeader className="px-2 pt-1">
+          <PopoverTitle>Boards</PopoverTitle>
+        </PopoverHeader>
+        <Command>
+          <CommandInput placeholder="Find a board..." />
+          <CommandList>
+            <CommandEmpty>No boards found.</CommandEmpty>
+            <CommandGroup>
+              {boards.map((board) => (
+                <CommandItem
+                  data-checked={board.id === activeBoardId}
+                  key={board.id}
+                  onSelect={() => switchBoard(board.id)}
+                  value={board.name}
+                >
+                  <IconLayoutKanban className="size-4 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate">{board.name}</span>
+                  {board.id === activeBoardId ? <span className="text-muted-foreground text-xs">Current</span> : null}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandGroup>
+              <CommandItem
+                onSelect={() => {
+                  setOpen(false);
+                  onAddBoard();
+                }}
+                value="add board"
+              >
+                <IconPlus className="size-4 text-muted-foreground" />
+                <span>Add board</span>
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

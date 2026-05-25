@@ -10,7 +10,9 @@ import {
   IconVersions,
 } from "@tabler/icons-react";
 import type { MemberWithUserOutput } from "@/entities/member";
+import { getMemberLabel } from "@/entities/member/lib";
 import type { TaskKind, TaskPriority } from "@/entities/task";
+import { taskKindItems, taskPriorityItems } from "@/entities/task/lib";
 import {
   Field,
   FieldDescription,
@@ -46,22 +48,6 @@ type Props = {
   setTitle?: (title: string) => void;
   title?: string;
 };
-
-const priorityItems = {
-  high: "High",
-  low: "Low",
-  medium: "Medium",
-  urgent: "Urgent",
-};
-
-const kindItems = {
-  bug: "Bug",
-  chore: "Chore",
-  feature: "Feature",
-  task: "Task",
-};
-
-const getMemberLabel = (member: MemberWithUserOutput) => member.user.name || member.user.email;
 
 export const TaskFormFields = ({
   assigneeId,
@@ -136,7 +122,7 @@ export const TaskFormFields = ({
           <FieldLabel htmlFor="taskKind">Kind</FieldLabel>
           <input name="kind" type="hidden" value={kind} />
           <Select
-            items={kindItems}
+            items={taskKindItems}
             value={kind}
             onValueChange={(value) => setKind(value as TaskKind)}
             disabled={disabled}
@@ -158,7 +144,7 @@ export const TaskFormFields = ({
           <FieldLabel htmlFor="taskPriority">Priority</FieldLabel>
           <input name="priority" type="hidden" value={priority} />
           <Select
-            items={priorityItems}
+            items={taskPriorityItems}
             value={priority}
             onValueChange={(value) => setPriority(value as TaskPriority)}
             disabled={disabled}

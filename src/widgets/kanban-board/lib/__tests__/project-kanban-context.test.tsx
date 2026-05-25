@@ -66,8 +66,8 @@ function Consumer() {
       <button type="button" onClick={() => context.removeColumn("column-1")}>
         remove column
       </button>
-      <button type="button" onClick={() => context.renameColumn("column-1", "Renamed")}>
-        rename column
+      <button type="button" onClick={() => context.updateColumnSettings("column-1", { name: "Renamed", wipLimit: 4 })}>
+        update column
       </button>
       <button type="button" onClick={() => context.removeTask("column-1", "task-1")}>
         remove task
@@ -127,12 +127,12 @@ describe("ProjectKanbanProvider", () => {
       columnId: "column-1",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "rename column" }));
+    fireEvent.click(screen.getByRole("button", { name: "update column" }));
     expect(updateColumnMock.mutateAsync).toHaveBeenCalledWith({
       boardId: "board-1",
       projectId: "project-1",
       columnId: "column-1",
-      data: { name: "Renamed" },
+      data: { name: "Renamed", wipLimit: 4 },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "remove task" }));

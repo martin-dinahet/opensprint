@@ -151,9 +151,9 @@ describe("KanbanColumnView", () => {
     expect(onDeleteColumn).toHaveBeenCalledWith(column.id);
   });
 
-  it("renames a column from the column actions menu", async () => {
-    const onRenameColumn = vi.fn().mockResolvedValue(undefined);
-    const column = makeColumn({ id: "column-1", name: "Doing" });
+  it("updates a column from the column actions menu", async () => {
+    const onUpdateColumn = vi.fn().mockResolvedValue(undefined);
+    const column = makeColumn({ id: "column-1", name: "Doing", wipLimit: 2 });
 
     renderWithClient(
       <KanbanColumnView
@@ -163,21 +163,22 @@ describe("KanbanColumnView", () => {
         onDeleteColumn={vi.fn()}
         onDeleteTask={vi.fn()}
         onOpenTask={vi.fn()}
-        onRenameColumn={onRenameColumn}
+        onUpdateColumn={onUpdateColumn}
         isHovered={false}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Column actions" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Rename column" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit column" }));
 
-    expect(screen.getByRole("heading", { name: "Rename column" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Edit column" })).toBeInTheDocument();
 
     const input = screen.getByLabelText("Name");
     fireEvent.change(input, { target: { value: "  Backlog  " } });
+    fireEvent.change(screen.getByLabelText("WIP limit"), { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(onRenameColumn).toHaveBeenCalledWith("Backlog"));
+    await waitFor(() => expect(onUpdateColumn).toHaveBeenCalledWith({ name: "Backlog", wipLimit: 4 }));
   });
 });
 

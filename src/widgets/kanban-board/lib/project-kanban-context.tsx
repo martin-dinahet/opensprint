@@ -21,7 +21,7 @@ type ProjectKanbanContextValue = {
   projectId: string;
   removeColumn: (columnId: string) => void;
   removeTask: (columnId: string, taskId: string) => void;
-  renameColumn: (columnId: string, name: string) => Promise<unknown>;
+  updateColumnSettings: (columnId: string, input: { name: string; wipLimit: number | null }) => Promise<unknown>;
   setCreateColumnOpen: (open: boolean) => void;
   setCreateTaskOpen: (open: boolean) => void;
   setSelectedTask: (task: TaskOutput | null) => void;
@@ -76,7 +76,7 @@ export const ProjectKanbanProvider = ({ boardId, children, projectId }: Props) =
       projectId,
       removeColumn: (columnId) => deleteColumn.mutate({ boardId, projectId, columnId }),
       removeTask: (columnId, taskId) => deleteTask.mutate({ columnId, taskId }),
-      renameColumn: (columnId, name) => updateColumn.mutateAsync({ boardId, projectId, columnId, data: { name } }),
+      updateColumnSettings: (columnId, data) => updateColumn.mutateAsync({ boardId, projectId, columnId, data }),
       setCreateColumnOpen,
       setCreateTaskOpen,
       selectedTask,

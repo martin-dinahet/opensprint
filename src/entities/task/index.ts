@@ -1,4 +1,5 @@
 export { taskApi, taskKeys } from "./api";
+export { taskKindItems, taskPriorityItems, taskTagPalette, toDateInputValue } from "./lib";
 export {
   useAssignTask,
   useAttachTaskTag,
