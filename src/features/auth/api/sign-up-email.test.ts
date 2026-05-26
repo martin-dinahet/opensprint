@@ -48,7 +48,9 @@ describe("signUpEmail", () => {
     const result = await signUpEmail("user@example.com", "Test User", "password-1");
 
     expect(result.isErr()).toBe(true);
-    expect(result.error).toEqual({ message: "Email already exists" });
+    if (result.isErr()) {
+      expect(result.error).toEqual({ message: "Email already exists" });
+    }
   });
 
   it("falls back when better-auth omits an error message", async () => {
@@ -57,16 +59,20 @@ describe("signUpEmail", () => {
     const result = await signUpEmail("user@example.com", "Test User", "password-1");
 
     expect(result.isErr()).toBe(true);
-    expect(result.error).toEqual({ message: "Unable to sign up" });
+    if (result.isErr()) {
+      expect(result.error).toEqual({ message: "Unable to sign up" });
+    }
   });
 
   it("returns client result failures", async () => {
-    handleClientResultMock.mockResolvedValue(err(new Error("Network failed")));
+    handleClientResultMock.mockResolvedValue(err(new Error("Network failed")) as never);
 
     const result = await signUpEmail("user@example.com", "Test User", "password-1");
 
     expect(result.isErr()).toBe(true);
-    expect(result.error).toEqual({ message: "Network failed" });
+    if (result.isErr()) {
+      expect(result.error).toEqual({ message: "Network failed" });
+    }
     expect(authClientMock.signUp.email).not.toHaveBeenCalled();
   });
 });

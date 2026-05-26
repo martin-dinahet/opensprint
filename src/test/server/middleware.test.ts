@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ServerVariables } from "@/server/types";
 
 const { authMock } = vi.hoisted(() => ({
   authMock: {
@@ -24,7 +25,7 @@ describe("server middleware", () => {
 
   it("returns 401 from the real auth guard without a session", async () => {
     authMock.api.getSession.mockResolvedValue(null);
-    const app = new Hono().get("/guarded", guard(), (c) => c.json({ ok: true }));
+    const app = new Hono<ServerVariables>().get("/guarded", guard(), (c) => c.json({ ok: true }));
 
     const response = await app.request("/guarded");
 
@@ -40,7 +41,7 @@ describe("server middleware", () => {
       user: { id: "user-1" },
       session: { id: "session-1", userId: "user-1" },
     });
-    const app = new Hono().get("/guarded", guard(), (c) =>
+    const app = new Hono<ServerVariables>().get("/guarded", guard(), (c) =>
       c.json({ userId: c.get("user").id, sessionId: c.get("session").id }),
     );
 

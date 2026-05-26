@@ -101,7 +101,13 @@ describe("project hooks", () => {
 
   it("invalidates list and detail queries after updating a project", async () => {
     vi.mocked(projectApi.update).mockResolvedValue(
-      ok({ id: "project-1", name: "Updated", description: null, updatedAt: "2026-01-02T00:00:00.000Z" }),
+      ok({
+        id: "project-1",
+        name: "Updated",
+        description: null,
+        status: "active",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+      }),
     );
     const queryClient = createTestQueryClient();
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");

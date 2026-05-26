@@ -1,6 +1,8 @@
 import { err, ok } from "@punpun-dev/ts-result";
+import type { Context, Next } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/server/lib";
+import type { ServerVariables } from "@/server/types";
 import { createHonoTestClient } from "@/test/backend";
 import { makeColumn, makeProject, makeTask, makeUser } from "@/test/factories";
 
@@ -81,7 +83,7 @@ vi.mock("@/server/lib", async () => {
     ...handleError,
     ...handleNotFound,
     auth: authMock,
-    guard: () => async (c, next) => {
+    guard: () => async (c: Context<ServerVariables>, next: Next) => {
       const session = await authMock.api.getSession({ headers: c.req.raw.headers });
       if (!session) return c.json({ success: false, errors: { root: "Not authenticated" } }, 401);
       c.set("user", session.user);
@@ -151,7 +153,7 @@ describe("server routes", () => {
 
   it("validates project create bodies", async () => {
     const client = createHonoTestClient(server);
-    const response = await client.api.projects.$post({ json: { name: "x" } });
+    const response = await client.api.projects.$post({ json: { name: "x", defaultBoardName: "" } });
 
     expect(response.status).toBe(403);
     const body = await response.json();
