@@ -52,6 +52,9 @@ export function TaskSheetDetailsFields({
   setTitle,
   title,
 }: Props) {
+  const detailFieldClassName = "min-w-0 space-y-2";
+  const detailControlClassName = "!h-9 w-full min-w-0";
+
   return (
     <>
       <section className="space-y-2">
@@ -59,15 +62,15 @@ export function TaskSheetDetailsFields({
         <Input id="task-sheet-title" value={title} onChange={(event) => setTitle(event.target.value)} />
       </section>
 
-      <section className="grid gap-3 rounded-md border bg-muted/10 p-3 sm:grid-cols-5">
-        <div className="space-y-2">
+      <section className="grid gap-3 rounded-md border bg-muted/10 p-3 sm:grid-cols-2">
+        <div className={detailFieldClassName}>
           <Label htmlFor="task-sheet-kind" className="text-xs">
             Kind
           </Label>
           <Select items={taskKindItems} value={kind} onValueChange={(value) => setKind(value as TaskKind)}>
-            <SelectTrigger id="task-sheet-kind" className="h-9 w-full">
+            <SelectTrigger id="task-sheet-kind" className={detailControlClassName}>
               <IconVersions />
-              <SelectValue />
+              <SelectValue className="min-w-0 truncate" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="task">Task</SelectItem>
@@ -78,7 +81,7 @@ export function TaskSheetDetailsFields({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className={detailFieldClassName}>
           <Label htmlFor="task-sheet-priority" className="text-xs">
             Priority
           </Label>
@@ -87,9 +90,9 @@ export function TaskSheetDetailsFields({
             value={priority}
             onValueChange={(value) => setPriority(value as TaskPriority)}
           >
-            <SelectTrigger id="task-sheet-priority" className="h-9 w-full">
+            <SelectTrigger id="task-sheet-priority" className={detailControlClassName}>
               <IconFlag />
-              <SelectValue />
+              <SelectValue className="min-w-0 truncate" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="low">Low</SelectItem>
@@ -100,7 +103,7 @@ export function TaskSheetDetailsFields({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className={detailFieldClassName}>
           <Label htmlFor="task-sheet-estimate" className="text-xs">
             Estimate
           </Label>
@@ -108,7 +111,7 @@ export function TaskSheetDetailsFields({
             <IconHash className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
             <Input
               id="task-sheet-estimate"
-              className="h-9 pl-8"
+              className={`${detailControlClassName} pl-8`}
               type="number"
               min={1}
               max={99}
@@ -118,7 +121,7 @@ export function TaskSheetDetailsFields({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className={detailFieldClassName}>
           <Label className="text-xs">Assignee</Label>
           <Select
             items={[
@@ -128,20 +131,20 @@ export function TaskSheetDetailsFields({
             value={assigneeId}
             onValueChange={(value) => setAssigneeId(typeof value === "string" ? value : null)}
           >
-            <SelectTrigger className="h-9 w-full">
+            <SelectTrigger className={detailControlClassName}>
               <IconUser />
-              <SelectValue />
+              <SelectValue className="min-w-0 truncate" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={null}>Unassigned</SelectItem>
               {members.map((member) => (
                 <SelectItem key={member.id} value={member.id}>
-                  <span className="flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     <Avatar size="sm">
                       {member.user.image ? <AvatarImage alt="" src={member.user.image} /> : null}
                       <AvatarFallback>{getMemberLabel(member).trim().charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    {getMemberLabel(member)}
+                    <span className="truncate">{getMemberLabel(member)}</span>
                   </span>
                 </SelectItem>
               ))}
@@ -149,7 +152,7 @@ export function TaskSheetDetailsFields({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className={detailFieldClassName}>
           <Label htmlFor="task-sheet-due-date" className="text-xs">
             Due date
           </Label>
@@ -157,7 +160,7 @@ export function TaskSheetDetailsFields({
             <IconCalendar className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
             <Input
               id="task-sheet-due-date"
-              className="h-9 pl-8"
+              className={`${detailControlClassName} pl-8`}
               type="date"
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}

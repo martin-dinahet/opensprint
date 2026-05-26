@@ -35,7 +35,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="!w-[min(100vw,36rem)] gap-0 overflow-hidden sm:!max-w-xl" showCloseButton>
+      <SheetContent className="!w-[min(100vw,44rem)] gap-0 overflow-hidden sm:!max-w-[44rem]" showCloseButton>
         <SheetHeader className="border-b px-4 py-3 pr-12">
           <SheetTitle>{sheet.isCreateMode ? "Create task" : "Task details"}</SheetTitle>
           <SheetDescription>
@@ -117,7 +117,7 @@ export const TaskSheet = ({ columnId = "", members, onCreated, onOpenChange, ope
                   targetColumns={sheet.targetColumns}
                   targetProjectId={sheet.targetProjectId}
                   transferCurrentTask={sheet.transferCurrentTask}
-                  transferableProjects={sheet.transferableProjects}
+                  transferTargetProjects={sheet.transferTargetProjects}
                 />
               ) : null}
             </div>

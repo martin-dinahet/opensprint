@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeMember, makeTask } from "@/test/factories";
 import { TaskSheet } from "./task-sheet";
@@ -12,6 +13,7 @@ const {
   deleteProjectTagMock,
   deleteTaskItemMock,
   detachTagMock,
+  moveTaskMock,
   reorderTaskItemsMock,
   toastMock,
   transferTaskMock,
@@ -26,6 +28,7 @@ const {
   deleteProjectTagMock: vi.fn(),
   deleteTaskItemMock: vi.fn(),
   detachTagMock: vi.fn(),
+  moveTaskMock: vi.fn(),
   reorderTaskItemsMock: vi.fn(),
   toastMock: {
     error: vi.fn(),
@@ -51,7 +54,7 @@ vi.mock("@/entities/task", () => ({
   useDeleteProjectTaskTag: () => ({ mutate: deleteProjectTagMock, isPending: false }),
   useDeleteTaskItem: () => ({ mutate: deleteTaskItemMock, isPending: false }),
   useDetachTaskTag: () => ({ mutateAsync: detachTagMock, isPending: false }),
-  useMoveTask: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useMoveTask: () => ({ mutateAsync: moveTaskMock, isPending: false }),
   useProjectTaskTags: () => ({
     data: [{ id: "tag-1", projectId: "project-1", name: "QA", color: "#2563eb", createdAt: "", updatedAt: "" }],
   }),
@@ -74,16 +77,28 @@ vi.mock("@/entities/project", () => ({
 
 vi.mock("@/entities/board", () => ({
   useBoards: (projectId: string) => ({
-    data: projectId === "project-2" ? [{ id: "board-2", projectId: "project-2", name: "Target board" }] : [],
+    data:
+      projectId === "project-1"
+        ? [
+            { id: "board-1", projectId: "project-1", name: "Current board" },
+            { id: "board-same-project", projectId: "project-1", name: "Same project board" },
+          ]
+        : projectId === "project-2"
+          ? [{ id: "board-2", projectId: "project-2", name: "Target board" }]
+          : [],
   }),
 }));
 
 vi.mock("@/entities/column", () => ({
   useColumns: (projectId: string, boardId: string) => ({
     data:
-      projectId === "project-2" && boardId === "board-2"
-        ? [{ id: "column-2", projectId: "project-2", boardId: "board-2", name: "Ready" }]
-        : [],
+      projectId === "project-1" && boardId === "board-same-project"
+        ? [{ id: "column-same-project", projectId: "project-1", boardId: "board-same-project", name: "Doing" }]
+        : projectId === "project-1" && boardId === "board-1"
+          ? [{ id: "column-1", projectId: "project-1", boardId: "board-1", name: "Todo" }]
+          : projectId === "project-2" && boardId === "board-2"
+            ? [{ id: "column-2", projectId: "project-2", boardId: "board-2", name: "Ready" }]
+            : [],
   }),
 }));
 
@@ -93,6 +108,7 @@ describe("TaskSheet", () => {
     createTaskMock.mockResolvedValue(makeTask({ id: "task-new", title: "Created task" }));
     updateTaskMock.mockResolvedValue(makeTask({ id: "task-1", title: "Updated task" }));
     assignTaskMock.mockResolvedValue(makeTask({ id: "task-1" }));
+    moveTaskMock.mockResolvedValue({ id: "task-1", columnId: "column-same-project", position: 0 });
     transferTaskMock.mockResolvedValue({ id: "task-1", columnId: "column-2", position: 0 });
   });
 
@@ -188,7 +204,8 @@ describe("TaskSheet", () => {
     expect(screen.getByRole("button", { name: "Transfer task" })).toBeDisabled();
   });
 
-  it("transfers existing tasks after choosing a destination", async () => {
+  it("moves existing tasks to another board in the same project", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     const onOpenChange = vi.fn();
 
     render(
@@ -201,22 +218,55 @@ describe("TaskSheet", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Project"));
-    fireEvent.click(await screen.findByText("Target project"));
-    fireEvent.click(screen.getByText("Board"));
-    fireEvent.click(await screen.findByText("Target board"));
-    fireEvent.click(screen.getByText("Column"));
-    fireEvent.click(await screen.findByText("Ready"));
-    fireEvent.click(screen.getByRole("button", { name: "Transfer task" }));
+    await user.click(screen.getByLabelText("Target board"));
+    await user.click(await screen.findByText("Same project board"));
+    await waitFor(() => expect(screen.getByLabelText("Target column")).toBeEnabled());
+    await user.click(screen.getByLabelText("Target column"));
+    await user.click(await screen.findByText("Doing"));
+    await user.click(screen.getByRole("button", { name: "Transfer task" }));
+
+    await waitFor(() => {
+      expect(moveTaskMock).toHaveBeenCalledWith({ taskId: "task-1", data: { columnId: "column-same-project" } });
+    });
+    expect(transferTaskMock).not.toHaveBeenCalled();
+    expect(toastMock.success).toHaveBeenCalledWith("Task transferred");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("transfers existing tasks to another project after choosing a destination", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const onOpenChange = vi.fn();
+
+    render(
+      <TaskSheet
+        members={[makeMember()]}
+        onOpenChange={onOpenChange}
+        open
+        projectId="project-1"
+        task={makeTask({ id: "task-1", columnId: "column-1" })}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("Target project"));
+    await user.click(await screen.findByText("Target project"));
+    await waitFor(() => expect(screen.getByLabelText("Target board")).toBeEnabled());
+    await user.click(screen.getByLabelText("Target board"));
+    await user.click(await screen.findByText("Target board"));
+    await waitFor(() => expect(screen.getByLabelText("Target column")).toBeEnabled());
+    await user.click(screen.getByLabelText("Target column"));
+    await user.click(await screen.findByText("Ready"));
+    await user.click(screen.getByRole("button", { name: "Transfer task" }));
 
     await waitFor(() => {
       expect(transferTaskMock).toHaveBeenCalledWith({ taskId: "task-1", data: { columnId: "column-2" } });
     });
+    expect(moveTaskMock).not.toHaveBeenCalled();
     expect(toastMock.success).toHaveBeenCalledWith("Task transferred");
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("shows transfer errors in the sheet", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     transferTaskMock.mockRejectedValue(new Error("Transfer failed"));
 
     render(
@@ -229,13 +279,15 @@ describe("TaskSheet", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Project"));
-    fireEvent.click(await screen.findByText("Target project"));
-    fireEvent.click(screen.getByText("Board"));
-    fireEvent.click(await screen.findByText("Target board"));
-    fireEvent.click(screen.getByText("Column"));
-    fireEvent.click(await screen.findByText("Ready"));
-    fireEvent.click(screen.getByRole("button", { name: "Transfer task" }));
+    await user.click(screen.getByLabelText("Target project"));
+    await user.click(await screen.findByText("Target project"));
+    await waitFor(() => expect(screen.getByLabelText("Target board")).toBeEnabled());
+    await user.click(screen.getByLabelText("Target board"));
+    await user.click(await screen.findByText("Target board"));
+    await waitFor(() => expect(screen.getByLabelText("Target column")).toBeEnabled());
+    await user.click(screen.getByLabelText("Target column"));
+    await user.click(await screen.findByText("Ready"));
+    await user.click(screen.getByRole("button", { name: "Transfer task" }));
 
     expect(await screen.findByText("Transfer failed")).toBeInTheDocument();
     expect(toastMock.error).toHaveBeenCalledWith("Transfer failed");

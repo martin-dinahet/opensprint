@@ -15,7 +15,7 @@ type Props = {
   targetColumns: ColumnOutput[];
   targetProjectId: string;
   transferCurrentTask: () => void;
-  transferableProjects: ProjectListOutput[];
+  transferTargetProjects: ProjectListOutput[];
 };
 
 export function TransferSection({
@@ -29,7 +29,7 @@ export function TransferSection({
   targetColumns,
   targetProjectId,
   transferCurrentTask,
-  transferableProjects,
+  transferTargetProjects,
 }: Props) {
   return (
     <section className="space-y-3 rounded-md border bg-muted/10 p-3">
@@ -38,12 +38,12 @@ export function TransferSection({
           <IconArrowRight className="h-4 w-4 text-muted-foreground" />
           Transfer
         </h3>
-        <p className="text-muted-foreground text-xs">Move this task to another project column.</p>
+        <p className="text-muted-foreground text-xs">Move this task to another board or project column.</p>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-3">
         <Select
-          items={Object.fromEntries(transferableProjects.map((project) => [project.id, project.name]))}
+          items={Object.fromEntries(transferTargetProjects.map((project) => [project.id, project.name]))}
           value={targetProjectId}
           onValueChange={(value) => {
             setTargetProjectId(typeof value === "string" ? value : "");
@@ -51,11 +51,11 @@ export function TransferSection({
             setTargetColumnId("");
           }}
         >
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger aria-label="Target project" className="h-9 w-full">
             <SelectValue placeholder="Project" />
           </SelectTrigger>
           <SelectContent>
-            {transferableProjects.map((project) => (
+            {transferTargetProjects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.name}
               </SelectItem>
@@ -72,7 +72,7 @@ export function TransferSection({
           }}
           disabled={!targetProjectId}
         >
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger aria-label="Target board" className="h-9 w-full">
             <SelectValue placeholder="Board" />
           </SelectTrigger>
           <SelectContent>
@@ -90,7 +90,7 @@ export function TransferSection({
           onValueChange={(value) => setTargetColumnId(typeof value === "string" ? value : "")}
           disabled={!targetBoardId}
         >
-          <SelectTrigger className="h-9 w-full">
+          <SelectTrigger aria-label="Target column" className="h-9 w-full">
             <SelectValue placeholder="Column" />
           </SelectTrigger>
           <SelectContent>

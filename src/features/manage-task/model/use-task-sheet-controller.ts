@@ -20,6 +20,7 @@ import {
   useDeleteProjectTaskTag,
   useDeleteTaskItem,
   useDetachTaskTag,
+  useMoveTask,
   useProjectTaskTags,
   useReorderTaskItems,
   useTransferTask,
@@ -56,6 +57,7 @@ export function useTaskSheetController({ columnId = "", onCreated, onOpenChange,
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const assignTask = useAssignTask();
+  const moveTask = useMoveTask();
   const transferTask = useTransferTask();
   const createItem = useCreateTaskItem();
   const updateItem = useUpdateTaskItem();
@@ -93,14 +95,14 @@ export function useTaskSheetController({ columnId = "", onCreated, onOpenChange,
     setSelectedTagIds(new Set(task?.tags.map((tag) => tag.id) ?? []));
     setNewItemTitle("");
     setNewTagName("");
-    setTargetProjectId("");
+    setTargetProjectId(projectId);
     setTargetBoardId("");
     setTargetColumnId("");
     setError(null);
-  }, [open, task]);
+  }, [open, projectId, task]);
 
-  const transferableProjects = useMemo(
-    () => projects.filter((project) => project.id !== projectId),
+  const transferTargetProjects = useMemo(
+    () => [...projects].sort((a, b) => (a.id === projectId ? -1 : b.id === projectId ? 1 : 0)),
     [projectId, projects],
   );
   const items = task?.items ?? [];
@@ -112,6 +114,7 @@ export function useTaskSheetController({ columnId = "", onCreated, onOpenChange,
     createTask.isPending ||
     updateTask.isPending ||
     assignTask.isPending ||
+    moveTask.isPending ||
     transferTask.isPending ||
     createItem.isPending ||
     updateItem.isPending ||
@@ -233,10 +236,12 @@ export function useTaskSheetController({ columnId = "", onCreated, onOpenChange,
     if (!task || !targetColumnId) return;
     setError(null);
 
-    const result = await handleClientResult(
-      () => transferTask.mutateAsync({ taskId: task.id, data: { columnId: targetColumnId } }),
-      "Unable to transfer task",
-    );
+    const mutation =
+      targetProjectId === projectId
+        ? () => moveTask.mutateAsync({ taskId: task.id, data: { columnId: targetColumnId } })
+        : () => transferTask.mutateAsync({ taskId: task.id, data: { columnId: targetColumnId } });
+
+    const result = await handleClientResult(mutation, "Unable to transfer task");
 
     result.match({
       ok: () => {
@@ -393,7 +398,7 @@ export function useTaskSheetController({ columnId = "", onCreated, onOpenChange,
     title,
     toggleTag,
     transferCurrentTask,
-    transferableProjects,
+    transferTargetProjects,
     updateDraftItem,
     updatePersistedItem,
   };
