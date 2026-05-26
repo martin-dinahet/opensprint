@@ -1,6 +1,6 @@
 import { KanbanColumn, KanbanColumnView, KanbanTaskCard } from "./kanban-column-view";
-import { KanbanColumns, KanbanRoot } from "./kanban-root";
 import { KanbanOverlay } from "./kanban-overlay";
+import { KanbanColumns, KanbanRoot } from "./kanban-root";
 
 export { KanbanColumnView };
 

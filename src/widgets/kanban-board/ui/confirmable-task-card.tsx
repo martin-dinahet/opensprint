@@ -1,6 +1,7 @@
 "use client";
 
 import { IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 import type { TaskOutput } from "@/entities/task";
 import { TaskCard as EntityTaskCard } from "@/entities/task";
 import {
@@ -14,7 +15,6 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/shared";
-import { useState } from "react";
 
 type Props = {
   members: Parameters<typeof EntityTaskCard>[0]["members"];

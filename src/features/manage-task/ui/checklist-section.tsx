@@ -1,6 +1,6 @@
 import { IconArrowDown, IconArrowUp, IconListCheck, IconPlus, IconTrash } from "@tabler/icons-react";
 import type { TaskItemOutput } from "@/entities/task";
-import { Button, cn, Badge, Input } from "@/shared";
+import { Badge, Button, cn, Input } from "@/shared";
 import type { DraftItem } from "../model";
 
 type Props = {

@@ -1,5 +1,5 @@
 import { err, ok } from "@punpun-dev/ts-result";
-import { ForbiddenError, type AppError } from "@/server/lib";
+import { type AppError, ForbiddenError } from "@/server/lib";
 import { memberRepository } from "@/server/repositories";
 import type { Member } from "@/shared";
 

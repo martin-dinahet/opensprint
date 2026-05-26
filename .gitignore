@@ -6,6 +6,7 @@
 /.zed
 /.opencode
 /.agents
+.DS_Store
 
 .env*
 next-env.d.ts

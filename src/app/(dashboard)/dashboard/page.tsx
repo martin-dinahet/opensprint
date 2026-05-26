@@ -3,17 +3,17 @@
 import {
   IconArchive,
   IconArrowRight,
-  IconPlayerPlay,
   IconPlayerPause,
+  IconPlayerPlay,
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import type { ProjectListOutput } from "@/entities/project";
 import { useProjects } from "@/entities/project";
 import { CreateProjectDialog } from "@/features/create-project";
-import { Badge, Button, Input, LoadingScreen, NativeSelect, NativeSelectOption, cn } from "@/shared";
+import { Badge, Button, cn, Input, LoadingScreen, NativeSelect, NativeSelectOption } from "@/shared";
 import { useDashboardHeader } from "@/widgets/header";
 
 type SortValue = "name-asc" | "recent" | "oldest";

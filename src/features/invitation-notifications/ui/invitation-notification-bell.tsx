@@ -3,10 +3,10 @@
 import { BellIcon, CheckIcon, InboxIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
+  type InvitationOutput,
   useAcceptInvitation,
   useDeclineInvitation,
   useUserInvitations,
-  type InvitationOutput,
 } from "@/entities/invitation";
 import {
   Badge,
