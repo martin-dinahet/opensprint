@@ -176,6 +176,58 @@ describe("TaskSheet", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it("updates assignee changes while saving an existing task", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const members = [
+      makeMember({
+        id: "member-2",
+        userId: "user-2",
+        user: { id: "user-2", name: "Ada Lovelace", email: "ada@example.com", image: null },
+      }),
+    ];
+
+    render(
+      <TaskSheet
+        members={members}
+        onOpenChange={vi.fn()}
+        open
+        projectId="project-1"
+        task={makeTask({ id: "task-1", assigneeId: null, columnId: "column-1" })}
+      />,
+    );
+
+    await user.click(screen.getByText("Unassigned"));
+    await user.click(await screen.findByText("Ada Lovelace"));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => {
+      expect(assignTaskMock).toHaveBeenCalledWith({ assigneeId: "member-2", taskId: "task-1" });
+    });
+  });
+
+  it("adds persisted checklist items to existing tasks", async () => {
+    render(
+      <TaskSheet
+        members={[makeMember()]}
+        onOpenChange={vi.fn()}
+        open
+        projectId="project-1"
+        task={makeTask({ id: "task-1", columnId: "column-1" })}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Add checklist item…"), { target: { value: "Confirm rollout" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+
+    await waitFor(() => {
+      expect(createTaskItemMock).toHaveBeenCalledWith({
+        columnId: "column-1",
+        taskId: "task-1",
+        title: "Confirm rollout",
+      });
+    });
+  });
+
   it("renders transfer controls only for existing tasks", () => {
     const { rerender } = render(
       <TaskSheet
