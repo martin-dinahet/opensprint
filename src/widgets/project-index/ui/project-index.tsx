@@ -25,7 +25,7 @@ const statusMeta = {
   paused: { icon: IconPlayerPause, label: "Paused" },
 };
 
-export function DashboardPage() {
+export function ProjectIndex() {
   const { data: projects, isLoading } = useProjects();
   const [createOpen, setCreateOpen] = useState(false);
   const [query, setQuery] = useState("");
