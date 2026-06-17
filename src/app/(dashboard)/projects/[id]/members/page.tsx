@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProjectMembersPage } from "@/_pages/project-members";
+import { ProjectMembersPage } from "@/_pages/project-members/page";
 
 type Props = {
   params: Promise<{ id: string }>;
