@@ -1,0 +1,59 @@
+name: opensprint
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - opensprint_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - opensprint-internal
+
+  app:
+    build:
+      context: .
+      args:
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+        BETTER_AUTH_URL: ${APP_URL}
+        NEXT_PUBLIC_APP_URL: ${APP_URL}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${APP_URL}
+      NEXT_PUBLIC_APP_URL: ${APP_URL}
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+      traefik.http.routers.opensprint-http.rule: Host(`${APP_HOST}`)
+      traefik.http.routers.opensprint-http.entrypoints: web
+      traefik.http.routers.opensprint-http.middlewares: https-redirect
+      traefik.http.routers.opensprint.rule: Host(`${APP_HOST}`)
+      traefik.http.routers.opensprint.entrypoints: websecure
+      traefik.http.routers.opensprint.tls: "true"
+      traefik.http.routers.opensprint.tls.certresolver: letsencrypt
+      traefik.http.services.opensprint.loadbalancer.server.port: "3000"
+    networks:
+      - opensprint-internal
+      - proxy
+
+volumes:
+  opensprint_db_data:
+
+networks:
+  opensprint-internal:
+  proxy:
+    external: true

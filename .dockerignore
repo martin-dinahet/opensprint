@@ -1,0 +1,13 @@
+.git
+.github
+.next
+.pnpm-store
+node_modules
+coverage
+documents-travail
+livrables-finaux
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example

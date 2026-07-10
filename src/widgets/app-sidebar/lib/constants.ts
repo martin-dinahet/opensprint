@@ -1,5 +1,3 @@
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
-
 export const collapsedTextClass = "group-data-[collapsible=icon]:hidden";
 
 export const sidebarNavButtonClass =
@@ -13,9 +11,6 @@ export const sidebarSectionClass = "px-0 py-0 group-data-[collapsible=icon]:px-0
 export const sidebarSectionTriggerClass =
   "h-8 rounded-none border border-sidebar-border bg-sidebar px-2 font-black text-[0.68rem] text-sidebar-foreground uppercase hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden";
 
-export const sidebarSectionLabelClass =
-  "px-2 pb-1 font-black text-[0.68rem] text-sidebar-foreground/55 uppercase group-data-[collapsible=icon]:hidden";
-
 export const projectListLimit = 10;
 
 export const projectSkeletonKeys = [
@@ -25,9 +20,3 @@ export const projectSkeletonKeys = [
   "project-skeleton-4",
   "project-skeleton-5",
 ];
-
-export const themeItems = [
-  { label: "Light", value: "light", icon: SunIcon },
-  { label: "Dark", value: "dark", icon: MoonIcon },
-  { label: "System", value: "system", icon: MonitorIcon },
-] as const;

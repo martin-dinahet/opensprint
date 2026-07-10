@@ -1,6 +1,7 @@
 {
   "name": "opensprint",
   "type": "module",
+  "packageManager": "pnpm@11.7.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

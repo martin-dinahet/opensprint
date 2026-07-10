@@ -5,10 +5,7 @@ export {
   projectSkeletonKeys,
   sidebarNavButtonClass,
   sidebarSectionClass,
-  sidebarSectionLabelClass,
   sidebarSectionTriggerClass,
   sidebarSubNavButtonClass,
-  themeItems,
 } from "./constants";
-export type { ProjectNavigationItem } from "./navigation";
-export { getProjectId, getProjectNavigationItems } from "./navigation";
+export { getProjectId } from "./navigation";

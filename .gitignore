@@ -6,6 +6,7 @@
 /.zed
 /.opencode
 /.agents
+/docs
 .DS_Store
 
 .env*
