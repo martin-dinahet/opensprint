@@ -3,7 +3,7 @@ FROM node:22-alpine AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install -g pnpm@10.23.0
+RUN npm install -g pnpm@11.7.0
 
 FROM base AS deps
 
