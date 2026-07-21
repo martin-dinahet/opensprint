@@ -11,13 +11,94 @@ concurrency:
   group: deploy-vps
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  APP_NAME: opensprint
+  IMAGE_NAME: ghcr.io/martin-dinahet/opensprint
+  STACK_DIR: /opt/stacks/opensprint
+  SOURCE_REF: ${{ github.event.workflow_run.head_sha || github.sha }}
+  PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
+  DATABASE_URL: postgres://test:test@localhost:5432/opensprint_test
+  BETTER_AUTH_SECRET: ci-secret-do-not-use-in-production
+  BETTER_AUTH_URL: http://localhost:3000
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
 jobs:
   deploy:
-    name: Deploy to VPS
+    name: Build, publish and deploy
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: opensprint_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_REF }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint and typecheck
+        run: |
+          pnpm exec biome ci .
+          pnpm exec tsc --noEmit
+
+      - name: Run tests
+        run: |
+          pnpm db:migrate
+          pnpm test:backend
+          pnpm test:frontend
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.SOURCE_REF }}
+          build-args: |
+            DATABASE_URL=postgres://build:build@postgres:5432/opensprint_build
+            BETTER_AUTH_SECRET=build-time-secret
+            BETTER_AUTH_URL=${{ env.PUBLIC_APP_URL }}
+            NEXT_PUBLIC_APP_URL=${{ env.PUBLIC_APP_URL }}
 
       - name: Configure SSH
         run: |
@@ -26,18 +107,11 @@ jobs:
           chmod 600 ~/.ssh/vps_key
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Upload source
+      - name: Upload Compose file
         run: |
-          ssh -i ~/.ssh/vps_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "sudo mkdir -p '${{ secrets.VPS_APP_DIR }}' && sudo chown '${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }}' '${{ secrets.VPS_APP_DIR }}'"
-          tar \
-            --exclude='.git' \
-            --exclude='.next' \
-            --exclude='node_modules' \
-            --exclude='.pnpm-store' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            -czf - . | ssh -i ~/.ssh/vps_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "tar -xzf - -C '${{ secrets.VPS_APP_DIR }}'"
+          ssh -i ~/.ssh/vps_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "sudo mkdir -p '${{ env.STACK_DIR }}' && sudo chown '${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }}' '${{ env.STACK_DIR }}'"
+          scp -i ~/.ssh/vps_key compose.prod.yml "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.STACK_DIR }}/compose.yml"
 
-      - name: Restart services
+      - name: Deploy on VPS
         run: |
-          ssh -i ~/.ssh/vps_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "cd '${{ secrets.VPS_APP_DIR }}' && sudo docker compose --env-file .env.production -f compose.prod.yaml up -d --build --remove-orphans"
+          ssh -i ~/.ssh/vps_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "cd '${{ env.STACK_DIR }}' && sudo docker compose pull && sudo docker compose up -d --remove-orphans && sudo docker image prune -f"

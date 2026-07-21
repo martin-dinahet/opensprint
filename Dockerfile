@@ -37,4 +37,7 @@ RUN cp -r .next/static .next/standalone/.next/static && \
 
 EXPOSE 3000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
+
 CMD ["sh", "-c", "pnpm db:migrate && node .next/standalone/server.js"]
